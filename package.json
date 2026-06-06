@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "deploy": "VITE_BASE=/geo-landing/ vite build && touch dist/.nojekyll && gh-pages -d dist -t -m \"deploy: production build [skip ci]\""
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "gh-pages": "^6.3.0",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0",
     "puppeteer-core": "^23.11.1",
