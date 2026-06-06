@@ -1,4 +1,12 @@
 // Geo — landing page. Hero variants, nav variants, accent palette via Tweaks.
+import React from "react";
+import * as ReactDOM from "react-dom/client";
+import "./tokens.css";
+import "./page.css";
+import { DemoWidget } from "./demo-widget.jsx";
+import {
+  useTweaks, TweaksPanel, TweakSection, TweakRadio, TweakColor,
+} from "./tweaks-panel.jsx";
 
 const { useState, useEffect } = React;
 

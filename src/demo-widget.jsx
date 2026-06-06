@@ -1,3 +1,5 @@
+import React from "react";
+
 // Live GeoContext API demo — input lat/lng, watch the resolver place a crosshair
 // on a faded street-grid map while structured JSON streams in beside it.
 
@@ -407,4 +409,4 @@ function DemoWidget() {
   );
 }
 
-window.DemoWidget = DemoWidget;
+export { DemoWidget };
