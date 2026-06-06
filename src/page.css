@@ -95,7 +95,10 @@
   font-size: 18px;
   line-height: 1.5;
   color: var(--fg-secondary);
-  max-width: 56ch;
+  /* min() so the 56ch reading-measure never exceeds the viewport on phones.
+     As a flex-item descendant this block sizes to max-content, so a plain
+     56ch cap (600px) overflowed narrow screens; min(…,100%) makes it wrap. */
+  max-width: min(56ch, 100%);
   text-wrap: pretty;
 }
 .hero-ctas {
@@ -187,6 +190,11 @@
 }
 .hero-text {
   max-width: 640px;
+  /* Flex items default to min-width:auto, which refuses to shrink below the
+     content's intrinsic width — so the hero copy couldn't wrap on any screen
+     narrower than ~640px (all phones). min-width:0 lets it shrink & wrap.
+     No effect on desktop, where the container is already wider than the text. */
+  min-width: 0;
 }
 .hero-text h1 {
   font-family: var(--font-serif);
@@ -208,7 +216,7 @@
   font-size: 17px;
   line-height: 1.5;
   color: var(--fg-secondary);
-  max-width: 56ch;
+  max-width: min(56ch, 100%);
   text-wrap: pretty;
 }
 .hero-text .hero-ctas {
@@ -1450,6 +1458,17 @@
   padding: 2px 6px;
   border: 1px solid var(--accent);
   border-radius: 3px;
+}
+/* Small phones: the fixed 5-column row (140px 1fr 32px 60px auto ≈ 321px min)
+   can't fit < ~360px. Let the name + bar columns shrink (minmax 0) and the
+   name truncate, so the row fits down to ~280px with all data still visible. */
+@media (max-width: 480px) {
+  .uc-commerce-zones li {
+    grid-template-columns: minmax(0, 92px) minmax(0, 1fr) auto auto auto;
+    gap: 8px;
+  }
+  .uz-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .uz-surge { padding: 2px 4px; letter-spacing: 0.08em; }
 }
 
 /* — Ranked list viz — */
