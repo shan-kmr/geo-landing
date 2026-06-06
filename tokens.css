@@ -1,0 +1,246 @@
+/* Geo — landing tokens. Warm paper canvas, restrained ink accent. */
+
+:root {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Instrument Serif", "Times New Roman", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Canvas — warm paper, Nominal/Notion-leaning. */
+  --bg: #F6F4EF;
+  --bg-elevated: #FBFAF7;
+  --surface: #FFFFFF;
+  --surface-alt: #F0EDE6;
+  --surface-sunken: #ECE9E1;
+
+  /* Borders — warm hairlines */
+  --border: #E0DDD4;
+  --border-subtle: #EAE7DE;
+  --border-strong: #C8C4B8;
+  --border-bright: #1A1815;
+
+  /* Text — ink */
+  --fg: #1A1815;
+  --fg-secondary: #4E4B45;
+  --fg-muted: #8C887E;
+  --fg-faint: #B4B0A4;
+
+  /* Accent — deep cobalt ink (default). Overridable via [data-accent]. */
+  --accent: #1E3A8A;
+  --accent-soft: #1E3A8A14;
+  --accent-bright: #2A4FB8;
+
+  /* Map ink */
+  --map-bg: #EFECE3;
+  --map-line: #D5D1C5;
+  --map-line-major: #BFBBAD;
+  --map-block: #E7E4DA;
+  --map-label: #8C887E;
+  --map-water: #E0E3DE;
+
+  /* Status */
+  --ok: #1A7D4A;
+  --warn: #B85C00;
+
+  /* Type scale */
+  --text-hero: clamp(46px, 7vw, 92px);
+  --text-display: clamp(32px, 4vw, 52px);
+  --text-h1: 30px;
+  --text-h2: 22px;
+  --text-h3: 16px;
+  --text-body: 15px;
+  --text-small: 13px;
+  --text-micro: 11px;
+
+  /* Spacing — 8px scale */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+  --sp-24: 96px; --sp-32: 128px;
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 180ms;
+
+  --max-w: 1280px;
+  --max-w-prose: 720px;
+}
+
+/* Accent variants */
+[data-accent="clay"] {
+  --accent: #B85431;
+  --accent-soft: #B8543114;
+  --accent-bright: #D06A48;
+}
+[data-accent="ink"] {
+  --accent: #1A1815;
+  --accent-soft: #1A18150F;
+  --accent-bright: #2A2622;
+}
+[data-accent="forest"] {
+  --accent: #1A5D3A;
+  --accent-soft: #1A5D3A14;
+  --accent-bright: #2A7A52;
+}
+[data-accent="amber"] {
+  --accent: #A56A00;
+  --accent-soft: #A56A0014;
+  --accent-bright: #C58418;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection { background: var(--accent-soft); color: var(--fg); }
+
+a { color: inherit; text-decoration: none; }
+
+.mono { font-family: var(--font-mono); font-feature-settings: "ss02", "zero", "cv11"; }
+
+/* Display serif — used for hero H1, manifesto, large editorial copy */
+.serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: -0.01em;
+}
+.serif-italic { font-style: italic; }
+
+/* Hairline rule */
+.hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 0;
+}
+
+/* Containers */
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--sp-8);
+}
+@media (max-width: 720px) {
+  .container { padding: 0 var(--sp-6); }
+}
+
+/* Micro label — UPPERCASE tracked mono, used as section markers */
+.label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+/* Status pill */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-secondary);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ok) 22%, transparent);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.btn:hover { border-color: var(--border-bright); }
+.btn.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #FBFAF7;
+}
+.btn.primary:hover {
+  background: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+.btn.primary[disabled] {
+  opacity: 0.5;
+  cursor: progress;
+}
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  padding: 10px 0;
+}
+.btn.ghost:hover { border-color: transparent; background: transparent; color: var(--accent); }
+.btn .arrow { transition: transform var(--dur) var(--ease); }
+.btn:hover .arrow { transform: translateX(2px); }
+
+/* Section frame */
+section.sec {
+  padding: var(--sp-24) 0;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 720px) {
+  section.sec { padding: var(--sp-16) 0; }
+}
+
+/* Cursor blink for demo */
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--accent);
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Tabular numerals for data */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Subtle fade-in for streamed lines */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 220ms var(--ease) both; }
