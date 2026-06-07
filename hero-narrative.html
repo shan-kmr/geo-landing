@@ -1102,7 +1102,40 @@
     //   ASCEND/un-flatten  22.6 - 28.7  (grid -> globe re-curves; SLOW 6.1s morph,
     //                                    UNCHANGED; grid fades out AS globe fades in)
     //   WORLD hold (seam)  28.7 - 29.5  (== open)
-    var LOOP = 29.5;
+    // v12 (founder feedback — speed up the ENTIRE loop ~30%, but KEEP the globe SPIN
+    // RATE unchanged; do NOT let the shorter loop spin the globe faster). The whole
+    // 29.5s timeline is compressed ~30% via a monotone piecewise time-warp: the
+    // HOLDS/DWELLS compress hardest (opening globe HOLD + seam tail at ~0.44x, the
+    // ping/resolve/crest cross-fade region at ~0.62x), the two smoothness-critical
+    // MORPHS compress only ~0.785x (descend 8.5->6.67s, ascend 6.1->4.79s) and the
+    // RISE rides the same morph rate (4.5->3.54s) — so every cross-dissolve OVERLAP
+    // is preserved proportionally and no boundary pops. New LOOP = 20.58s (-30.2%).
+    //   v12 SPIN (the load-bearing constraint): the globe spin is ang = 2pi*TURNS*S(p),
+    //   p=t/LOOP. Shrinking LOOP with TURNS=3 fixed would spin the globe ~43% faster —
+    //   NOT wanted. So TURNS drops 3 -> 2 (kept a WHOLE INTEGER so the seam stays
+    //   byte-identical) to hold turns-per-SECOND ~constant: was 3/29.5 = 0.1017 turns/s,
+    //   now 2/20.58 = 0.0972 turns/s (~the same, a hair slower — exactly the founder's
+    //   ask, never faster). SPIN_WMIN is UNCHANGED at 0.30 so the warp tuning is not
+    //   touched; the VISIBLE dwell spin lands 0.0541 -> 0.0515 turns/s (revolution
+    //   18.5s -> 19.4s, ~5% slower, never faster). The spin-warp table auto-rebuilds
+    //   from the new (compressed) morph profile over the new LOOP.
+    //   SMOOTHNESS (verified, SwiftShader software raster, real getImageData frames):
+    //   EVERY phase boundary's per-frame motion stays <= the local within-beat median
+    //   (descend 0.59x, ping 0.75x, resolve 0.47x, rise 0.54x, recede 0.25x, ascend
+    //   0.26x, gridGone 0.93x) — all WELL under the 1.5x cap, no pops. Seam stays
+    //   BYTE-IDENTICAL (t=0 raster == t=LOOP raster, exact pixel diff 0; seam endpoints
+    //   sit in the short dwell at the low WMIN rate), 0 console errors, riseDelay=0
+    //   (synchronized rise) and "buildings LAST" preserved.
+    // New beats (loop-local seconds; ALL time-warped from v11, see ratios above):
+    //   GLOBE dwell        0.0  - 1.76  (+ seam tail 20.23-20.58 -> ~2.1s open HOLD)
+    //   DESCEND/flatten    1.76 - 8.43  (globe -> grid; ~6.67s morph, 0.785x of v11)
+    //   PING (traces)      7.65 - 10.91 (fade-in/out spans compressed cross-dissolves)
+    //   RESOLVE            9.98 - 13.65 (lock at 11.53)
+    //   BUILDINGS rise     11.53 - 15.07 (synchronized extrude ~3.54s)
+    //   BUILDINGS recede   15.38 - 17.32 (synchronized descent ~1.94s; OVERLAPS ascend)
+    //   ASCEND/un-flatten  15.44 - 20.23 (grid -> globe; ~4.79s morph, 0.785x of v11)
+    //   WORLD hold (seam)  20.23 - 20.58 (== open)
+    var LOOP = 20.58;
     var B = {
       // descent / flatten (globe -> grid) — SLOW 8.5s morph so the sphere "opens
       // out" gently; its per-frame velocity stays in the ordinary-motion band.
@@ -1110,26 +1143,26 @@
       // it opens out (founder: the opening dwell was too long). morph DURATION
       // (8.5s, flatten0->flatten1 = 4.0->12.5) is UNCHANGED (smoothness-critical);
       // the whole post-dwell timeline is shifted -5.5s with it (loop -> 29.5s).
-      descend0: 3.0,
-      flatten0: 4.0,
-      flatten1: 12.5,
+      descend0: 1.32,
+      flatten0: 1.76,
+      flatten1: 8.43,
       // grid draws in UNDER the morph and KEEPS drawing into the ping beat so the
       // boundary into PING carries motion (no freeze): a ~7s draw-in that overlaps
       // both the morph tail and the trace fade-in (a cross-dissolve, not a cut).
-      gridDraw0: 8.0,
-      gridDraw1: 15.0,
+      gridDraw0: 4.9,
+      gridDraw1: 9.98,
       // city traces (PING) — fade IN over a long ramp that OVERLAPS the grid
       // draw-in, hold, then FULLY FADE OUT to 0 over a long ramp that OVERLAPS the
       // RESOLVE fade-in. The fade is on the traces' OWN envelope so the pings are
       // already low (not a hard cut) as the reticle takes over.
       // v9: HOLD trimmed (pings register then leave promptly). fade-in 1.4s and
       // fade-out 2.0s (traceFade1-traceFade0) spans are UNCHANGED cross-dissolves.
-      trace0: 11.5,
-      traceFade0: 14.5,    // pings begin fading out (2.0s ramp, overlaps resolve-in)
-      traceFade1: 16.5,    // pings fully gone — overlaps the resolve build
-      heat0: 12.0,
-      heatFade0: 14.0,     // density haze fades out alongside the pings (2.5s)
-      heatFade1: 16.5,
+      trace0: 7.65,
+      traceFade0: 9.67,    // pings begin fading out (2.0s ramp, overlaps resolve-in)
+      traceFade1: 10.91,    // pings fully gone — overlaps the resolve build
+      heat0: 8.04,
+      heatFade0: 9.36,     // density haze fades out alongside the pings (2.5s)
+      heatFade1: 10.91,
       // RESOLVE beat: its presence fades IN while the last pings fade OUT (a
       // cross-dissolve), the reticle settles + the lock-ring sweeps closed, then
       // the cue fades OUT while the footprints-settled lift fades IN. resolveLock
@@ -1139,15 +1172,15 @@
       // ease-OUT (2.1s = resolveGone-resolve1, overlaps the settled lift + rise) are
       // UNCHANGED cross-dissolves. Lock lands at 23.0 (== rise0) so it reads exactly
       // as the buildings launch; resolveGone (25.7) overlaps the rise (cross-fade).
-      resolve0: 15.0,       // reticle begins settling (pings still leaving -> overlap)
-      resolveLock: 17.5,    // lock-ring full, brackets tight, point resolved
-      resolve1: 18.1,       // lock reads engaged; resolve begins easing out
-      resolveGone: 20.2,    // resolve fully gone — overlaps the settled lift + rise
+      resolve0: 9.98,       // reticle begins settling (pings still leaving -> overlap)
+      resolveLock: 11.53,    // lock-ring full, brackets tight, point resolved
+      resolve1: 12,       // lock reads engaged; resolve begins easing out
+      resolveGone: 13.65,    // resolve fully gone — overlaps the settled lift + rise
       // zoom into the focus block (camera push toward the resolved point), eased
       // so RESOLVE settles over the block and the push holds through the settled
       // beat and the synchronized rise, then pulls back out on recede.
-      zoom0: 15.5,
-      zoom1: 21.5,
+      zoom0: 10.29,
+      zoom1: 14.67,
       // place massing — SYNCHRONIZED rise (all blocks together on ONE timeline),
       // a brief crest (carries a faint breath, NOT a frozen hold), then a
       // synchronized recede. BUILDINGS ARE THE LAST CONTENT BEAT. The rise LAUNCHES
@@ -1164,17 +1197,17 @@
       // the synchronized massing still crests TOGETHER with no snap. rise0 (23.0)
       // OVERLAPS the settled lift + resolve-out (cross-dissolves); the brief 0.5s
       // crest keeps "buildings LAST"; recede OVERLAPS the ascend-in.
-      rise0: 17.5,
-      rise1: 22.0,          // gentle ~4.5s synchronized extrude on the clean field
-      recede0: 22.5,        // brief crest (buildings LAST) then synchronized recede
-      recede1: 25.0,        // gentle ~2.5s synchronized descent back toward the grid
+      rise0: 11.53,
+      rise1: 15.07,          // gentle ~4.5s synchronized extrude on the clean field
+      recede0: 15.38,        // brief crest (buildings LAST) then synchronized recede
+      recede1: 17.32,        // gentle ~2.5s synchronized descent back toward the grid
                             // (kept short enough that the building recede finishes
                             // BEFORE the ascend morph's fast middle, so the two do
                             // not pile up; the per-building sink is smoothed by the
                             // wider hFade band below + the smootherstep height ease)
       // pull back out of the block — overlaps the recede so the camera glides out
-      unzoom0: 22.0,
-      unzoom1: 27.5,
+      unzoom0: 15.07,
+      unzoom1: 19.28,
       // ascent / un-flatten (grid -> globe) — SLOW ~6.1s, made SYMMETRIC with the
       // 8.5s descend (was only 3.8s, so its per-frame morph velocity was ~2x the
       // descend's -> the ASCEND boundary spiked at ~2x the descend's). It OVERLAPS
@@ -1182,9 +1215,9 @@
       // dissolve, no swap); reaches the sphere (morph=0) by ~34.2 with a short
       // dwell tail before the seam. v9: DURATION (6.1s) UNCHANGED (smoothness-
       // critical transition); only shifted in time.
-      ascend0: 22.6,
-      ascend1: 28.7,
-      gridGone: 28.5
+      ascend0: 15.44,
+      ascend1: 20.23,
+      gridGone: 20.07
     };
 
     // morphCity: 0 = full globe (sphere) .. 1 = full city (dots on flat grid).
@@ -2416,7 +2449,7 @@
       // FIXED Manhattan grid targets, so dropping the aim is purely cosmetic (the
       // grid layout is identical regardless of orientation). Seam stays byte-
       // identical: baseSpin = tPhase*3*2pi is 0 at t=0 and 6pi (== 0) at t=44.
-      var TURNS = 3;
+      var TURNS = 2;
       // v8: warped phase -> the globe spins slower through the morphs, faster in
       // the dwell, completing exactly TURNS whole turns (seam byte-identical).
       // SPIN_PH0 is a CONSTANT orientation offset (added at every t, so the seam
