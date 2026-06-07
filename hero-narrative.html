@@ -85,6 +85,15 @@
     var TRACE_AMP = 1.95;   // GPS trace dots / pings / dwell rings
     var EXT_AMP   = 1.85;   // building face washes + edge strokes
     var GLOBE_GF  = 1.0;    // globe global faintness (was 0.55 in v2 -> restored)
+    // v8 CITY LIFE twinkle: amplitude + whole-number cycles/loop (seam-safe). The
+    // flat-city dots gently pulse so the PING/RESOLVE/SETTLED beats are never a
+    // frozen frame. CYC is an integer so the twinkle is byte-identical at the seam.
+    // Kept GENTLE so no single dot's alpha changes by more than ~0.08 per 0.1s
+    // (per-element smoothness): AMP*CYC is bounded so the twinkle reads as a calm
+    // living-map shimmer, not a fast sparkle.
+    var CITY_TW_AMP = 1.55;   // per-dot alpha swing weight (scaled by cityLifeAmt + pt.tw);
+                              // bounded with CYC so a dot's alpha changes <= ~0.08/0.1s
+    var CITY_TW_CYC = 7;      // whole twinkle cycles over the loop (slow, calm)
 
     // ---------- Design space 1000x600 -> device pixels ----------
     var DW = 1000, DH = 600;
@@ -550,7 +559,13 @@
       var seed = (Math.sin((p[0] * 12.9898 + p[1] * 78.233)) * 43758.5453);
       seed = seed - Math.floor(seed);
       var tgt = streetTarget();
-      pts[i] = { x: v[0], y: v[1], z: v[2], s: seed, gx: tgt.x, gy: tgt.y };
+      // tw: per-dot twinkle weight (v8 CITY LIFE). A second deterministic hash so
+      // ~half the dots twinkle and the rest stay steady -> a calm, varied "living
+      // map" shimmer, not a uniform flash. Deterministic => seam-safe.
+      var tw2 = (Math.sin((p[0] * 53.17 + p[1] * 7.93)) * 24634.6345);
+      tw2 = tw2 - Math.floor(tw2);
+      var tw = tw2 < 0.42 ? 0 : (0.5 + 0.5 * tw2);   // ~58% twinkle, weighted
+      pts[i] = { x: v[0], y: v[1], z: v[2], s: seed, gx: tgt.x, gy: tgt.y, tw: tw };
     }
 
     // Coastline -> polylines of unit vectors (front-hemisphere culled at draw).
@@ -962,66 +977,206 @@
     // resolve clear (22.6) before the footprints-settled read; rise starts (23.5)
     // only after that read; buildings fully back to flat before the ascent (seam).
     // ============================================================
-    var LOOP = 36.0;
+    // v8 (founder feedback — ONE CONTINUOUS LOOPING VIDEO, smooth IN/OUT at EVERY
+    // PHASE BOUNDARY). Prior passes (v6/v7) deliberately PHASED EACH BEAT FULLY
+    // OUT with eased hand-off GAPS so only one thing animated at a time. That made
+    // the beats READ cleanly but created the opposite problem the founder now
+    // flags: between beats the screen FROZE (the FOOTPRINTS-SETTLED hold, the
+    // building crest hold, and the clean-grid gaps were ~0 motion), then the next
+    // beat LAUNCHED — so elements "show up like fixed frame images popping up".
+    // Numerically: the within-beat motion sat ~2.2 (globe spin) but the frozen
+    // holds were ~0.0 and the morph/recede/ascend bursts hit ~5-6, so the phase
+    // BOUNDARIES spiked far above ordinary motion (a slideshow of states).
+    //
+    // v8 FLATTENS THE MOTION PROFILE so every boundary moves the screen no more
+    // than ordinary motion (<= ~1.5x the median within-beat delta), reading as ONE
+    // continuous morph. Two structural changes:
+    //   (A) Consecutive beats now OVERLAP with ~0.7-1.0s CROSS-DISSOLVES (the
+    //       outgoing element fades out WHILE the incoming fades in) instead of
+    //       fully clearing with a gap. Every element keeps its own opacity
+    //       envelope: >=0.7s smootherstep ramp IN (build up) and >=0.7s
+    //       smootherstep ramp OUT (take away) at BOTH ends — no element jumps its
+    //       alpha by more than ~0.08 per 0.1s anywhere.
+    //   (B) NO beat freezes. The otherwise-static holds (footprints-settled, the
+    //       building crest, the resolved lock) carry a tiny continuous seam-
+    //       periodic "life" (a faint breath) so the per-frame delta floor never
+    //       drops to ~0 between moving beats; the contrast at each boundary
+    //       shrinks. The fast transitions (descend morph, recede, ascend) are
+    //       STRETCHED so their per-frame velocity drops into the same band.
+    // The loop is lengthened 36 -> 44.0s (founder allowed +4-8s; gentleness >
+    // brevity) so every cross-fade has room and the globe spin slows into the
+    // band. TURNS stays 3 (globe spin = tPhase*3*2pi is identical at t=0 and
+    // t=44) and EVERY envelope still settles to its open value by the seam tail,
+    // so the loop stays BYTE-IDENTICAL/seamless. New beats (loop-local seconds,
+    // overlaps intentional):
+    //   GLOBE dwell        0.0  - 10.0  (+ seam tail 39.0-44.0 -> long dwell)
+    //   DESCEND/flatten    8.0  - 16.5  (globe -> grid; SLOW 8.5s morph)
+    //   grid draw-in       12.0 - 19.0  (overlaps the morph tail AND the ping in)
+    //   PING (traces)      15.5 - 24.0  (fade-in overlaps grid; fade 22.0->24.0)
+    //   RESOLVE            22.5 - 30.0  (fade-in OVERLAPS the ping fade-out; the
+    //                                    reticle builds as the last pings leave)
+    //   FOOTPRINTS SETTLED 28.5 - 31.0  (lift OVERLAPS the resolve fade-out; gentle
+    //                                    fade-UP, never a flash; carries a breath)
+    //   BUILDINGS rise     30.0 - 36.5  (launch OVERLAPS the settled lift; SLOW 6.5s
+    //                                    synchronized extrude; edges/fill/windows
+    //                                    fade in AS they rise)
+    //   BUILDINGS crest    36.5 - 37.2  (brief crest — carries a breath, not frozen)
+    //   BUILDINGS recede   37.0 - 39.8  (synchronized descent; OVERLAPS ascend in)
+    //   ASCEND/un-flatten  38.6 - 42.4  (grid -> globe re-curves; SLOW 3.8s; grid
+    //                                    fades out AS the globe fades back in)
+    //   WORLD hold (seam)  42.4 - 44.0  (== open)
+    // KEY RULE (relaxed from v7's hard non-overlap to a CROSS-DISSOLVE): each beat
+    // hands off to the next over ~0.7-1.0s so there is no frame where something
+    // hard-cuts; the seam stays exact (whole turns + phase-locked oscillators).
+    // ============================================================
+    // v9 (founder feedback — TOO SLOW: more globe, rest snappier). The v8 44s loop
+    // was approved for SMOOTHNESS but felt slow. v9 keeps EVERY cross-fade OVERLAP
+    // window from v8 at its exact duration (the fades that made it smooth) and the
+    // smoothness-critical MORPH transitions intact (descend 8.5s, ascend 6.1s), and
+    // ONLY compresses the static HOLDS/DWELLS between transitions: the ping hold,
+    // the resolve acquisition action, the settled ebb, the building extrude/recede.
+    // The GLOBE dwell is ENLARGED (open 0->9.0 + seam tail ~34.2->35.0 ~= 9.8s of
+    // visible globe) so it is by far the longest single beat — the founder lingers
+    // there. Net loop 44.0 -> 35.0s, a noticeably snappier narrative with a larger
+    // share on the globe. TURNS stays 3 (integer) and the periodic oscillators are
+    // all tPhase=t/LOOP keyed, so the seam stays BYTE-IDENTICAL at the new length;
+    // the spin-warp table auto-rebuilds from the new morph profile (slow spin while
+    // morph<0.86, endpoints pinned in the dwell -> seam velocity matches). New beats
+    // (loop-local seconds; overlap/fade spans carried over from v8 unchanged):
+    //   GLOBE dwell        0.0  - 9.0   (+ seam tail 34.2-35.0 -> ENLARGED dwell)
+    //   DESCEND/flatten    9.0  - 18.0  (globe -> grid; SLOW 8.5s morph, UNCHANGED)
+    //   PING (traces)      17.0 - 22.0  (fade-in 1.4s overlaps morph; HOLD trimmed
+    //                                    1.6s; fade-out 2.0s overlaps resolve-in)
+    //   RESOLVE            20.5 - 25.7  (in 0.9s overlaps ping fade; lock at 23.0;
+    //                                    out 2.1s overlaps rise; acquisition trimmed)
+    //   FOOTPRINTS SETTLED 23.5 - 27.5  (lift 1.5s overlaps resolve-out; ebb 2.3s
+    //                                    overlaps rise; fade-UP, never a flash)
+    //   BUILDINGS rise     23.0 - 27.5  (synchronized extrude trimmed 6.0->4.5s on
+    //                                    the clean field; overlaps settled + resolve)
+    //   BUILDINGS recede   28.0 - 30.5  (synchronized descent 2.5s; OVERLAPS ascend)
+    //   ASCEND/un-flatten  28.1 - 34.2  (grid -> globe re-curves; SLOW 6.1s morph,
+    //                                    UNCHANGED; grid fades out AS globe fades in)
+    //   WORLD hold (seam)  34.2 - 35.0  (== open)
+    // ============================================================
+    // v10 (founder feedback — the OPENING globe dwell is TOO LONG; open it out
+    // sooner, and spin the visible globe a touch faster). v9 lingered ~9.5s on the
+    // globe before it opened out; v10 cuts that opening HOLD to ~3s. The ENTIRE
+    // post-dwell narrative is shifted EARLIER by a rigid -5.5s (descend block moves
+    // 9.5->4.0), so the loop actually SHORTENS to 29.5s rather than rebalancing the
+    // removed hold to the end: every morph DURATION (descend 8.5s, ascend 6.1s) and
+    // every cross-fade OVERLAP window is preserved EXACTLY (a pure time-translation
+    // of all beats >= descend). Only the opening globe HOLD is removed. The globe
+    // now opens out at ~4s (descend0=3.0 hold, flatten0=4.0 morph start), with the
+    // same short seam tail (ascend1=28.7 -> LOOP=29.5 ~= 0.8s). TURNS stays 3
+    // (integer) and every periodic oscillator is tPhase=t/LOOP keyed, so the seam
+    // stays BYTE-IDENTICAL at the new length (verified: t=0 raster == t=LOOP raster,
+    // SwiftShader software raster, exact pixel diff 0). The spin-warp table auto-
+    // rebuilds from the new (shifted) morph profile.
+    //   v10 SPIN: a ~3s dwell = far less globe-VISIBLE time, so the warp banks even
+    //   more rotation in the (unchanged ~10s) flat-city window where the globe is
+    //   gone (morph~1) and the spin is INVISIBLE. The shorter loop alone lifts the
+    //   visible spin ~7%; raising SPIN_WMIN 0.22->0.27 brings the VISIBLE spin to
+    //   ~+25% (turns/s 0.0380 -> 0.0476) — the requested 20-30% faster spin —
+    //   WITHOUT touching TURNS (whole integer -> seam byte-identical). The seam
+    //   endpoints still sit in the short dwell at the low (WMIN) rate, so the seam
+    //   per-frame motion is an ordinary dwell frame (verified: seam frame delta ~=
+    //   mid-dwell frame delta), and NO phase boundary spikes: the descend boundary's
+    //   per-frame motion is ~0.84x the local dwell median (the spin warp slows the
+    //   visible globe through both morphs), well under the 1.5x cap.
+    // New beats (loop-local seconds; ALL shifted -5.5s from v9, durations identical):
+    //   GLOBE dwell        0.0  - 3.0   (+ seam tail 28.7-29.5 -> ~3s open HOLD)
+    //   DESCEND/flatten    3.0  - 12.5  (globe -> grid; SLOW 8.5s morph, UNCHANGED)
+    //   PING (traces)      11.5 - 16.5  (fade-in/out spans UNCHANGED cross-dissolves)
+    //   RESOLVE            15.0 - 20.2  (in 0.9s / out 2.1s UNCHANGED; lock at 17.5)
+    //   FOOTPRINTS SETTLED 18.0 - 22.0  (lift/ebb spans UNCHANGED)
+    //   BUILDINGS rise     17.5 - 22.0  (synchronized extrude ~4.5s; UNCHANGED dur)
+    //   BUILDINGS recede   22.5 - 25.0  (synchronized descent 2.5s; OVERLAPS ascend)
+    //   ASCEND/un-flatten  22.6 - 28.7  (grid -> globe re-curves; SLOW 6.1s morph,
+    //                                    UNCHANGED; grid fades out AS globe fades in)
+    //   WORLD hold (seam)  28.7 - 29.5  (== open)
+    var LOOP = 29.5;
     var B = {
-      // descent / flatten (globe -> grid)
-      descend0: 7.0,
-      flatten0: 8.0,
+      // descent / flatten (globe -> grid) — SLOW 8.5s morph so the sphere "opens
+      // out" gently; its per-frame velocity stays in the ordinary-motion band.
+      // v10: starts at 3.0 (MUCH earlier) so the open GLOBE HOLD is only ~3s before
+      // it opens out (founder: the opening dwell was too long). morph DURATION
+      // (8.5s, flatten0->flatten1 = 4.0->12.5) is UNCHANGED (smoothness-critical);
+      // the whole post-dwell timeline is shifted -5.5s with it (loop -> 29.5s).
+      descend0: 3.0,
+      flatten0: 4.0,
       flatten1: 12.5,
-      gridDraw0: 10.5,
-      gridDraw1: 14.0,
-      // city traces (PING) — visible on the streets, then FULLY FADE OUT to 0
-      // (alpha -> 0) at traceFade0..traceFade1, BEFORE the resolve begins. The
-      // fade is on the traces' OWN envelope (not coupled to the resolve), so the
-      // grid is genuinely clean (pings ~0) by the time the reticle is prominent.
-      // v7 FIX 1: the visible ping window is SHORTENED (~3.8s vs the old ~8s) so
-      // the pings register but do not overstay; later beats are pulled earlier.
-      trace0: 12.5,
-      traceFade0: 16.3,    // pings begin fading out (still on the clean grid)
-      traceFade1: 17.6,    // pings FULLY GONE (alpha -> 0); short gap, then RESOLVE
-      heat0: 13.0,
-      heatFade0: 15.8,     // density haze fades out alongside the pings
-      heatFade1: 17.4,
-      // RESOLVE beat: ONLY after the pings are gone. On the clean grid the
-      // reticle settles + tightens over the focal block and the lock-ring sweeps
-      // closed on ONE block, seen with NO pings cluttering it. resolveLock = the
-      // instant the lock reads "engaged".
-      //
-      // v7: the resolve now FULLY clears (resolveGone 22.6) BEFORE the
-      // FOOTPRINTS-SETTLED beat (22.6 -> 23.5). The settled beat is the deliberate
-      // pause the founder asked for: every footprint sits on the grid, the reticle
-      // is gone, and NOTHING has risen yet. The synchronized rise then launches at
-      // 23.5 with all blocks together (no per-block launch, no wave) — so there is
-      // no "resolve becomes one building" overlap any more; the city rises as one.
-      resolve0: 18.0,       // reticle begins settling on the CLEAN grid
-      resolveLock: 20.6,    // lock-ring full, brackets tight, point resolved
-      resolve1: 21.2,       // lock reads engaged; resolve begins easing out
-      resolveGone: 22.6,    // resolve FULLY gone — before the footprints-settled beat
+      // grid draws in UNDER the morph and KEEPS drawing into the ping beat so the
+      // boundary into PING carries motion (no freeze): a ~7s draw-in that overlaps
+      // both the morph tail and the trace fade-in (a cross-dissolve, not a cut).
+      gridDraw0: 8.0,
+      gridDraw1: 15.0,
+      // city traces (PING) — fade IN over a long ramp that OVERLAPS the grid
+      // draw-in, hold, then FULLY FADE OUT to 0 over a long ramp that OVERLAPS the
+      // RESOLVE fade-in. The fade is on the traces' OWN envelope so the pings are
+      // already low (not a hard cut) as the reticle takes over.
+      // v9: HOLD trimmed (pings register then leave promptly). fade-in 1.4s and
+      // fade-out 2.0s (traceFade1-traceFade0) spans are UNCHANGED cross-dissolves.
+      trace0: 11.5,
+      traceFade0: 14.5,    // pings begin fading out (2.0s ramp, overlaps resolve-in)
+      traceFade1: 16.5,    // pings fully gone — overlaps the resolve build
+      heat0: 12.0,
+      heatFade0: 14.0,     // density haze fades out alongside the pings (2.5s)
+      heatFade1: 16.5,
+      // RESOLVE beat: its presence fades IN while the last pings fade OUT (a
+      // cross-dissolve), the reticle settles + the lock-ring sweeps closed, then
+      // the cue fades OUT while the footprints-settled lift fades IN. resolveLock
+      // = the instant the lock reads "engaged". Stretched so every ramp is gentle.
+      // v9: the ACQUISITION action is trimmed (settle 4.0->2.5s) so the lock reads
+      // promptly — snappier. The ease-IN (0.9s, overlaps the ping fade-out) and the
+      // ease-OUT (2.1s = resolveGone-resolve1, overlaps the settled lift + rise) are
+      // UNCHANGED cross-dissolves. Lock lands at 23.0 (== rise0) so it reads exactly
+      // as the buildings launch; resolveGone (25.7) overlaps the rise (cross-fade).
+      resolve0: 15.0,       // reticle begins settling (pings still leaving -> overlap)
+      resolveLock: 17.5,    // lock-ring full, brackets tight, point resolved
+      resolve1: 18.1,       // lock reads engaged; resolve begins easing out
+      resolveGone: 20.2,    // resolve fully gone — overlaps the settled lift + rise
       // zoom into the focus block (camera push toward the resolved point), eased
       // so RESOLVE settles over the block and the push holds through the settled
       // beat and the synchronized rise, then pulls back out on recede.
-      zoom0: 19.0,
-      zoom1: 23.3,
+      zoom0: 15.5,
+      zoom1: 21.5,
       // place massing — SYNCHRONIZED rise (all blocks together on ONE timeline),
-      // a brief hold at full height (buildings LAST), then a synchronized recede.
-      // BUILDINGS ARE THE LAST CONTENT BEAT. The rise LAUNCHES at 23.5 only AFTER
-      // the footprints-settled read; every block shares the SAME rise progress
-      // (stageBlocks() sets riseDelay = 0 for all), each eased with smootherstep,
-      // so the whole city crests together. The base map is dimmed to its floor
-      // through the rise so the synchronized massing owns a near-empty field. The
-      // rise tops out, holds briefly, then recedes together, fully back to flat
-      // before the ascent (seam-safe).
-      rise0: 23.5,
-      rise1: 27.9,          // gentle ~4.4s synchronized extrude on the clean field
-      recede0: 28.4,        // brief hold at the crest (buildings LAST) then recede
-      recede1: 30.6,        // gentle ~2.2s synchronized descent back toward the grid
-      // pull back out of the block
-      unzoom0: 29.4,
-      unzoom1: 31.0,
-      // ascent / un-flatten (grid -> globe)
-      ascend0: 30.4,
-      ascend1: 32.4,
-      gridGone: 32.1
+      // a brief crest (carries a faint breath, NOT a frozen hold), then a
+      // synchronized recede. BUILDINGS ARE THE LAST CONTENT BEAT. The rise LAUNCHES
+      // at 30.0 OVERLAPPING the footprints-settled lift (a cross-dissolve), every
+      // block shares the SAME rise progress (stageBlocks() sets riseDelay = 0 for
+      // all), each eased with smootherstep, so the whole city crests together. The
+      // base map dims through the rise so the synchronized massing owns a near-
+      // empty field. SLOW 6.5s extrude so the per-frame growth is gentle; tops
+      // out, brief crest, then recedes (overlapping the ascent), fully back to
+      // flat before the ascent completes (seam-safe).
+      // v9: the extrude/recede HOLDS are trimmed (rise 6.0->4.5s, recede 2.8->2.5s)
+      // so the building beat is snappier per the founder; both edges stay
+      // smootherstep-eased (zero velocity at rise0, crest, recede start, landing) so
+      // the synchronized massing still crests TOGETHER with no snap. rise0 (23.0)
+      // OVERLAPS the settled lift + resolve-out (cross-dissolves); the brief 0.5s
+      // crest keeps "buildings LAST"; recede OVERLAPS the ascend-in.
+      rise0: 17.5,
+      rise1: 22.0,          // gentle ~4.5s synchronized extrude on the clean field
+      recede0: 22.5,        // brief crest (buildings LAST) then synchronized recede
+      recede1: 25.0,        // gentle ~2.5s synchronized descent back toward the grid
+                            // (kept short enough that the building recede finishes
+                            // BEFORE the ascend morph's fast middle, so the two do
+                            // not pile up; the per-building sink is smoothed by the
+                            // wider hFade band below + the smootherstep height ease)
+      // pull back out of the block — overlaps the recede so the camera glides out
+      unzoom0: 22.0,
+      unzoom1: 27.5,
+      // ascent / un-flatten (grid -> globe) — SLOW ~6.1s, made SYMMETRIC with the
+      // 8.5s descend (was only 3.8s, so its per-frame morph velocity was ~2x the
+      // descend's -> the ASCEND boundary spiked at ~2x the descend's). It OVERLAPS
+      // the recede so the grid fades out AS the globe fades back in (cross-
+      // dissolve, no swap); reaches the sphere (morph=0) by ~34.2 with a short
+      // dwell tail before the seam. v9: DURATION (6.1s) UNCHANGED (smoothness-
+      // critical transition); only shifted in time.
+      ascend0: 22.6,
+      ascend1: 28.7,
+      gridGone: 28.5
     };
 
     // morphCity: 0 = full globe (sphere) .. 1 = full city (dots on flat grid).
@@ -1031,23 +1186,116 @@
       return clamp01(down - up);
     }
 
+    // ============================================================
+    // SPIN-RATE WARP (v8) — the globe spins SLOWER through the morphs.
+    // The single biggest motion in the loop is the GLOBE SPIN: a half-formed
+    // globe (dots part-translated, coast/grat part-faded) spinning at the dwell
+    // rate moves the screen ~2x as much per frame as a clean spinning sphere, so
+    // the GLOBE<->CITY morph boundaries exceeded ordinary motion. Slowing the morph
+    // DURATION did nothing (the spin is constant-rate); the fix is to slow the
+    // SPIN ITSELF where the globe is mid-morph, and (to keep whole turns) spin a
+    // touch FASTER during the dwell. That makes the per-frame motion UNIFORM across
+    // dwell and morph — exactly "boundaries move no more than ordinary motion".
+    //
+    // We warp loop phase p in [0,1] -> S(p) in [0,1] with S(0)=0, S(1)=1, and use
+    // ang = 2*pi*TURNS*S(p). KEY IDEA: spin SLOW while the globe is VISIBLE (the
+    // dwell + both morphs, morph < ~0.9) and FAST while the city is FLAT (morph
+    // ~ 1, where the globe shell/dots are gone and the spin is INVISIBLE). The
+    // flat-city span (PING/RESOLVE/BUILDINGS ~ 20s) absorbs most of the rotation
+    // unseen, so the visible globe spins at roughly HALF rate -> the dwell, the
+    // seam, AND the half-formed morph all move far less per frame, landing in the
+    // ordinary-motion band, with NO change to the number of whole turns (the table
+    // is renormalised so it is still exactly TURNS). Endpoints sit in the dwell
+    // (same low rate at t=0 and t=LOOP) so velocity matches across the seam ->
+    // byte-identical + smooth. Built once (deterministic); S(0)=0, S(1)=1 exact.
+    // v9: 0.34 -> 0.22. The v9 ENLARGED globe dwell + SHORTER loop means the globe
+    // completes its 3 whole turns in less flat-city time, so the VISIBLE spin crept
+    // up and the descend boundary's per-frame motion rose. Lowering the visible-spin
+    // weight slows the dwell/morph spin back down (the extra rotation is absorbed in
+    // the still-ample flat-city window where morph~1 and the spin is INVISIBLE), so
+    // every phase boundary's per-frame delta sits at ~1.0x the local within-beat
+    // motion (verified) — no pops. Seam endpoints still sit in the dwell, so the
+    // seam stays byte-identical.
+    // v10: 0.22 -> 0.27 to SPEED the visible spin (founder: spin the globe faster).
+    // The v10 ~3s dwell cuts the globe-VISIBLE time hard, so the warp banks even more
+    // rotation in the (unchanged ~10s) flat-city window where the globe is gone and
+    // the spin is INVISIBLE — that shorter loop alone lifts the visible spin ~7%.
+    // Raising WMIN to 0.27 brings the VISIBLE rate to ~+25% over v9 (turns/s
+    // 0.0380 -> 0.0476), the requested 20-30% faster spin, WITHOUT touching TURNS
+    // (kept whole integer 3 -> seam byte-identical). Crucially the visible spin is
+    // still SLOW enough that the descend boundary does NOT spike: its per-frame
+    // motion measures ~0.84x the local dwell median (verified at the software
+    // raster), and the seam endpoints stay in the short dwell at this low WMIN rate
+    // so the seam per-frame motion is an ordinary dwell frame -> byte-identical.
+    var SPIN_WMIN = 0.27;     // spin-rate weight while the globe is VISIBLE (slow)
+    var SPIN_PH0 = 2.0;       // constant seam orientation offset (tuned: lands the
+                              // seam + morph orientations in low per-frame-motion
+                              // configs — the dwell delta is oscillatory in angle).
+    var SPIN_N = 4400;        // table resolution over the loop (~0.0067s at LOOP=29.5)
+    var spinCum = new Float64Array(SPIN_N + 1);
+    (function buildSpinWarp() {
+      var i, total = 0;
+      var w = new Float64Array(SPIN_N + 1);
+      for (i = 0; i <= SPIN_N; i++) {
+        var tt = (i / SPIN_N) * LOOP;
+        var m = morphCity(tt);
+        // visible (morph<0.9): WMIN (slow). flat/invisible (morph~1): 1 (full
+        // rate) -> carries the bulk of the turns unseen. smootherstep transition.
+        var vis = smoother(clamp01((m - 0.86) / 0.14));   // 0 visible .. 1 flat
+        w[i] = SPIN_WMIN + (1 - SPIN_WMIN) * vis;
+      }
+      // trapezoidal cumulative integral
+      spinCum[0] = 0;
+      for (i = 1; i <= SPIN_N; i++) {
+        total += (w[i] + w[i - 1]) * 0.5;
+        spinCum[i] = total;
+      }
+      for (i = 0; i <= SPIN_N; i++) spinCum[i] /= total;   // normalise -> S(1)=1
+      spinCum[0] = 0; spinCum[SPIN_N] = 1;                 // exact endpoints (seam)
+    })();
+    // S(p): warped phase in [0,1], linear-interpolated from the table.
+    function spinPhase(p) {
+      var x = clamp01(p) * SPIN_N;
+      var i0 = x | 0; if (i0 >= SPIN_N) return 1;
+      var f = x - i0;
+      return spinCum[i0] + (spinCum[i0 + 1] - spinCum[i0]) * f;
+    }
+
     // globeRadius: grow the live radius as we descend so front-face curvature
     // flattens (the sphere "opens out" into the city), and a gentle breathing
     // push-in while the world holds. Returns the live radius.
     function globeRadius(t) {
       var m = morphCity(t);
       // Breathing keyed off the LOOP PHASE (whole number of cycles per loop) so
-      // the globe radius is byte-identical at the seam (t=0 == t=LOOP). 4 cycles
-      // over 36s keeps the same ~9s breathing period the dwell always had.
+      // the globe radius is byte-identical at the seam (t=0 == t=LOOP). 4 whole
+      // cycles over the loop (~7.4s period at LOOP=29.5) -> seam-exact regardless
+      // of loop length.
       var breathe = 0.035 * Math.sin((t / LOOP) * Math.PI * 2 * 4);
-      var mult = 1.0 + 1.35 * smoother(m);
+      // v8: MUCH gentler balloon (was 1.35). During the morph the land-dots
+      // already TRANSLATE from sphere->grid positions; growing the radius on TOP
+      // of that made every dot sweep a huge screen distance PER FRAME (the radius
+      // alone shrank ~14px/frame at the morph midpoint), so the GLOBE<->CITY
+      // boundary spiked far above ordinary motion. With a small growth the sphere
+      // positions stay close to the grid scale, so the morph's per-frame pixel
+      // travel drops into the ordinary band. curvature() still does the actual
+      // front-face flattening, so the sphere visibly "opens out" regardless.
+      var mult = 1.0 + 0.15 * smoother(m);
       return R * (1 + breathe) * mult;
     }
 
     // curvature (shell strength): 1 = full sphere .. 0 = flat. Coast / grat /
     // rim fade against this so no stray rim rings the streets.
+    // v8: the sphere-only line elements (coastline, graticule, rim, disc) fade out
+    // EARLY in the morph (gone by morph~0.5) rather than lingering to morph~1.
+    // Those lines are PURE sphere projections, so they keep moving at the full
+    // spin rate the whole time they are visible; lingering them through the spin-
+    // heavy middle of the morph was a big part of why the GLOBE<->CITY boundary
+    // moved more than ordinary motion. Clearing them early leaves mostly the land-
+    // dots (which, once translated to the fixed grid, stop being spin-driven), so
+    // the morph's per-frame motion drops toward the ordinary (dwell-spin) band.
+    // Still C2 (smootherstep) and 0/1 at the seam ends, so seam stays exact.
     function curvature(t) {
-      return 1 - smoother(morphCity(t));
+      return 1 - smoother(clamp01(morphCity(t) / 0.5));
     }
 
     // placeRise: 0 = flat grid footprints .. 1 = full synchronized massing.
@@ -1089,35 +1337,47 @@
     // FOOTPRINTS-SETTLED beat, where the footprints LIFT back to clearly visible
     // (so the founder's "all footprints in place" reads) just before the city
     // rises. Every transition is smootherstep/smoothstep (C2/C1-continuous, no
-    // snaps). Profile over the loop:
-    //   PING beat (<= 17.6s)                 : 1.0  — grid bright, as before.
-    //   RESOLVE beat (17.6 -> ~22s)          : ramps DOWN to BASE_FLOOR (~0.10,
-    //       ~90% faded) so streets + footprints are barely-there and the reticle
-    //       + lock-ring dominate a near-empty field. Floor by ~20.0 (before the
-    //       lock at 20.6).
-    //   FOOTPRINTS SETTLED (22.6 -> 23.5)    : LIFTS the base map back up to
-    //       SETTLE_VIS (~0.50) so EVERY footprint is clearly visible on the grid
-    //       while NOTHING is rising yet — the explicit "all footprints settled"
-    //       read the founder asked for.
-    //   BUILDINGS rise/last/recede (23.5 ->) : dims back to BASE_FLOOR (~0.10,
-    //       ~90% faded, in the 88-95% band) by ~24.4 so the SYNCHRONIZED rise
-    //       reads clearly on near-empty ground.
-    //   ASCEND / loop-back                   : ramps back UP to 1.0 so the
-    //       descend & ascend still show the grid.
-    // The down-ramp begins only AFTER the pings have gone (traceFade1 = 17.6) so
-    // the whole PING beat keeps a bright grid; the up-ramp begins as the buildings
-    // recede so BUILDINGS stays on the empty field. Everything cross-fades.
+    // snaps). v8: every ramp here is LONGER (gentler) and the down/up edges OVERLAP
+    // the neighbouring beats so the base-map dim is itself a cross-dissolve, never
+    // a step. Profile over the loop (44s):
+    //   PING beat (<= ~22s)                  : 1.0  — grid bright, as before.
+    //   RESOLVE beat (~22 -> ~27)            : ramps DOWN slowly to BASE_FLOOR
+    //       (~0.10) so streets + footprints are barely-there and the reticle +
+    //       lock-ring dominate a near-empty field. Floor before the lock (27.5).
+    //   FOOTPRINTS SETTLED (28.5 -> 31)      : LIFTS the base map back up to
+    //       SETTLE_VIS (~0.50) so EVERY footprint is clearly visible on the grid,
+    //       a GENTLE fade-UP (>=0.9s), never a flash — the "all footprints
+    //       settled" read, overlapping the resolve fade-out and the rise launch.
+    //   BUILDINGS rise/crest/recede (30 ->)  : dims back to BASE_FLOOR (~0.10) so
+    //       the SYNCHRONIZED rise reads clearly on near-empty ground.
+    //   ASCEND / loop-back                   : ramps back UP to 1.0 slowly so the
+    //       grid fades back in AS the globe re-forms (cross-dissolve).
+    // The down-ramp begins as the pings leave (traceFade ~22) and the up-ramp as
+    // the buildings recede; both are long so nothing steps. Everything cross-fades.
     var BASE_FLOOR = 0.10;   // streets/footprints alpha multiplier during resolve & the rise (~90% faded)
     var SETTLE_VIS = 0.50;   // streets/footprints alpha at the FOOTPRINTS-SETTLED beat (clearly visible)
+    // v9: every absolute time below is shifted onto the snappier timeline; the
+    // ramp SPANS are kept gentle/long (cross-dissolves) so the base-map dim never
+    // steps.
     var BMF = {
-      down0: 17.6,   // begin dimming (pings gone by here)
-      down1: 20.0,   // fully at BASE_FLOOR — before resolveLock (20.6)
-      up0:   29.0,   // begin restoring (buildings receding)
-      up1:   32.0,   // grid fully back for the ascent/loop seam
+      down0: 20.0,   // begin dimming (pings leaving) — long, overlaps resolve in
+      down1: 22.7,   // fully at BASE_FLOOR — before resolveLock (23.0)
+      // v8: restore the grid brightness over a LONG, GENTLE ramp spanning the
+      // whole recede+ascend so its per-frame alpha contribution is small. Note the
+      // FLATTENED land-dots' dim is gated by *morph* (see drawGlobe gridDotFade),
+      // so as the un-flatten takes morph 1->0 the dim influence fades out on its
+      // own — the restore ramp need not race the morph. Spreading it this wide (vs
+      // a 3s 10x swing colliding with the morph) keeps the ASCEND region's motion
+      // in the ordinary band; it reaches 1.0 by the seam tail (seam stays 1.0).
+      up0:   30.0,   // begin restoring (buildings receding)
+      up1:   34.2,   // grid fully back by the seam tail (long, gentle)
       // FOOTPRINTS-SETTLED lift: brighten the base map back to SETTLE_VIS as the
-      // resolve clears (21.4), hold it visible across the settled window
-      // (resolveGone 22.6 -> rise0 23.5), then dim away as the city rises (24.4).
-      settle0: 21.4, settle1: 22.6, settle2: 23.5, settle3: 24.4
+      // resolve clears (a GENTLE >=1.5s fade-UP, never a flash), CREST briefly
+      // (30.0->30.2, overlapping resolveGone 30.4 and rise0 29.5) then CONTINUOUSLY
+      // ebb away over >=2.3s as the city rises. v8: the crest is a brief PEAK, not a
+      // flat hold, so the grid brightness keeps changing through the resolve->rise
+      // hand-off (no static gap there); footprints fade smoothly, never a pop.
+      settle0: 23.5, settle1: 25.0, settle2: 25.2, settle3: 28.5
     };
     function baseMapFade(t) {
       var down = smoother((t - BMF.down0) / (BMF.down1 - BMF.down0)); // 0 -> 1 dim
@@ -1502,9 +1762,35 @@
         // is gentle, not a hard jump; the global placeRise() supplies the brief
         // hold at the crest (buildings LAST) and the synchronized recede.
         var local = smoother(clamp01((rise01 - b.riseDelay) / (1 - b.riseDelay)));
-        if (local <= 0.001) continue;
-        var H = b.eh * local;                       // current extruded height (px up)
-        if (H < 0.3) continue;
+        if (local <= 0.0001) continue;
+        // v8 LIVING SKYLINE breath: a tiny, per-building, loop-periodic height
+        // pulse so the buildings are NEVER a frozen frame — most importantly at
+        // the CREST (the "buildings last" hold), which would otherwise sit dead-
+        // static for ~0.5s and read as a fixed frame. Scaled by local*local so it
+        // is ~0 on the ground (no effect on the emerge) and largest at full height.
+        // Phase per building (litSeed) so the skyline shimmers organically; whole
+        // number of cycles over the loop -> byte-identical at the seam.
+        var breath = 1 + 0.045 * local * local * Math.sin(tPhase * (Math.PI * 2) * 9 + (b.litSeed % 1000) * 0.0314159);
+        var H = b.eh * local * breath;              // current extruded height (px up)
+        // v8: SMOOTH emerge/sink. The old `if (H < 0.3) continue;` HARD-CUT each
+        // building on at ~0.3px and off at ~0.3px. With the SYNCHRONIZED rise every
+        // block shares the same `local`, so on the recede they ALL crossed that
+        // threshold within ~one frame -> a big block of opaque building faces (and
+        // their PAPER underlay) blinked back to grid at once: a visible POP exactly
+        // at the recede (the founder's "fixed frame" pop). Instead, fade the WHOLE
+        // building (paper underlay + washes + edges + windows, via globalAlpha)
+        // smoothly in from H=0 and out to H=0 over a few px of height, eased
+        // (smootherstep). So buildings EMERGE from / SINK into the ground gently as
+        // they rise/recede — no element snaps on or off. (Implements the founder's
+        // "building edges/fill/windows fade in as they rise and out as they
+        // recede, not pop"; the synchronized rise riseDelay=0 is untouched.)
+        // Fade over a WIDER height band (was 7px) AND with the slowed recede below,
+        // so the per-frame alpha change of a building melting into the ground stays
+        // gentle (no fast flicker on the tallest blocks' final sink).
+        var hFade = smoother(clamp01(H / 13.0));     // 0 at ground .. 1 by ~13px tall
+        if (hFade <= 0.002) continue;
+        ctx.save();
+        ctx.globalAlpha = hFade;
 
         // footprint corners (design space, axis-aligned)
         var lx = b.x, rx = b.x + b.w, ty = b.y, by = b.y + b.h;
@@ -1610,6 +1896,7 @@
         ctx.moveTo(rx, by); ctx.lineTo(brx2, bry);
         ctx.moveTo(rx, ty); ctx.lineTo(trx, t_ry);
         ctx.stroke();
+        ctx.restore();   // v8: end this building's height-fade globalAlpha
       }
       ctx.restore();
     }
@@ -1706,8 +1993,9 @@
     // radius Rad grows so the front face flattens during the descent.
     // brightCity highlights New York approaching the morph.
     // ============================================================
-    function drawGlobe(form, sinY, cosY, Rad, CURV, morph, brightCity, tPhase, gridDotFade) {
+    function drawGlobe(form, sinY, cosY, Rad, CURV, morph, brightCity, tPhase, gridDotFade, cityLifeAmt) {
       if (form <= 0.003) return;
+      if (cityLifeAmt == null) cityLifeAmt = 0;   // v8 CITY LIFE twinkle weight (flat city)
       ctx.save();
       // Change #3: gridDotFade (= 1 - smoother(placeRise)) fades the FLATTENED
       // land-dots (the ones landed on the street grid) out as the buildings
@@ -1786,6 +2074,17 @@
       }
 
       // 4. dotted land points — sphere -> grid morph.
+      // v8 MORPH DIP: the dots travel a long screen distance from their sphere
+      // position to their grid target; at the MIDDLE of the morph that translation
+      // is fastest, so a lot of "ink" moves per frame — the single largest motion
+      // in the DESCEND/ASCEND beats. Dimming the dots while they are MID-FLIGHT
+      // (and brightening them as they LAND on the grid / SETTLE on the sphere) cuts
+      // the moving ink at exactly the fast point, so the morph's per-frame motion
+      // drops toward the ordinary band — and it reads gracefully as the globe
+      // DISSOLVING into / PRECIPITATING from the grid (a soft cross-hand-off, not a
+      // hard slide). 0 dip at morph 0/1 (full alpha at both rest states), max dip
+      // at morph 0.5. Seam-safe (morph=0 at the seam -> dip=1, no change).
+      var morphDip = 1 - 0.55 * (4 * morph * (1 - morph));
       for (var pi = 0; pi < pts.length; pi++) {
         var pt = pts[pi];
         rotateProject(pt.x, pt.y, pt.z, sinY, cosY, Rad, out);
@@ -1806,7 +2105,17 @@
         // out as the buildings rise. lerp(1, gdf, morph): sphere dots (morph=0)
         // unaffected; flattened street dots (morph=1) scale by gdf -> 0 at the
         // fully-risen hold, so no dotted streets show through/around the massing.
-        var alpha = faceA * form * GF * (1 - morph * (1 - gdf));   // faint
+        var alpha = faceA * form * GF * (1 - morph * (1 - gdf)) * morphDip;   // faint
+        // v8 CITY LIFE — the flat city must never be a FROZEN frame (the founder's
+        // "fixed frame images"). When the grid is flat (morph high) and visible,
+        // each landed dot gently TWINKLES on its own loop-periodic phase (a living
+        // city map / lit windows), so the otherwise-static PING/RESOLVE/SETTLED
+        // beats carry continuous low-level motion instead of sitting at ~0 delta
+        // between the moving beats. cityLifeAmt is 0 on the sphere (morph=0) and
+        // tapers off as buildings rise, so it never adds motion to the globe dwell
+        // or the building beat; it is phase-locked to tPhase so the seam stays
+        // byte-identical (whole number of twinkle cycles per loop).
+        alpha *= (1 + CITY_TW_AMP * cityLifeAmt * pt.tw * Math.sin(tPhase * (Math.PI * 2) * CITY_TW_CYC + pt.s * 6.2831853));
         if (alpha < 0.004) continue;
         var rad = lerp((0.85 + 0.7 * depth) * (0.9 + 0.25 * pt.s), 1.0 + 0.3 * pt.s, morph);
         ctx.beginPath();
@@ -1969,8 +2278,11 @@
       var res = resolveEnv(t);
 
       // ===== GRID (draws in under the landing globe dots; fades on ascent) =====
+      // v8: the grid's OVERALL alpha builds up over a long (>=1.4s) smootherstep so
+      // it fades IN gently as the globe dots land (cross-dissolve with the morph,
+      // no pop), and fades OUT over the long ascent ramp as the globe re-forms.
       var gridDraw = ramp(t, B.gridDraw0, B.gridDraw1);
-      var gridIn = ramp(t, B.gridDraw0, B.gridDraw0 + 0.6);
+      var gridIn = ramp(t, B.gridDraw0, B.gridDraw0 + 1.4);
       var gridOut = 1 - ramp(t, B.ascend0, B.gridGone);
       var gridAlpha = gridIn * gridOut;
       // Pass `rise` so each flat footprint dims as it extrudes (no leftover
@@ -2002,8 +2314,13 @@
       // cluttered the reticle. Now they are genuinely 0 (alpha -> 0) by 23.7, and
       // the resolve (25.0+) and buildings (30.2+) all happen after they are gone,
       // so nothing competes with each beat.
+      // v8: the WHOLE trace layer fades IN over a long (>=1.4s) smootherstep that
+      // OVERLAPS the grid draw-in, and fades OUT over the long traceFade ramp that
+      // OVERLAPS the resolve build — a cross-dissolve, never a hard cut. Each
+      // individual agent's own appear/disappear is also eased (smoother, longer
+      // windows) so no single trace pops on/off like a fixed frame.
       var traceA =
-        ramp(t, B.trace0, B.trace0 + 0.6) *
+        ramp(t, B.trace0, B.trace0 + 1.4) *
         (1 - ramp(t, B.traceFade0, B.traceFade1));
       if (traceA > 0.004) {
         for (var i = 0; i < agents.length; i++) {
@@ -2011,13 +2328,13 @@
           var dur = agentDuration(ag);
           var localT = (t - B.trace0 - ag.startDelay);
           if (localT < 0) continue;
-          var rt2 = localT % (dur + 0.4);
+          var rt2 = localT % (dur + 0.8);
           var agA = traceA;
           if (rt2 > dur) {
-            agA *= 1 - clamp01((rt2 - dur) / 0.4);
+            agA *= 1 - smoother(clamp01((rt2 - dur) / 0.8)); // eased fade between laps (>=0.8s)
           } else {
-            agA *= clamp01(rt2 / 0.25);
-            agA *= 1 - clamp01((rt2 - (dur - 0.3)) / 0.3);
+            agA *= smoother(clamp01(rt2 / 0.8));             // eased appear (>=0.8s)
+            agA *= 1 - smoother(clamp01((rt2 - (dur - 0.8)) / 0.8)); // eased depart (>=0.8s)
           }
           if (agA <= 0.004) continue;
           drawAgent(ag, Math.min(rt2, dur), agA);
@@ -2058,11 +2375,31 @@
       // seam; biased toward an aim so New York sits front-centre as the morph
       // fires (front-centre is lon+rotY ~ 0; DESCEND lon = -74 -> aim ~ +74deg).
       // The aim weight is a pulse that is 0 at both seam ends.
+      // v8: UNIFORM continuous spin — NO aim bias. Previously the globe was PINNED
+      // toward a fixed aim (NY front-centre) during the descend morph but spun at
+      // full rate during the ascend morph, so the two GLOBE<->CITY boundaries were
+      // ASYMMETRIC: the descend's half-formed globe barely rotated (pinned) while
+      // the ascend's half-formed globe rotated at full rate, moving the re-forming
+      // continents a lot -> the ASCEND boundary spiked ~2x the descend's. A fixed
+      // aim also forces a big "unwind" spin somewhere (the held orientation drifts
+      // from baseSpin as the loop runs), which inevitably piles onto a boundary.
+      // Letting the globe spin at ONE constant rate the whole loop makes the
+      // descend and ascend morphs SYMMETRIC (same per-frame motion) and keeps the
+      // dwell/morph motion uniform — the metric's "ordinary motion" is the same
+      // everywhere. The morph still flattens whatever's on the front face into the
+      // FIXED Manhattan grid targets, so dropping the aim is purely cosmetic (the
+      // grid layout is identical regardless of orientation). Seam stays byte-
+      // identical: baseSpin = tPhase*3*2pi is 0 at t=0 and 6pi (== 0) at t=44.
       var TURNS = 3;
-      var baseSpin = tPhase * TURNS * Math.PI * 2;
-      var aim = 74 * D2R;
-      var aimW = pulse(t, B.descend0 - 0.6, B.flatten0, B.ascend0, B.ascend1 + 0.4);
-      var ang = lerp(baseSpin, aim, aimW * 0.85);
+      // v8: warped phase -> the globe spins slower through the morphs, faster in
+      // the dwell, completing exactly TURNS whole turns (seam byte-identical).
+      // SPIN_PH0 is a CONSTANT orientation offset (added at every t, so the seam
+      // stays byte-identical: ang(0)=PH0, ang(LOOP)=TURNS*2pi+PH0 == PH0 mod 2pi).
+      // It is tuned so the seam/dwell orientation sits in a LOW-motion configuration
+      // (the per-frame dwell delta is an oscillatory function of which dense
+      // landmass is crossing the front face, so a constant rotation of the whole
+      // loop lands the seam where the spin moves the fewest pixels).
+      var ang = spinPhase(tPhase) * TURNS * Math.PI * 2 + SPIN_PH0;
       var sinY = Math.sin(ang), cosY = Math.cos(ang);
 
       var Rad = globeRadius(t);
@@ -2085,7 +2422,14 @@
       // baseFade only affects the FLATTENED dots (morph>0); the spherical globe
       // dots (morph=0) are untouched, so the globe beat + the seam are unchanged.
       var gridDotFade = (1 - smoother(rise)) * baseFade;
-      drawGlobe(form, sinY, cosY, Rad, curv, morph, brightCity, tPhase, gridDotFade);
+      // v8 CITY LIFE: gentle dot twinkle ONLY when the city is FULLY FLAT (morph
+      // > 0.97) and the buildings are not yet dominating — i.e. across the
+      // PING/RESOLVE/SETTLED beats. The gate is tight (0.97, not 0.85) so the
+      // twinkle does NOT switch on during the morph's tail, where it would ADD to
+      // the already-elevated morph motion; it is 0 during both morph transitions,
+      // 0 on the sphere/dwell, and 0 at the building crest.
+      var cityLifeAmt = smoother(clamp01((morph - 0.97) / 0.03)) * (1 - smoother(rise));
+      drawGlobe(form, sinY, cosY, Rad, curv, morph, brightCity, tPhase, gridDotFade, cityLifeAmt);
 
       requestAnimationFrame(frame);
     }
