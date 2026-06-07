@@ -337,68 +337,27 @@
     FOCUS.cy = (FOCUS.y0 + FOCUS.y1) / 2;
 
     // ------------------------------------------------------------
-    // Per-block RISE WAVE (founder fix — the buildings must rise as ONE
-    // cohesive, ordered motion, not "a few at a time then all at once").
-    // The previous stagger keyed riseDelay off a block's Y only, with a tiny
-    // 0.34 spread: blocks sharing a street row all launched together (clumps),
-    // and the wide-row gaps made it read as "a few, then the rest jump up".
+    // SYNCHRONIZED RISE (founder fix #2 — the buildings must ALL rise TOGETHER,
+    // not "whack-a-mole"). EVERY prior version staggered the rise: the last one
+    // was a smooth radial WAVE that swept outward from the locked focus block, so
+    // near blocks rose first and far corners last — which still read as random
+    // per-block popping. That is now GONE entirely.
     //
-    // NEW: a smooth spatial WAVE that originates AT the locked FOCUS block and
-    // sweeps RADIALLY OUTWARD across the whole grid — the resolve point literally
-    // "becomes" the city, the closest blocks first, the far corners last, in one
-    // continuous expanding front. The delay is a smooth function of normalized
-    // radial distance (so neighbours differ only slightly — a moving wavefront,
-    // never a row-clump), and we add a hair of rank-spread so even equidistant
-    // blocks fan out a touch instead of popping as a hard ring. Every block still
-    // CRESTS together at rise01=1 (preserving the no-static-hold crest+recede),
-    // so the apex reads as "the whole city up together". Each building's own
-    // extrude stays eased (the pow-curve in drawCityExtrude). riseDur is kept as
-    // informational metadata (taller = marginally longer) but the launch ORDER is
-    // the radial field below.
+    // NEW: ZERO stagger. There is NO per-block riseDelay, NO spatial stagger, NO
+    // wave, NO radial offset. Every block shares the EXACT SAME rise progress
+    // (rise01) at every frame — the per-block height is just b.eh * smoother(rise01)
+    // for all blocks (see drawCityExtrude). The single global placeRise() envelope
+    // drives the whole city: all footprints settle on the grid first, then the
+    // entire skyline rises SIMULTANEOUSLY on one shared, smootherstep-eased
+    // timeline, crests together, holds briefly (buildings LAST), and recedes
+    // together. riseDelay is kept on each block but pinned to 0 so any consumer
+    // still finds the field; riseDur is informational only.
     (function stageBlocks() {
       var n = blocks.length;
-      // radial distance of each block centre from the locked focus point.
-      var maxD = 1e-6;
       for (var i = 0; i < n; i++) {
-        var bx = blocks[i].x + blocks[i].w * 0.5;
-        var by = blocks[i].y + blocks[i].h * 0.5;
-        var dx = bx - FOCUS.cx, dy = by - FOCUS.cy;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        blocks[i]._riseD = d;
-        if (d > maxD) maxD = d;
-      }
-      // ORDER strictly by radial distance from the locked block (the wavefront
-      // sweeps outward from the lock). Then assign the delay primarily by RANK so
-      // the per-block delays are EVENLY SPACED — this is the load-bearing fix:
-      // a pure distance field clusters the far blocks (the grid corners share a
-      // similar large radius), so they all crossed their delay together and the
-      // wave ended in a "then they all go up at once" burst (the founder's exact
-      // complaint, just at the tail). Rank-spacing guarantees a steady trickle —
-      // a continuous front, one ring of blocks easing up after the next, never a
-      // burst. A small radial term is folded back in so a true ring of equidistant
-      // blocks still launches near-together (reads as a coherent wavefront, not a
-      // mechanical one-at-a-time ticker) without ever re-clustering.
-      var order = blocks.map(function (b, k) { return k; });
-      order.sort(function (a, b2) { return blocks[a]._riseD - blocks[b2]._riseD; });
-      // SPREAD = fraction of the [0..1] rise the launch sweep occupies. The
-      // nearest block launches at delay 0 (right out of the lock); the farthest
-      // near delay SPREAD. ~0.55 reads as a clear, unhurried travelling wave while
-      // still letting every block crest together at rise01 = 1.
-      var SPREAD = 0.55;
-      for (var r = 0; r < n; r++) {
-        var idx = order[r];
-        var fRad  = blocks[idx]._riseD / maxD;          // 0 at focus .. 1 far corner
-        var fRank = n > 1 ? r / (n - 1) : 0;            // 0..1 STRICTLY EVEN (no clumps)
-        // rank-dominant so spacing is even; a light radial term keeps real rings
-        // grouped. (Because we sorted by distance, rank already carries the radial
-        // ORDER — the radial term only nudges grouping, it cannot re-cluster.)
-        var f = clamp01(0.7 * fRank + 0.3 * fRad);
-        // a gentle ease so the front eases out of the lock and decelerates into
-        // the far corners (organic), rather than marching at constant cadence.
-        blocks[idx].riseDelay = smoother(f) * SPREAD;
-        var tall = clamp(blocks[idx].eh / 55, 0, 1);
-        blocks[idx].riseDur = lerp(0.55, 0.82, tall); // metadata (taller ~ longer)
-        delete blocks[idx]._riseD;
+        blocks[i].riseDelay = 0;                         // SYNCHRONIZED: no stagger
+        var tall = clamp(blocks[i].eh / 55, 0, 1);
+        blocks[i].riseDur = lerp(0.55, 0.82, tall);      // metadata only (unused for timing)
       }
     })();
 
@@ -975,64 +934,94 @@
     // (pings on the globe, window flicker) key off tPhase (0..1) so they complete
     // whole cycles regardless of LOOP length -> the seam stays exact.
     // ============================================================
-    var LOOP = 44.0;
+    // v7 (founder feedback — TWO fixes): (1) the PING beat DWELLED TOO LONG; the
+    // visible trace window is cut roughly in half (~3.8s vs ~8s) and every later
+    // beat is pulled earlier, so the pings register but never overstay. (2) the
+    // buildings rose like WHACK-A-MOLE (radial/staggered wave); they now ALL rise
+    // TOGETHER on ONE shared, smootherstep-eased timeline (NO per-block riseDelay,
+    // NO stagger/wave/radial offset — see stageBlocks() + placeRise()). A new
+    // FOOTPRINTS-SETTLED beat is inserted just before the rise: a brief moment
+    // where every footprint is clearly visible on the grid and NOTHING is rising
+    // yet, then the whole city rises simultaneously and crests together. The loop
+    // is shortened to 36.0s; TURNS stays 3 (globe spin = tPhase*3*2pi is identical
+    // at both seam ends) and every envelope settles to its open value by the seam
+    // tail, so the loop is still byte-identical/seamless. New beats (seconds):
+    //   GLOBE dwell        0.0  - 8.0   (+ seam tail 32.4-36.0 -> long dwell)
+    //   DESCEND/flatten    7.0  - 12.5  (globe -> Manhattan grid, calm)
+    //   PING (traces)      12.5 - 16.3  visible (SHORT), then FULLY FADE 16.3->17.6
+    //   RESOLVE            18.0 - 20.6  reticle settles + locks on ONE block,
+    //                                   then resolve cue eases out 21.2 -> 22.6
+    //   FOOTPRINTS SETTLED 22.6 - 23.5  ALL footprints visible, NOTHING rising yet
+    //   BUILDINGS rise     23.5 - 27.9  every block rises TOGETHER (synchronized,
+    //                                   smootherstep), crests together at the top
+    //   BUILDINGS last     27.9 - 28.4  brief hold at full height (buildings LAST)
+    //   BUILDINGS recede   28.4 - 30.6  every block recedes TOGETHER
+    //   ASCEND/un-flatten  30.4 - 32.4  (grid -> globe re-curves)
+    //   WORLD hold (seam)  32.4 - 36.0  (== open)
+    // KEY RULES: pings ~0 (17.6) before the reticle is prominent (resolve 18.0+);
+    // resolve clear (22.6) before the footprints-settled read; rise starts (23.5)
+    // only after that read; buildings fully back to flat before the ascent (seam).
+    // ============================================================
+    var LOOP = 36.0;
     var B = {
       // descent / flatten (globe -> grid)
-      descend0: 8.0,
-      flatten0: 9.0,
-      flatten1: 14.0,
-      gridDraw0: 12.0,
-      gridDraw1: 16.0,
+      descend0: 7.0,
+      flatten0: 8.0,
+      flatten1: 12.5,
+      gridDraw0: 10.5,
+      gridDraw1: 14.0,
       // city traces (PING) — visible on the streets, then FULLY FADE OUT to 0
       // (alpha -> 0) at traceFade0..traceFade1, BEFORE the resolve begins. The
       // fade is on the traces' OWN envelope (not coupled to the resolve), so the
       // grid is genuinely clean (pings ~0) by the time the reticle is prominent.
-      trace0: 14.0,
-      traceFade0: 22.0,    // pings begin fading out (still on the clean grid)
-      traceFade1: 23.7,    // pings FULLY GONE (alpha -> 0); short gap, then RESOLVE
-      heat0: 14.5,
-      heatFade0: 21.5,     // density haze fades out alongside the pings
-      heatFade1: 23.5,
+      // v7 FIX 1: the visible ping window is SHORTENED (~3.8s vs the old ~8s) so
+      // the pings register but do not overstay; later beats are pulled earlier.
+      trace0: 12.5,
+      traceFade0: 16.3,    // pings begin fading out (still on the clean grid)
+      traceFade1: 17.6,    // pings FULLY GONE (alpha -> 0); short gap, then RESOLVE
+      heat0: 13.0,
+      heatFade0: 15.8,     // density haze fades out alongside the pings
+      heatFade1: 17.4,
       // RESOLVE beat: ONLY after the pings are gone. On the clean grid the
       // reticle settles + tightens over the focal block and the lock-ring sweeps
       // closed on ONE block, seen with NO pings cluttering it. resolveLock = the
       // instant the lock reads "engaged".
       //
-      // BRIDGE FIX (founder — "before and after resolve ends is weird"): the old
-      // timing fully cleared the resolve (resolveGone 29.6) THEN left a 0.6s dead
-      // grid THEN started the rise cold (30.2) — an abrupt, disjointed hand-off.
-      // Now the resolve eases out and the building wave LAUNCHES (from the locked
-      // block) while the reticle/lock-ring are still fading, so they OVERLAP for a
-      // beat: the locked block rises up THROUGH the dissolving lock-ring (drawn
-      // after the resolve, so it occludes it) — the resolve visually "becomes" the
-      // first building, no cut and no dead gap. resolveGone now lands just AFTER
-      // the rise has begun.
-      resolve0: 25.0,       // reticle begins settling on the CLEAN grid
-      resolveLock: 27.3,    // lock-ring full, brackets tight, point resolved
-      resolve1: 27.9,       // lock reads engaged; resolve begins easing out
-      resolveGone: 29.8,    // resolve fully gone — just AFTER the wave launches
+      // v7: the resolve now FULLY clears (resolveGone 22.6) BEFORE the
+      // FOOTPRINTS-SETTLED beat (22.6 -> 23.5). The settled beat is the deliberate
+      // pause the founder asked for: every footprint sits on the grid, the reticle
+      // is gone, and NOTHING has risen yet. The synchronized rise then launches at
+      // 23.5 with all blocks together (no per-block launch, no wave) — so there is
+      // no "resolve becomes one building" overlap any more; the city rises as one.
+      resolve0: 18.0,       // reticle begins settling on the CLEAN grid
+      resolveLock: 20.6,    // lock-ring full, brackets tight, point resolved
+      resolve1: 21.2,       // lock reads engaged; resolve begins easing out
+      resolveGone: 22.6,    // resolve FULLY gone — before the footprints-settled beat
       // zoom into the focus block (camera push toward the resolved point), eased
-      // so RESOLVE settles over the block and the push lands EXACTLY as the rise
-      // begins (zoom1 == rise0) — the camera move flows straight into the rise.
-      zoom0: 26.0,
-      zoom1: 29.0,
-      // place massing — SLOW rise, then INSTANT turnaround (no static hold).
-      // BUILDINGS ARE THE LAST CONTENT BEAT. The rise now LAUNCHES at 29.0 (the
-      // locked focus block first, out of the still-fading lock) and the wave
-      // sweeps radially outward; the base map is fully dimmed (floor by 26.4) the
-      // whole time, so the buildings own a near-empty field. The rise still tops
-      // out + recedes last, fully back to flat before the ascent (seam-safe).
-      rise0: 29.0,
-      rise1: 36.6,          // long, gentle ~7.6s extrude on the clean field
-      recede0: 36.6,        // == rise1: recede starts the MOMENT it tops out
-      recede1: 38.9,        // gentle ~2.3s descent back toward the grid
+      // so RESOLVE settles over the block and the push holds through the settled
+      // beat and the synchronized rise, then pulls back out on recede.
+      zoom0: 19.0,
+      zoom1: 23.3,
+      // place massing — SYNCHRONIZED rise (all blocks together on ONE timeline),
+      // a brief hold at full height (buildings LAST), then a synchronized recede.
+      // BUILDINGS ARE THE LAST CONTENT BEAT. The rise LAUNCHES at 23.5 only AFTER
+      // the footprints-settled read; every block shares the SAME rise progress
+      // (stageBlocks() sets riseDelay = 0 for all), each eased with smootherstep,
+      // so the whole city crests together. The base map is dimmed to its floor
+      // through the rise so the synchronized massing owns a near-empty field. The
+      // rise tops out, holds briefly, then recedes together, fully back to flat
+      // before the ascent (seam-safe).
+      rise0: 23.5,
+      rise1: 27.9,          // gentle ~4.4s synchronized extrude on the clean field
+      recede0: 28.4,        // brief hold at the crest (buildings LAST) then recede
+      recede1: 30.6,        // gentle ~2.2s synchronized descent back toward the grid
       // pull back out of the block
-      unzoom0: 37.6,
-      unzoom1: 39.1,
+      unzoom0: 29.4,
+      unzoom1: 31.0,
       // ascent / un-flatten (grid -> globe)
-      ascend0: 38.7,
-      ascend1: 40.5,
-      gridGone: 40.2
+      ascend0: 30.4,
+      ascend1: 32.4,
+      gridGone: 32.1
     };
 
     // morphCity: 0 = full globe (sphere) .. 1 = full city (dots on flat grid).
@@ -1047,7 +1036,10 @@
     // push-in while the world holds. Returns the live radius.
     function globeRadius(t) {
       var m = morphCity(t);
-      var breathe = 0.035 * Math.sin(t * 0.7);
+      // Breathing keyed off the LOOP PHASE (whole number of cycles per loop) so
+      // the globe radius is byte-identical at the seam (t=0 == t=LOOP). 4 cycles
+      // over 36s keeps the same ~9s breathing period the dwell always had.
+      var breathe = 0.035 * Math.sin((t / LOOP) * Math.PI * 2 * 4);
       var mult = 1.0 + 1.35 * smoother(m);
       return R * (1 + breathe) * mult;
     }
@@ -1058,19 +1050,19 @@
       return 1 - smoother(morphCity(t));
     }
 
-    // placeRise: 0 = flat grid focus block .. 1 = full iso massing.
-    // Drives the cross-fade between the zoomed-in flat grid and the iso block,
-    // and the extrusion of the buildings. Change #1 (LIVING BUILDINGS): a SLOW,
-    // gentle rise that turns around the INSTANT it peaks (recede0 == rise1) —
-    // NO static hold. The rise uses a soft-launch power curve (pow 1.2) rather
-    // than a smoothstep, so it does NOT flatten out at the top — it approaches
-    // the peak with non-zero velocity and then immediately reverses into the
-    // eased recede. That makes the apex a crisp CREST (always moving) instead
-    // of the previous smoothstep "settle + hold". Seam-safe: 0 at both ends.
-    // Independent of the globe morph (which stays at 1 here).
+    // placeRise: 0 = flat grid footprints .. 1 = full synchronized massing.
+    // The SINGLE global rise progress shared by EVERY block (there is no per-block
+    // stagger any more — see stageBlocks/drawCityExtrude). v7 (SYNCHRONIZED RISE):
+    // a clean up-window, a brief hold at full (so the buildings LAST), then a
+    // recede-window. Both edges are LINEAR here; every consumer wraps this in a
+    // smootherstep (the per-block extrude is smoother(rise01), the grid/heat fades
+    // use smoother(rise)), so the actual building HEIGHT eases in and out with
+    // zero velocity at rise0, at the crest, at the recede start, and at the
+    // landing — a gentle, snap-free ease-in-out where the whole city rises and
+    // crests TOGETHER. Seam-safe: 0 at both ends. Independent of the globe morph.
     function placeRise(t) {
-      var up = Math.pow(clamp01((t - B.rise0) / (B.rise1 - B.rise0)), 1.2); // slow soft-launch climb, non-flat top
-      var down = ramp(t, B.recede0, B.recede1);                            // gentle eased recede, begins at the peak
+      var up = clamp01((t - B.rise0) / (B.rise1 - B.rise0));   // synchronized climb (eased by smoother() at use)
+      var down = clamp01((t - B.recede0) / (B.recede1 - B.recede0)); // synchronized recede after a brief hold
       return clamp01(up - down);
     }
 
@@ -1092,35 +1084,51 @@
     // buildings never stood out — the whole frame read as a busy dotted grid.
     // (Earlier passes only faded the MOVING traces/pings, not this base map.)
     //
-    // baseMapFade(t) is a single smootherstep (C2-continuous: zero velocity at
-    // both ends, no snaps) that DIMS the streets' AND footprints' alpha so each
-    // late beat sits on a near-empty field:
-    //   PING beat (<= ~23s, incl. t=18)      : 1.0  — grid bright, as before.
-    //   RESOLVE beat (~25 -> 29.6s)          : ramps DOWN to BASE_FLOOR (~0.12)
-    //       so streets + footprints are barely-there and the reticle + lock-ring
-    //       + resolved point dominate a near-empty field. Full floor by ~26.4s,
-    //       i.e. BEFORE resolveLock (27.3) — so the lock reads on a clean field.
-    //   BUILDINGS beat (~30.2 -> 38.9s)      : held at the floor (~0.12, in the
-    //       0.10-0.15 band) so the rising buildings are the clear focus on
-    //       near-empty ground.
+    // baseMapFade(t) DIMS the streets' AND footprints' alpha so each late beat
+    // sits on a near-empty field, with ONE deliberate exception — the
+    // FOOTPRINTS-SETTLED beat, where the footprints LIFT back to clearly visible
+    // (so the founder's "all footprints in place" reads) just before the city
+    // rises. Every transition is smootherstep/smoothstep (C2/C1-continuous, no
+    // snaps). Profile over the loop:
+    //   PING beat (<= 17.6s)                 : 1.0  — grid bright, as before.
+    //   RESOLVE beat (17.6 -> ~22s)          : ramps DOWN to BASE_FLOOR (~0.10,
+    //       ~90% faded) so streets + footprints are barely-there and the reticle
+    //       + lock-ring dominate a near-empty field. Floor by ~20.0 (before the
+    //       lock at 20.6).
+    //   FOOTPRINTS SETTLED (22.6 -> 23.5)    : LIFTS the base map back up to
+    //       SETTLE_VIS (~0.50) so EVERY footprint is clearly visible on the grid
+    //       while NOTHING is rising yet — the explicit "all footprints settled"
+    //       read the founder asked for.
+    //   BUILDINGS rise/last/recede (23.5 ->) : dims back to BASE_FLOOR (~0.10,
+    //       ~90% faded, in the 88-95% band) by ~24.4 so the SYNCHRONIZED rise
+    //       reads clearly on near-empty ground.
     //   ASCEND / loop-back                   : ramps back UP to 1.0 so the
     //       descend & ascend still show the grid.
-    // The down-ramp begins only AFTER the pings have essentially gone
-    // (traceFade1 = 23.7) so the whole PING beat keeps a bright grid; the
-    // up-ramp begins as the buildings recede (recede0 = 36.6) so BUILDINGS stays
-    // on the empty field. Everything cross-fades — no snaps anywhere.
-    var BASE_FLOOR = 0.12;   // streets/footprints alpha multiplier at the trough
+    // The down-ramp begins only AFTER the pings have gone (traceFade1 = 17.6) so
+    // the whole PING beat keeps a bright grid; the up-ramp begins as the buildings
+    // recede so BUILDINGS stays on the empty field. Everything cross-fades.
+    var BASE_FLOOR = 0.10;   // streets/footprints alpha multiplier during resolve & the rise (~90% faded)
+    var SETTLE_VIS = 0.50;   // streets/footprints alpha at the FOOTPRINTS-SETTLED beat (clearly visible)
     var BMF = {
-      down0: 23.0,   // begin dimming (pings essentially gone by here)
-      down1: 26.4,   // fully at BASE_FLOOR — before resolveLock (27.3)
-      up0:   37.0,   // begin restoring (buildings receding)
-      up1:   40.0    // grid fully back for the ascent/loop seam
+      down0: 17.6,   // begin dimming (pings gone by here)
+      down1: 20.0,   // fully at BASE_FLOOR — before resolveLock (20.6)
+      up0:   29.0,   // begin restoring (buildings receding)
+      up1:   32.0,   // grid fully back for the ascent/loop seam
+      // FOOTPRINTS-SETTLED lift: brighten the base map back to SETTLE_VIS as the
+      // resolve clears (21.4), hold it visible across the settled window
+      // (resolveGone 22.6 -> rise0 23.5), then dim away as the city rises (24.4).
+      settle0: 21.4, settle1: 22.6, settle2: 23.5, settle3: 24.4
     };
     function baseMapFade(t) {
       var down = smoother((t - BMF.down0) / (BMF.down1 - BMF.down0)); // 0 -> 1 dim
       var up   = smoother((t - BMF.up0)   / (BMF.up1   - BMF.up0));   // 0 -> 1 restore
-      var dim  = down * (1 - up);   // 1 only in the RESOLVE+BUILDINGS trough, 0 outside
-      return 1 - (1 - BASE_FLOOR) * dim;
+      var dim  = down * (1 - up);   // 1 only in the RESOLVE+SETTLED+BUILDINGS trough, 0 outside
+      // settled bump: lifts the dimmed band from BASE_FLOOR toward SETTLE_VIS so
+      // all footprints are clearly visible for the "settled" beat, then falls so
+      // the synchronized rise owns a near-empty field.
+      var bump = pulse(t, BMF.settle0, BMF.settle1, BMF.settle2, BMF.settle3);
+      var troughA = lerp(BASE_FLOOR, SETTLE_VIS, bump); // alpha inside the dimmed band
+      return 1 - (1 - troughA) * dim;                   // == 1.0 outside the band
     }
 
     // lockAnchor(t): during the RESOLVE the single LOCKED block may stay
@@ -1486,17 +1494,14 @@
       }
       for (var oi = 0; oi < n; oi++) {
         var b = blocks[order[oi]];
-        // Change #1: per-block local rise, STAGGERED to start but mapped so
-        // EVERY block crests at exactly rise01=1 (rise over [riseDelay,1]). The
-        // ease is an ACCELERATING power curve (pow 1.5), NOT a smootherstep — so
-        // it does not flatten near the top and the block is still climbing with
-        // non-zero velocity right up to the apex, then immediately recedes. The
-        // massing swells as a continuous wave that crests together and washes
-        // back down — no block ever idles at full height (no static hold).
-        var local;
-        if (rise01 >= 1) local = 1;
-        else if (rise01 <= b.riseDelay) local = 0;
-        else local = Math.pow(clamp((rise01 - b.riseDelay) / (1 - b.riseDelay), 0, 1), 1.5);
+        // v7 SYNCHRONIZED RISE: every block shares the SAME rise progress. With
+        // riseDelay pinned to 0 (stageBlocks) the local rise is identical for ALL
+        // blocks — smoother(rise01) — so they rise and crest TOGETHER (no wave, no
+        // stagger, no per-block popping). Each block's own extrude stays eased by
+        // a smootherstep (C2: zero velocity at both ends) so the synchronized rise
+        // is gentle, not a hard jump; the global placeRise() supplies the brief
+        // hold at the crest (buildings LAST) and the synchronized recede.
+        var local = smoother(clamp01((rise01 - b.riseDelay) / (1 - b.riseDelay)));
         if (local <= 0.001) continue;
         var H = b.eh * local;                       // current extruded height (px up)
         if (H < 0.3) continue;
