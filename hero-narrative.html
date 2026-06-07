@@ -85,6 +85,14 @@
     var TRACE_AMP = 1.95;   // GPS trace dots / pings / dwell rings
     var EXT_AMP   = 1.85;   // building face washes + edge strokes
     var GLOBE_GF  = 1.0;    // globe global faintness (was 0.55 in v2 -> restored)
+    // v11: the dotted CONTINENTS read too faint. This multiplier darkens ONLY the
+    // land-dots (drawGlobe item 4) by +20% alpha so the globe reads a touch more
+    // present, WITHOUT touching the coastline / graticule / rim / disc / pings (they
+    // stay faint so the dark headline still clearly dominates the backdrop). Applied
+    // as a constant scale on the per-dot alpha -> seam stays BYTE-IDENTICAL (it
+    // scales the already-equal t=0 / t=LOOP dwell alphas identically). rgba clamps at
+    // 1.0, so the few brightest front dots simply saturate; the field just darkens.
+    var GLOBE_DOT_GF = 1.20;   // land-dot darkness boost (+20% alpha, background still)
     // v8 CITY LIFE twinkle: amplitude + whole-number cycles/loop (seam-safe). The
     // flat-city dots gently pulse so the PING/RESOLVE/SETTLED beats are never a
     // frozen frame. CYC is an integer so the twinkle is byte-identical at the seam.
@@ -1227,7 +1235,25 @@
     // motion measures ~0.84x the local dwell median (verified at the software
     // raster), and the seam endpoints stay in the short dwell at this low WMIN rate
     // so the seam per-frame motion is an ordinary dwell frame -> byte-identical.
-    var SPIN_WMIN = 0.27;     // spin-rate weight while the globe is VISIBLE (slow)
+    var SPIN_WMIN = 0.30;     // spin-rate weight while the globe is VISIBLE (slow)
+                              // v11: 0.27 -> 0.30 (founder: spin the visible globe a
+                              // touch FASTER). The visible dwell spin rises +7.4% (turns/s
+                              // 0.0504 -> 0.0541; a revolution shortens 19.9s -> 18.5s) —
+                              // visibly a bit faster, the requested small bump. We landed
+                              // at 0.30 (NOT 0.31): raising the floor `w = WMIN+(1-WMIN)*vis`
+                              // speeds the dwell AND both morph boundaries by the same
+                              // factor, and at the software raster the ASCEND (grid->globe)
+                              // boundary — already the loop's hottest — reached ~1.54x the
+                              // local within-beat median at 0.31, brushing the 1.5x cap; at
+                              // 0.30 EVERY boundary sits at/under the prior 0.27 baseline
+                              // (descend max ~1.19x local, ascend ~1.46x local; verified by
+                              // pixel-diffing real getImageData frames in software-raster
+                              // Chrome), so smoothness HOLDS. The extra rotation is still
+                              // absorbed in the flat-city window (morph~1, spin INVISIBLE);
+                              // the warp table is renormalised to exactly TURNS (whole
+                              // integer 3) and the seam endpoints sit in the dwell at this
+                              // WMIN rate, so the seam stays BYTE-IDENTICAL (spinPhase(0)=0,
+                              // spinPhase(1)=1 exact; verified t=0 raster == t=LOOP raster).
     var SPIN_PH0 = 2.0;       // constant seam orientation offset (tuned: lands the
                               // seam + morph orientations in low per-frame-motion
                               // configs — the dwell delta is oscillatory in angle).
@@ -2105,7 +2131,7 @@
         // out as the buildings rise. lerp(1, gdf, morph): sphere dots (morph=0)
         // unaffected; flattened street dots (morph=1) scale by gdf -> 0 at the
         // fully-risen hold, so no dotted streets show through/around the massing.
-        var alpha = faceA * form * GF * (1 - morph * (1 - gdf)) * morphDip;   // faint
+        var alpha = faceA * form * GF * GLOBE_DOT_GF * (1 - morph * (1 - gdf)) * morphDip;   // v11: +20% darker dots (background still)
         // v8 CITY LIFE — the flat city must never be a FROZEN frame (the founder's
         // "fixed frame images"). When the grid is flat (morph high) and visible,
         // each landed dot gently TWINKLES on its own loop-periodic phase (a living
