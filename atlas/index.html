@@ -247,7 +247,7 @@ document.getElementById("shade").onchange=async e=>{
     "fill-extrusion-height":["get","h"],"fill-extrusion-base":0,
     "fill-extrusion-opacity":.8}},window.__beforeId);
   }catch(e){}
-  overlay=new deck.MapboxOverlay({interleaved:true,layers:[],onClick,onHover,
+  overlay=new deck.MapboxOverlay({interleaved:false,layers:[],onClick,onHover,
    getCursor:({isHovering})=>isHovering?"pointer":"grab"});
   map.addControl(overlay);
   loadR5();
