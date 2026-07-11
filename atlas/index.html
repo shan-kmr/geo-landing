@@ -52,6 +52,30 @@ font-family:var(--mono);font-size:11px;padding:5px 10px;cursor:pointer;color:var
 .jx-fac .c{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
 .jx-txt{font-size:.85rem;color:var(--fg2);line-height:1.5;margin-top:4px}
 .jx-sec{margin-top:15px}
+/* v2 dossier card */
+.jx-place{font-size:1.3rem;font-weight:680;letter-spacing:-.015em;margin:3px 0 2px}
+.jx-marks{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;align-items:center}
+.jx-mark{font-family:var(--mono);font-size:.66rem;border:1px solid var(--line);border-radius:99px;
+padding:4px 10px;color:var(--ink);background:#fff;white-space:nowrap}
+.jx-mark small{color:var(--muted);margin-left:6px;font-size:.58rem}
+.jx-mark.dim{color:var(--fg2);border-style:dashed}
+.jx-marknote{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.jx-sig{font-size:.84rem;color:var(--fg2);line-height:1.5;border-left:2px solid var(--ink);
+padding:2px 0 2px 10px;margin:12px 0 12px}
+.jx-sig b{color:var(--ink)}
+details.jx-acc{border-top:1px solid var(--line2)}
+details.jx-acc summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+cursor:pointer;list-style:none;padding:11px 0}
+details.jx-acc summary::-webkit-details-marker{display:none}
+details.jx-acc summary .l{font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;
+text-transform:uppercase;color:var(--muted)}
+details.jx-acc summary .l::before{content:"▸ ";color:var(--faint)}
+details.jx-acc[open] summary .l::before{content:"▾ "}
+details.jx-acc[open] summary .l{color:var(--ink)}
+details.jx-acc summary .hd{font-family:var(--mono);font-size:.72rem;color:var(--fg2);text-align:right}
+details.jx-acc summary .hd b{color:var(--ink);font-weight:650}
+details.jx-acc .jx-bd{padding:0 0 14px}
+details.jx-acc .jx-bd .jx-lab:first-child{margin-top:2px}
 @keyframes jxIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 .jx-card{animation:jxIn .3s ease-out both}
 @media (prefers-reduced-motion:reduce){.jx-card,#panel{animation:none!important;transition:none!important}}
@@ -167,7 +191,9 @@ async function openCard(id){
  panel.classList.add("open");
  history.replaceState(null,"","?h="+id);
  const c=await fetch(STATIC+"/cards/"+id+".html").then(r=>r.ok?r.text():null).catch(()=>null);
- if(c)pbody.innerHTML=c;
+ if(c){pbody.innerHTML=c;
+  const pl=pbody.querySelector(".jx-place");
+  if(pl)ptitle.textContent=pl.textContent;}
  else pbody.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px 4px">no card for this cell — outside the NYC grid</div>';
 }
 function closeCard(){panel.classList.remove("open");focus=null;redraw();
