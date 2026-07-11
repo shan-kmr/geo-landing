@@ -12,13 +12,13 @@
     height: 100%;
     width: 100%;
     overflow: hidden;
-    background: #F6F4EF;
+    background: #FCFCFB;
   }
   body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #F6F4EF;
+    background: #FCFCFB;
   }
   /* Stage 1000x600, scale-to-fit (contain), centered — same harness as L2d. */
   #stage {
@@ -26,7 +26,7 @@
     width: 1000px;
     height: 600px;
     transform-origin: center center;
-    background: #F6F4EF;
+    background: #FCFCFB;
     overflow: hidden;
   }
   /* The narrative canvas: a restrained, FAINT background layer. It sits BEHIND a
@@ -68,9 +68,9 @@
     // ============================================================
 
     // ---------- Palette (cobalt on paper) ----------
-    var PAPER = "#F6F4EF";
-    var ACC = "30, 58, 138";        // #1E3A8A cobalt (place-rev-B style)
-    var COB = [30, 58, 138];
+    var PAPER = "#FCFCFB";
+    var ACC = "74, 78, 84";        // graphite (WHITE pass, 2026-07-11)        // #1E3A8A cobalt (place-rev-B style)
+    var COB = [74, 78, 84];
     function cob(a) { return "rgba(" + COB[0] + "," + COB[1] + "," + COB[2] + "," + a + ")"; }
     function ink(a) { return "rgba(" + ACC + "," + a + ")"; }
 
@@ -2196,15 +2196,15 @@
           if (out.z <= 0.05) continue;
           var cdepth = smooth(out.z / 0.4);
           var gr = ctx.createRadialGradient(out.sx, out.sy, 0, out.sx, out.sy, 6 + 3 * pulseV);
-          gr.addColorStop(0, "rgba(37,72,170," + (0.55 * cdepth * la * GF).toFixed(3) + ")");
-          gr.addColorStop(1, "rgba(37,72,170,0)");
+          gr.addColorStop(0, "rgba(104,108,114," + (0.55 * cdepth * la * GF).toFixed(3) + ")");
+          gr.addColorStop(1, "rgba(104,108,114,0)");
           ctx.beginPath();
           ctx.arc(out.sx, out.sy, 6 + 3 * pulseV, 0, Math.PI * 2);
           ctx.fillStyle = gr;
           ctx.fill();
           ctx.beginPath();
           ctx.arc(out.sx, out.sy, 1.6, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(20,40,110," + (0.9 * cdepth * la * GF).toFixed(3) + ")";
+          ctx.fillStyle = "rgba(42,45,49," + (0.9 * cdepth * la * GF).toFixed(3) + ")";
           ctx.fill();
         }
       }
@@ -2503,7 +2503,7 @@
       var c2 = cv && cv.getContext ? cv.getContext("2d") : null;
       if (c2) {
         c2.setTransform(1, 0, 0, 1, 0, 0);
-        c2.fillStyle = "#F6F4EF";
+        c2.fillStyle = "#FCFCFB";
         c2.fillRect(0, 0, cv.width, cv.height);
       }
       if (window.console) console.error("hero-final init failed:", err);

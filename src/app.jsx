@@ -782,7 +782,7 @@ function Hero() {
       <div className="gjscrimB" />
       <div className="gjtop">
         <div className="gjmark">Janus</div>
-        <nav className="gjnav"><a>Platform</a><a>Domains</a><a>Company</a></nav>
+        <nav className="gjnav"><a href={`${import.meta.env.BASE_URL}argument/`}>Platform</a><a href={`${import.meta.env.BASE_URL}argument/#domains`}>Domains</a><a href={`${import.meta.env.BASE_URL}method/`}>Company</a></nav>
       </div>
       <div className="gjcopyL">
         <h1 className="gjh1">Grounding machine intelligence.</h1>
