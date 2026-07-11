@@ -2268,3 +2268,12 @@ footer.foot {
   color: var(--fg-muted);
   letter-spacing: 0.06em;
 }
+
+/* Atlas CTAs — hero line (B) + closing swap (D) */
+.hero-go{margin-top:34px;font-family:var(--font-mono);font-size:13px;letter-spacing:.08em}
+.hero-go a{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:3px}
+.hero-go a:hover{color:var(--accent)}
+.hg-arrow{color:var(--accent)}
+.cl-sub{margin-top:18px;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em}
+.cl-sub a{color:rgba(26,24,21,.5);text-decoration:none}
+.cl-sub a:hover{color:var(--accent)}
