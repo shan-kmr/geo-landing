@@ -80,7 +80,7 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
   
 </div>
 <div id="tip"></div>
-<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v15 · self-contained<span id="tr"></span></div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v16 · h3v4<span id="tr"></span></div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
@@ -99,7 +99,7 @@ function ramp(t){t=Math.max(0,Math.min(1,t));
   if(t>=a&&t<=b){const f=(t-a)/(b-a+1e-9);return[0,1,2].map(k=>ca[k]+f*(cb[k]-ca[k]));}}
  return RAMP[2][1];}
 
-let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="",live=null,focus=null;
+let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="kontur_population",live=null,focus=null;
 let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
 const tip=document.getElementById("tip"),
       panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
@@ -158,10 +158,10 @@ function hexLayer(res,rows,isTop){
  const data=[...rows.entries()].map(([id,r])=>({id,v:r.v}));
  return new deck.H3HexagonLayer({id:"hex-r"+res,data,
   getHexagon:d=>d.id,filled:true,extruded:false,stroked:true,coverage:.985,
-  getFillColor:d=>{if(structure||d.v==null)return[122,127,133,isTop?4:2];
+  getFillColor:d=>{if(structure||d.v==null)return[122,127,133,isTop?9:3];
    const t=Math.log1p(Math.max(0,d.v))/Math.log1p(vmax[res]||1);
-   return[...ramp(t),t<.04?4:8+t*70];},
-  getLineColor:[...LINE,isTop?34:11],lineWidthMinPixels:isTop?.7:.4,
+   return[...ramp(t),t<.04?5:10+t*80];},
+  getLineColor:[...LINE,isTop?52:14],lineWidthMinPixels:isTop?.7:.4,
   pickable:isTop,autoHighlight:isTop,highlightColor:[22,24,26,26],
   transitions:{getFillColor:350},updateTriggers:{getFillColor:[col,vmax[res]]}});
 }
@@ -209,7 +209,7 @@ function onClick(info){
  const res=m?parseInt(m[1]):activeRes(view.zoom);
  if(res>=9){openCard(id);return;}
  const next=LADDER.find(([r])=>r===Math.min(res+1,9));
- const c=h3.h3ToGeo(id);if(!c)return;
+ const c=h3.cellToLatLng(id);if(!c)return;
  map.flyTo({center:[c[1],c[0]],zoom:(next?next[1]:11)+.55,duration:950,essential:true});
 }
 function onHover(info){
@@ -237,7 +237,8 @@ document.getElementById("shade").onchange=async e=>{
  try{const sv=sessionStorage.getItem("atlas_view");if(sv)view={...view,...JSON.parse(sv)};}catch(e){}
  const qs=new URLSearchParams(location.search);
  const deep=qs.get("h");
- if(deep){try{const c=h3.h3ToGeo(deep);view={...view,latitude:c[0],longitude:c[1],zoom:14.6};}catch(e){}}
+ if(deep){try{const c=h3.cellToLatLng(deep);view={...view,latitude:c[0],longitude:c[1],zoom:14.6};}catch(e){}}
+ document.getElementById("shade").value=col;
  map=new maplibregl.Map({container:"map",style:BASEMAP,
   center:[view.longitude,view.latitude],zoom:view.zoom,pitch:view.pitch,bearing:view.bearing,
   minZoom:8.6,maxZoom:17.4,maxPitch:62,maxBounds:[[-74.32,40.46],[-73.62,40.98]],
