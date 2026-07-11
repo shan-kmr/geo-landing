@@ -90,7 +90,7 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
 </aside>
 <script>
 const STATIC="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main";
-const LIVE_URL=null; // live feeds need a tiny server — off until one exists
+const LIVE_DISCOVERY="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/live_endpoint.json";
 const TILES="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/nyc_buildings.pmtiles";
 const BASEMAP="./basemap-style.json";
 const LADDER=[[5,0],[6,5.8],[7,7.3],[8,8.8],[9,10.3]], BUILDING_ZOOM=13.4;
@@ -257,8 +257,18 @@ document.getElementById("shade").onchange=async e=>{
   map.addControl(overlay);
   loadR5();
   if(deep)openCard(deep);
-  if(LIVE_URL)(async function liveLoop(){
-   try{live=await fetch(LIVE_URL).then(r=>r.json());redraw();hudUpdate();}catch(e){}
+  (async function liveLoop(){
+   try{
+    if(!window.__liveUrl){
+     const d=await fetch(LIVE_DISCOVERY,{cache:"no-store"}).then(r=>r.json()).catch(()=>null);
+     if(d&&d.url)window.__liveUrl=d.url;
+    }
+    if(window.__liveUrl){
+     const v=await fetch(window.__liveUrl).then(r=>r.ok?r.json():null).catch(()=>null);
+     if(v){live=v;redraw();hudUpdate();}
+     else window.__liveUrl=null;   // tunnel moved — rediscover next tick
+    }
+   }catch(e){}
    setTimeout(liveLoop,20000);
   })();
  });
