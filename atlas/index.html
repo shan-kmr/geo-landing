@@ -4,7 +4,7 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Janus — Atlas · New York</title>
-<link href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" rel="stylesheet"/>
+<link href="./vendor/maplibre-gl.css" rel="stylesheet"/>
 <style>
 :root{--ground:#FCFCFB;--ink:#16181A;--fg2:#4A4E54;--muted:#7A7F85;--faint:#B9BCC1;
 --line:#E9EAEC;--line2:#F2F3F4;--signal:#D9480F;
@@ -58,11 +58,11 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
 .jx-card{animation:jxIn .3s ease-out both}
 @media (prefers-reduced-motion:reduce){.jx-card,#panel{animation:none!important;transition:none!important}}
 </style>
-<script crossorigin="anonymous" src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
-<script crossorigin="anonymous" src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js"></script>
-<script crossorigin="anonymous" src="https://unpkg.com/h3-js@3.7.2/dist/h3-js.umd.js"></script>
-<script crossorigin="anonymous" src="https://unpkg.com/deck.gl@9.3.6/dist.min.js"></script>
-<script crossorigin="anonymous" src="https://unpkg.com/@deck.gl/mapbox@9.3.6/dist.min.js"></script>
+<script src="./vendor/maplibre-gl.js"></script>
+<script src="./vendor/pmtiles.js"></script>
+<script src="./vendor/h3-js.umd.js"></script>
+<script src="./vendor/deck.min.js"></script>
+<script src="./vendor/deck-mapbox.min.js"></script>
 </head>
 <body>
 <div id="map"></div>
@@ -80,7 +80,7 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
   
 </div>
 <div id="tip"></div>
-<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v14 · same-origin</div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v15 · self-contained<span id="tr"></span></div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
@@ -103,8 +103,11 @@ let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="",live=null
 let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
 const tip=document.getElementById("tip"),
       panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
-      ptitle=document.getElementById("panel-title");
-window.onerror=(m)=>{console.error("[atlas]",m);};
+      ptitle=document.getElementById("panel-title"),
+      trEl=document.getElementById("tr");
+function trace(s){if(trEl)trEl.textContent=" · "+s;}
+window.onerror=(m)=>{console.error("[atlas]",m);trace("ERR "+String(m).slice(0,80));};
+document.addEventListener("pointerdown",e=>{const t=e.target;trace("tap:"+(t.id||t.tagName));},true);
 
 function activeRes(z){let r=5;for(const[res,mz]of LADDER)if(z>=mz)r=res;return r;}
 function hudUpdate(){}
@@ -221,9 +224,16 @@ document.getElementById("shade").onchange=async e=>{
  await loadR5();
  for(const key in rawChunks){const[res]=key.split(":");ingestChunk(parseInt(res),rawChunks[key]);}
  redraw();
+ trace("shade:"+(col||"structure")+(col?" vmax"+activeRes(view.zoom)+"="+Math.round(vmax[activeRes(view.zoom)]||0):""));
 };
 
 (async function boot(){
+ const missing=["maplibregl","pmtiles","h3","deck"].filter(g=>typeof window[g]==="undefined");
+ if(!missing.length&&typeof deck.MapboxOverlay!=="function")missing.push("deck.MapboxOverlay");
+ if(missing.length){
+  document.getElementById("stamp").innerHTML='<span style="color:#D9480F">libs failed: '+missing.join(", ")+' — hard-refresh</span>';
+  return;
+ }
  try{const sv=sessionStorage.getItem("atlas_view");if(sv)view={...view,...JSON.parse(sv)};}catch(e){}
  const qs=new URLSearchParams(location.search);
  const deep=qs.get("h");
@@ -238,7 +248,7 @@ document.getElementById("shade").onchange=async e=>{
   hudUpdate();});
  map.on("moveend",maybeNeed);
  map.on("error",e=>{if(e&&e.error)console.error("[map]",e.error.message);});
- map.on("load",()=>{
+ map.on("load",()=>{try{
   window.__beforeId=(map.getStyle().layers.find(l=>l.type==="symbol")||{}).id;
   try{
    const proto=new pmtiles.Protocol();maplibregl.addProtocol("pmtiles",proto.tile);
@@ -248,9 +258,26 @@ document.getElementById("shade").onchange=async e=>{
     "fill-extrusion-height":["get","h"],"fill-extrusion-base":0,
     "fill-extrusion-opacity":.8}},window.__beforeId);
   }catch(e){}
-  overlay=new deck.MapboxOverlay({interleaved:false,layers:[],onClick,onHover,
-   getCursor:({isHovering})=>isHovering?"pointer":"grab"});
+  // deck = renderer only; ALL events flow through maplibre (proven live on every device)
+  overlay=new deck.MapboxOverlay({interleaved:false,layers:[]});
   map.addControl(overlay);
+  function pickAt(pt,radius){
+   if(!overlay)return null;
+   try{const i=overlay.pickObject({x:pt.x,y:pt.y,radius:radius});return(i&&i.object)?i:null;}
+   catch(err){trace("pick ERR "+String(err.message).slice(0,60));return null;}
+  }
+  map.on("click",e=>{
+   const info=pickAt(e.point,6);
+   trace("clk r"+activeRes(view.zoom)+" → "+(info?(info.layer.id+" …"+String(info.object.id).slice(-5)):"∅"));
+   if(info)onClick(info);
+  });
+  let hoverT=0;
+  map.on("mousemove",e=>{
+   const now=performance.now();if(now-hoverT<70)return;hoverT=now;
+   const info=pickAt(e.point,2);
+   onHover(info?{...info,x:e.point.x,y:e.point.y}:null);
+   map.getCanvas().style.cursor=info?"pointer":"";
+  });
   loadR5();
   if(deep)openCard(deep);
   (async function liveLoop(){
@@ -267,7 +294,7 @@ document.getElementById("shade").onchange=async e=>{
    }catch(e){}
    setTimeout(liveLoop,20000);
   })();
- });
+ }catch(err){trace("BOOT ERR "+String(err.message).slice(0,80));console.error(err);}});
 })();
 </script>
 </body>
