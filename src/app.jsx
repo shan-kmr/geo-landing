@@ -791,7 +791,7 @@ function Hero() {
         <p className="gjract">The context layer for the physical world.</p>
         <hr className="gjrule" />
         <p className="gjsub">Janus powers <b>location intelligence</b><br />for teams that build in the real world.</p>
-        <p className="gjgo"><a href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">See it live — the Atlas →</a></p>
+        <p className="gjgo"><a href={`${import.meta.env.BASE_URL}atlas/`}>See it live — the Atlas →</a></p>
       </div>
     </section>);
 

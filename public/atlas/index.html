@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Janus — Atlas · New York</title>
+<link href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" rel="stylesheet"/>
+<style>
+:root{--ground:#FCFCFB;--ink:#16181A;--fg2:#4A4E54;--muted:#7A7F85;--faint:#B9BCC1;
+--line:#E9EAEC;--line2:#F2F3F4;--signal:#D9480F;
+--mono:ui-monospace,"SF Mono",Menlo,monospace;
+--sans:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--ground);font-family:var(--sans);color:var(--ink);overflow:hidden}
+#map{position:absolute;inset:0}
+/* top bar */
+#bar{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;align-items:center;gap:16px;
+padding:14px 18px;pointer-events:none}
+#bar>*{pointer-events:auto}
+.brand{font-family:var(--mono);font-size:12px;letter-spacing:.28em;font-weight:700;color:var(--ink);text-decoration:none;
+background:rgba(252,252,251,.85);backdrop-filter:blur(8px);padding:8px 12px;border:1px solid var(--line);border-radius:4px}
+.brand small{letter-spacing:.14em;color:var(--muted);font-weight:400;margin-left:8px}
+select{appearance:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink);
+background:rgba(252,252,251,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:4px;padding:8px 26px 8px 12px;
+background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="6"><path d="M0 0h8L4 6z" fill="%237A7F85"/></svg>');
+background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+#hud{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+background:rgba(252,252,251,.85);backdrop-filter:blur(8px);padding:7px 10px;border:1px solid var(--line);border-radius:4px}
+#hud .live{color:var(--signal)}
+/* card panel */
+#panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,92vw);z-index:30;background:var(--ground);
+border-left:1px solid var(--line);transform:translateX(103%);transition:transform .32s cubic-bezier(.2,.8,.25,1);
+display:flex;flex-direction:column}
+#panel.open{transform:none;box-shadow:-18px 0 44px rgba(22,24,26,.07)}
+#panel-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line2)}
+#panel-head .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#panel-close{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:4px;
+font-family:var(--mono);font-size:11px;padding:5px 10px;cursor:pointer;color:var(--fg2)}
+#panel-body{overflow-y:auto;padding:14px 16px 40px}
+#tip{position:absolute;z-index:25;pointer-events:none;display:none;font:12px/1.45 var(--mono);color:var(--ink);
+background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:7px 10px;max-width:240px;
+box-shadow:0 2px 8px rgba(22,24,26,.07)}
+#tip b{color:var(--ink)}
+/* card content (jx system, white doctrine) */
+.jx-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:18px 20px}
+.jx-cid{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.jx-big{font-size:2.3rem;font-weight:700;line-height:1;margin:4px 0 2px;letter-spacing:-.02em}
+.jx-big small{font-size:.85rem;color:var(--muted);font-family:var(--mono);letter-spacing:.04em;font-weight:400}
+.jx-row{display:flex;justify-content:space-between;gap:12px;font-size:.88rem;padding:5px 0;border-top:1px solid var(--line2)}
+.jx-row .k{color:var(--fg2)}.jx-row .v{font-family:var(--mono);font-size:.78rem;text-align:right}
+.jx-row .v b{color:var(--ink);font-weight:650}
+.jx-lab{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.jx-hist{display:flex;align-items:flex-end;gap:2px;height:46px}
+.jx-hist .b{flex:1;background:var(--ink);border-radius:1px 1px 0 0;min-height:1px;opacity:.78}
+.jx-hticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.55rem;color:var(--faint);margin-top:3px}
+.jx-fac{font-size:.84rem;padding:3px 0;display:flex;justify-content:space-between}
+.jx-fac .c{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.jx-txt{font-size:.85rem;color:var(--fg2);line-height:1.5;margin-top:4px}
+.jx-sec{margin-top:15px}
+@keyframes jxIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.jx-card{animation:jxIn .3s ease-out both}
+@media (prefers-reduced-motion:reduce){.jx-card,#panel{animation:none!important;transition:none!important}}
+</style>
+<script crossorigin="anonymous" src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/h3-js@3.7.2/dist/h3-js.umd.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/deck.gl@9.3.6/dist.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/@deck.gl/mapbox@9.3.6/dist.min.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<div id="bar">
+  <a class="brand" href="../">JANUS<small>ATLAS · NEW YORK</small></a>
+  <select id="shade">
+    <option value="">Structure · none</option>
+    <option value="kontur_population">Population</option>
+    <option value="poi_count">Places</option>
+    <option value="building_count">Buildings</option>
+    <option value="wt_visit_count">Movement</option>
+    <option value="road_count">Roads</option>
+    <option value="nightlight_2021">Night-lights</option>
+  </select>
+  <div id="hud">res 5</div>
+</div>
+<div id="tip"></div>
+<aside id="panel">
+  <div id="panel-head"><span class="t" id="panel-title">CELL</span>
+    <button id="panel-close">esc</button></div>
+  <div id="panel-body"></div>
+</aside>
+<script>
+const STATIC="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/static_atlas";
+const LIVE_URL=null; // live feeds need a tiny server — off until one exists
+const TILES="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/nyc_buildings.pmtiles";
+const BASEMAP="./basemap-style.json";
+const LADDER=[[5,0],[6,5.8],[7,7.3],[8,8.8],[9,10.3]], BUILDING_ZOOM=13.4;
+const RAMP=[[0,[233,234,236]],[.5,[158,162,168]],[1,[42,45,49]]];
+const LINE=[122,127,133];
+function ramp(t){t=Math.max(0,Math.min(1,t));
+ for(let i=0;i<RAMP.length-1;i++){const[a,ca]=RAMP[i],[b,cb]=RAMP[i+1];
+  if(t>=a&&t<=b){const f=(t-a)/(b-a+1e-9);return[0,1,2].map(k=>ca[k]+f*(cb[k]-ca[k]));}}
+ return RAMP[2][1];}
+
+let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="",live=null,focus=null;
+let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
+const hud=document.getElementById("hud"),tip=document.getElementById("tip"),
+      panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
+      ptitle=document.getElementById("panel-title");
+window.onerror=(m,s,l)=>{hud.innerHTML=("ERR "+m).slice(0,120);hud.style.color="#B04A3A";};
+
+function activeRes(z){let r=5;for(const[res,mz]of LADDER)if(z>=mz)r=res;return r;}
+function hudUpdate(){const n=live?live.buses.length:0;
+ hud.innerHTML="res "+activeRes(view.zoom)+(view.zoom>=BUILDING_ZOOM?" · buildings":"")+
+   (n?' · <span class="live">'+n+" live</span>":"");}
+
+let R5=null;
+async function loadR5(){
+ if(!R5) R5=await fetch(STATIC+"/r5.json").then(r=>r.json());
+ store["5"]=new Map();centers=[];
+ const vals=col?R5.vals[col]:null;
+ for(let i=0;i<R5.h3.length;i++){store["5"].set(R5.h3[i],{v:vals?vals[i]:null});
+  centers.push([R5.h3[i],R5.lat[i],R5.lon[i]]);}
+ if(vals) vmax[5]=Math.max(...vals,1);
+ redraw();maybeNeed();
+}
+function visibleParents(){
+ if(!map||!centers.length)return[];
+ const b=map.getBounds(),w=b.getWest(),e=b.getEast(),s=b.getSouth(),n=b.getNorth();
+ const pLon=(e-w)*.25,pLat=(n-s)*.25,out=[];
+ for(const[id,la,lo]of centers)if(lo>w-pLon&&lo<e+pLon&&la>s-pLat&&la<n+pLat)out.push(id);
+ const CAP={6:140,7:120,8:48,9:10};return out.slice(0,CAP[activeRes(view.zoom)]||60);
+}
+let needTimer=null; const rawChunks={};
+function ingestChunk(res,c){
+ if(!store[res])store[res]=new Map();
+ const vals=col?c.vals[col]:null;
+ if(vals){const m=Math.max(...vals,1); if(!vmax[res]||m>vmax[res])vmax[res]=m;}
+ for(let i=0;i<c.h3.length;i++)store[res].set(c.h3[i],{v:vals?vals[i]:null,
+   bc:c.bc?c.bc[i]:0,fl:c.fl?c.fl[i]:0,mh:c.mh?c.mh[i]:0});
+}
+function maybeNeed(){
+ hudUpdate();const res=activeRes(view.zoom);if(res===5)return;
+ const missing=visibleParents().filter(p=>!requested.has(res+":"+p));
+ if(!missing.length)return;
+ clearTimeout(needTimer);
+ needTimer=setTimeout(async()=>{
+  await Promise.all(missing.map(async p=>{
+   requested.add(res+":"+p);
+   const c=await fetch(STATIC+"/chunks/"+res+"/"+p+".json").then(r=>r.json()).catch(()=>null);
+   if(!c)return;
+   rawChunks[res+":"+p]=c;
+   ingestChunk(res,c);
+  }));
+  redraw();
+ },240);
+}
+function hexLayer(res,rows,isTop){
+ const structure=!col;
+ const data=[...rows.entries()].map(([id,r])=>({id,v:r.v}));
+ return new deck.H3HexagonLayer({id:"hex-r"+res,data,beforeId:window.__beforeId,
+  getHexagon:d=>d.id,filled:true,extruded:false,stroked:true,coverage:.985,
+  getFillColor:d=>{if(structure||d.v==null)return[122,127,133,isTop?4:2];
+   const t=Math.log1p(Math.max(0,d.v))/Math.log1p(vmax[res]||1);
+   return[...ramp(t),t<.04?4:8+t*70];},
+  getLineColor:[...LINE,isTop?34:11],lineWidthMinPixels:isTop?.7:.4,
+  pickable:isTop,autoHighlight:isTop,highlightColor:[22,24,26,26],
+  transitions:{getFillColor:350},updateTriggers:{getFillColor:[col,vmax[res]]}});
+}
+function buildLayers(){
+ const z=view.zoom,res=activeRes(z),layers=[];
+ const order=[5,6,7,8,9].filter(r=>r<=res&&store[String(r)]&&store[String(r)].size);
+ for(const r of order)layers.push(hexLayer(r,store[String(r)],r===res||(r===Math.max(...order)&&r<res)));
+ if(live){
+  if(live.buses.length)layers.push(new deck.ScatterplotLayer({id:"live-bus",beforeId:window.__beforeId,
+   data:[...live.buses].sort((a,b)=>String(a[3])>String(b[3])?1:-1),
+   getPosition:d=>[d[0],d[1]],getRadius:16,radiusMinPixels:2.2,radiusMaxPixels:5,
+   getFillColor:[22,24,26,205],pickable:false,
+   transitions:{getPosition:{duration:18000,easing:t=>t}},updateTriggers:{getPosition:[live.ts]}}));
+  if(live.bikes.length)layers.push(new deck.ScatterplotLayer({id:"live-bike",beforeId:window.__beforeId,
+   data:live.bikes,getPosition:d=>[d[0],d[1]],getRadius:d=>6+d[2]*15,
+   radiusMinPixels:1.2,radiusMaxPixels:4,getFillColor:d=>[122,127,133,70+d[2]*100],pickable:false,
+   transitions:{getRadius:800},updateTriggers:{getRadius:[live.ts]}}));
+ }
+ if(focus&&store["9"]&&store["9"].has(focus))
+  layers.push(new deck.H3HexagonLayer({id:"focus",beforeId:window.__beforeId,data:[{id:focus}],
+   getHexagon:d=>d.id,filled:true,stroked:true,extruded:false,
+   getFillColor:[217,72,15,16],getLineColor:[217,72,15,215],lineWidthMinPixels:2,pickable:false}));
+ return layers;
+}
+function redraw(){if(overlay)overlay.setProps({layers:buildLayers()});}
+
+async function openCard(id){
+ focus=id;redraw();
+ ptitle.textContent="R9 · "+id.slice(-12);
+ pbody.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px 4px">reading the cell…</div>';
+ panel.classList.add("open");
+ history.replaceState(null,"","?h="+id);
+ const c=await fetch(STATIC+"/cards/"+id+".html").then(r=>r.ok?r.text():null).catch(()=>null);
+ if(c)pbody.innerHTML=c;
+ else pbody.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px 4px">no card for this cell — outside the NYC grid</div>';
+}
+function closeCard(){panel.classList.remove("open");focus=null;redraw();
+ history.replaceState(null,"",location.pathname);}
+document.getElementById("panel-close").onclick=closeCard;
+addEventListener("keydown",e=>{if(e.key==="Escape")closeCard();});
+
+function onClick(info){
+ if(!info||!info.object||!info.object.id)return;
+ const id=info.object.id,m=((info.layer&&info.layer.id)||"").match(/^hex-r(\d)/);
+ const res=m?parseInt(m[1]):activeRes(view.zoom);
+ if(res>=9){openCard(id);return;}
+ const next=LADDER.find(([r])=>r===Math.min(res+1,9));
+ const c=h3.h3ToGeo(id);if(!c)return;
+ map.flyTo({center:[c[1],c[0]],zoom:(next?next[1]:11)+.55,duration:950,essential:true});
+}
+function onHover(info){
+ if(info&&info.object&&info.object.v!=null&&col){
+  tip.style.display="block";tip.style.left=(info.x+14)+"px";tip.style.top=(info.y+14)+"px";
+  tip.innerHTML="<b>"+Number(info.object.v).toLocaleString(undefined,{maximumFractionDigits:2})+"</b><br/>click to open";
+ }else tip.style.display="none";
+}
+
+document.getElementById("shade").onchange=async e=>{
+ col=e.target.value; vmax={}; store={};
+ await loadR5();
+ for(const key in rawChunks){const[res]=key.split(":");ingestChunk(parseInt(res),rawChunks[key]);}
+ redraw();
+};
+
+(async function boot(){
+ try{const sv=sessionStorage.getItem("atlas_view");if(sv)view={...view,...JSON.parse(sv)};}catch(e){}
+ const qs=new URLSearchParams(location.search);
+ const deep=qs.get("h");
+ if(deep){try{const c=h3.h3ToGeo(deep);view={...view,latitude:c[0],longitude:c[1],zoom:14.6};}catch(e){}}
+ map=new maplibregl.Map({container:"map",style:BASEMAP,
+  center:[view.longitude,view.latitude],zoom:view.zoom,pitch:view.pitch,bearing:view.bearing,
+  minZoom:8.6,maxZoom:17.4,maxPitch:62,maxBounds:[[-74.32,40.46],[-73.62,40.98]],
+  attributionControl:{compact:true},antialias:true});
+ map.on("move",()=>{const c=map.getCenter();
+  view={latitude:c.lat,longitude:c.lng,zoom:map.getZoom(),pitch:map.getPitch(),bearing:map.getBearing()};
+  try{sessionStorage.setItem("atlas_view",JSON.stringify(view));}catch(e){}
+  hudUpdate();});
+ map.on("moveend",maybeNeed);
+ map.on("error",e=>{if(e&&e.error){hud.textContent=("MAP "+e.error.message).slice(0,120);hud.style.color="#B04A3A";}});
+ map.on("load",()=>{
+  window.__beforeId=(map.getStyle().layers.find(l=>l.type==="symbol")||{}).id;
+  try{
+   const proto=new pmtiles.Protocol();maplibregl.addProtocol("pmtiles",proto.tile);
+   map.addSource("bldg",{type:"vector",url:"pmtiles://"+TILES});
+   map.addLayer({id:"bldg3d",source:"bldg","source-layer":"buildings",type:"fill-extrusion",
+    minzoom:BUILDING_ZOOM,paint:{"fill-extrusion-color":"#F1F0ED",
+    "fill-extrusion-height":["get","h"],"fill-extrusion-base":0,
+    "fill-extrusion-opacity":.8}},window.__beforeId);
+  }catch(e){}
+  overlay=new deck.MapboxOverlay({interleaved:true,layers:[],onClick,onHover,
+   getCursor:({isHovering})=>isHovering?"pointer":"grab"});
+  map.addControl(overlay);
+  loadR5();
+  if(deep)openCard(deep);
+  if(LIVE_URL)(async function liveLoop(){
+   try{live=await fetch(LIVE_URL).then(r=>r.json());redraw();hudUpdate();}catch(e){}
+   setTimeout(liveLoop,20000);
+  })();
+ });
+})();
+</script>
+</body>
+</html>
