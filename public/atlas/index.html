@@ -20,10 +20,12 @@ padding:14px 18px;pointer-events:none}
 .brand{font-family:var(--mono);font-size:12px;letter-spacing:.28em;font-weight:700;color:var(--ink);text-decoration:none;
 background:rgba(252,252,251,.85);backdrop-filter:blur(8px);padding:8px 12px;border:1px solid var(--line);border-radius:4px}
 .brand small{letter-spacing:.14em;color:var(--muted);font-weight:400;margin-left:8px}
-select{appearance:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink);
-background:rgba(252,252,251,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:4px;padding:8px 26px 8px 12px;
-background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="6"><path d="M0 0h8L4 6z" fill="%237A7F85"/></svg>');
-background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
+.chip{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--ink);
+background:rgba(252,252,251,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:4px;
+padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.chip i{width:5px;height:5px;border-radius:50%;background:var(--ink);display:inline-block}
+.chip:not(.on){color:var(--muted)}
+.chip:not(.on) i{opacity:.25}
 /* card panel */
 #panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,92vw);z-index:30;background:var(--ground);
 border-left:1px solid var(--line);transform:translateX(103%);transition:transform .32s cubic-bezier(.2,.8,.25,1);
@@ -34,10 +36,6 @@ display:flex;flex-direction:column}
 #panel-close{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:4px;
 font-family:var(--mono);font-size:11px;padding:5px 10px;cursor:pointer;color:var(--fg2)}
 #panel-body{overflow-y:auto;padding:14px 16px 40px}
-#tip{position:absolute;z-index:25;pointer-events:none;display:none;font:12px/1.45 var(--mono);color:var(--ink);
-background:var(--ground);border:1px solid var(--line);border-radius:4px;padding:7px 10px;max-width:240px;
-box-shadow:0 2px 8px rgba(22,24,26,.07)}
-#tip b{color:var(--ink)}
 /* card content (jx system, white doctrine) */
 .jx-card{border:1px solid var(--line);border-radius:8px;background:#fff;padding:18px 20px}
 .jx-cid{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -68,19 +66,9 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
 <div id="map"></div>
 <div id="bar">
   <a class="brand" href="../">JANUS<small>ATLAS · NEW YORK</small></a>
-  <select id="shade">
-    <option value="">Structure · none</option>
-    <option value="kontur_population">Population</option>
-    <option value="poi_count">Places</option>
-    <option value="building_count">Buildings</option>
-    <option value="wt_visit_count">Movement</option>
-    <option value="road_count">Roads</option>
-    <option value="nightlight_2021">Night-lights</option>
-  </select>
-  
+  <button id="fq" class="chip on"><i></i>fatal crashes 22–24</button>
 </div>
-<div id="tip"></div>
-<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v16 · h3v4<span id="tr"></span></div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v17 · clean-skin<span id="tr"></span></div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
@@ -92,17 +80,11 @@ const LIVE_DISCOVERY="https://huggingface.co/datasets/skay97/curbai-tiles/resolv
 const TILES=new URL("./data/nyc_buildings.pmtiles",location.href).href;
 const BASEMAP="./basemap-style.json";
 const LADDER=[[5,0],[6,5.8],[7,7.3],[8,8.8],[9,10.3]], BUILDING_ZOOM=13.4;
-const RAMP=[[0,[233,234,236]],[.5,[158,162,168]],[1,[42,45,49]]];
-const LINE=[122,127,133];
-function ramp(t){t=Math.max(0,Math.min(1,t));
- for(let i=0;i<RAMP.length-1;i++){const[a,ca]=RAMP[i],[b,cb]=RAMP[i+1];
-  if(t>=a&&t<=b){const f=(t-a)/(b-a+1e-9);return[0,1,2].map(k=>ca[k]+f*(cb[k]-ca[k]));}}
- return RAMP[2][1];}
 
-let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="kontur_population",live=null,focus=null;
+let map,overlay,store={},centers=[],requested=new Set(),live=null,focus=null,hoverId=null,
+    fars=null,crashesOn=true;
 let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
-const tip=document.getElementById("tip"),
-      panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
+const panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
       ptitle=document.getElementById("panel-title"),
       trEl=document.getElementById("tr");
 function trace(s){if(trEl)trEl.textContent=" · "+s;}
@@ -110,16 +92,13 @@ window.onerror=(m)=>{console.error("[atlas]",m);trace("ERR "+String(m).slice(0,8
 document.addEventListener("pointerdown",e=>{const t=e.target;trace("tap:"+(t.id||t.tagName));},true);
 
 function activeRes(z){let r=5;for(const[res,mz]of LADDER)if(z>=mz)r=res;return r;}
-function hudUpdate(){}
 
 let R5=null;
 async function loadR5(){
  if(!R5) R5=await fetch(STATIC+"/r5.json").then(r=>r.json());
  store["5"]=new Map();centers=[];
- const vals=col?R5.vals[col]:null;
- for(let i=0;i<R5.h3.length;i++){store["5"].set(R5.h3[i],{v:vals?vals[i]:null});
+ for(let i=0;i<R5.h3.length;i++){store["5"].set(R5.h3[i],1);
   centers.push([R5.h3[i],R5.lat[i],R5.lon[i]]);}
- if(vals) vmax[5]=Math.max(...vals,1);
  redraw();maybeNeed();
 }
 function visibleParents(){
@@ -129,16 +108,9 @@ function visibleParents(){
  for(const[id,la,lo]of centers)if(lo>w-pLon&&lo<e+pLon&&la>s-pLat&&la<n+pLat)out.push(id);
  const CAP={6:140,7:120,8:48,9:10};return out.slice(0,CAP[activeRes(view.zoom)]||60);
 }
-let needTimer=null; const rawChunks={};
-function ingestChunk(res,c){
- if(!store[res])store[res]=new Map();
- const vals=col?c.vals[col]:null;
- if(vals){const m=Math.max(...vals,1); if(!vmax[res]||m>vmax[res])vmax[res]=m;}
- for(let i=0;i<c.h3.length;i++)store[res].set(c.h3[i],{v:vals?vals[i]:null,
-   bc:c.bc?c.bc[i]:0,fl:c.fl?c.fl[i]:0,mh:c.mh?c.mh[i]:0});
-}
+let needTimer=null;
 function maybeNeed(){
- hudUpdate();const res=activeRes(view.zoom);if(res===5)return;
+ const res=activeRes(view.zoom);if(res===5)return;
  const missing=visibleParents().filter(p=>!requested.has(res+":"+p));
  if(!missing.length)return;
  clearTimeout(needTimer);
@@ -147,43 +119,43 @@ function maybeNeed(){
    requested.add(res+":"+p);
    const c=await fetch(STATIC+"/chunks/"+res+"/"+p+".json").then(r=>r.json()).catch(()=>null);
    if(!c)return;
-   rawChunks[res+":"+p]=c;
-   ingestChunk(res,c);
+   if(!store[res])store[res]=new Map();
+   for(const id of c.h3)store[res].set(id,1);
   }));
   redraw();
  },240);
 }
-function hexLayer(res,rows,isTop){
- const structure=!col;
- const data=[...rows.entries()].map(([id,r])=>({id,v:r.v}));
- return new deck.H3HexagonLayer({id:"hex-r"+res,data,
-  getHexagon:d=>d.id,filled:true,extruded:false,stroked:true,coverage:.985,
-  getFillColor:d=>{if(structure||d.v==null)return[122,127,133,isTop?9:3];
-   const t=Math.log1p(Math.max(0,d.v))/Math.log1p(vmax[res]||1);
-   return[...ramp(t),t<.04?5:10+t*80];},
-  getLineColor:[...LINE,isTop?52:14],lineWidthMinPixels:isTop?.7:.4,
-  pickable:isTop,autoHighlight:isTop,highlightColor:[22,24,26,26],
-  transitions:{getFillColor:350},updateTriggers:{getFillColor:[col,vmax[res]]}});
-}
 function buildLayers(){
- const z=view.zoom,res=activeRes(z),layers=[];
- const order=[5,6,7,8,9].filter(r=>r<=res&&store[String(r)]&&store[String(r)].size);
- for(const r of order)layers.push(hexLayer(r,store[String(r)],r===res||(r===Math.max(...order)&&r<res)));
+ const res=activeRes(view.zoom),layers=[];
+ // invisible pick skin: highest loaded res at or under the ladder step
+ let skin=null;
+ for(let r=res;r>=5;r--){const s=store[String(r)];if(s&&s.size){skin=r;break;}}
+ if(skin!=null)layers.push(new deck.H3HexagonLayer({id:"hex-r"+skin,
+  data:[...store[String(skin)].keys()].map(id=>({id})),
+  getHexagon:d=>d.id,filled:true,stroked:false,extruded:false,coverage:1,
+  getFillColor:[0,0,0,1],pickable:true,autoHighlight:false}));
+ if(crashesOn&&fars)layers.push(new deck.ScatterplotLayer({id:"fars",data:fars.pts,
+  getPosition:d=>[d[0],d[1]],getRadius:d=>9+d[2]*7,radiusMinPixels:1.7,radiusMaxPixels:4.5,
+  getFillColor:[22,24,26,175],pickable:false}));
  if(live){
   if(live.buses.length)layers.push(new deck.ScatterplotLayer({id:"live-bus",
    data:[...live.buses].sort((a,b)=>String(a[3])>String(b[3])?1:-1),
    getPosition:d=>[d[0],d[1]],getRadius:16,radiusMinPixels:2.2,radiusMaxPixels:5,
-   getFillColor:[22,24,26,205],pickable:false,
+   getFillColor:[217,72,15,205],pickable:false,
    transitions:{getPosition:{duration:18000,easing:t=>t}},updateTriggers:{getPosition:[live.ts]}}));
   if(live.bikes.length)layers.push(new deck.ScatterplotLayer({id:"live-bike",
    data:live.bikes,getPosition:d=>[d[0],d[1]],getRadius:d=>6+d[2]*15,
-   radiusMinPixels:1.2,radiusMaxPixels:4,getFillColor:d=>[122,127,133,70+d[2]*100],pickable:false,
+   radiusMinPixels:1.2,radiusMaxPixels:4,getFillColor:d=>[217,72,15,60+d[2]*90],pickable:false,
    transitions:{getRadius:800},updateTriggers:{getRadius:[live.ts]}}));
  }
- if(focus&&store["9"]&&store["9"].has(focus))
+ if(hoverId&&hoverId!==focus)
+  layers.push(new deck.H3HexagonLayer({id:"hover",data:[{id:hoverId}],
+   getHexagon:d=>d.id,filled:false,stroked:true,extruded:false,
+   getLineColor:[22,24,26,95],lineWidthMinPixels:1,pickable:false}));
+ if(focus)
   layers.push(new deck.H3HexagonLayer({id:"focus",data:[{id:focus}],
    getHexagon:d=>d.id,filled:true,stroked:true,extruded:false,
-   getFillColor:[217,72,15,16],getLineColor:[217,72,15,215],lineWidthMinPixels:2,pickable:false}));
+   getFillColor:[217,72,15,14],getLineColor:[217,72,15,215],lineWidthMinPixels:2,pickable:false}));
  return layers;
 }
 function redraw(){if(overlay)overlay.setProps({layers:buildLayers()});}
@@ -212,41 +184,32 @@ function onClick(info){
  const c=h3.cellToLatLng(id);if(!c)return;
  map.flyTo({center:[c[1],c[0]],zoom:(next?next[1]:11)+.55,duration:950,essential:true});
 }
-function onHover(info){
- if(info&&info.object&&info.object.v!=null&&col){
-  tip.style.display="block";tip.style.left=(info.x+14)+"px";tip.style.top=(info.y+14)+"px";
-  tip.innerHTML="<b>"+Number(info.object.v).toLocaleString(undefined,{maximumFractionDigits:2})+"</b><br/>click to open";
- }else tip.style.display="none";
-}
 
-document.getElementById("shade").onchange=async e=>{
- col=e.target.value; vmax={}; store={};
- await loadR5();
- for(const key in rawChunks){const[res]=key.split(":");ingestChunk(parseInt(res),rawChunks[key]);}
+document.getElementById("fq").onclick=e=>{
+ crashesOn=!crashesOn;
+ e.currentTarget.classList.toggle("on",crashesOn);
  redraw();
- trace("shade:"+(col||"structure")+(col?" vmax"+activeRes(view.zoom)+"="+Math.round(vmax[activeRes(view.zoom)]||0):""));
+ trace("crashes:"+(crashesOn?"on":"off"));
 };
 
 (async function boot(){
- const missing=["maplibregl","pmtiles","h3","deck"].filter(g=>typeof window[g]==="undefined");
- if(!missing.length&&typeof deck.MapboxOverlay!=="function")missing.push("deck.MapboxOverlay");
- if(missing.length){
-  document.getElementById("stamp").innerHTML='<span style="color:#D9480F">libs failed: '+missing.join(", ")+' — hard-refresh</span>';
+ const missingLibs=["maplibregl","pmtiles","h3","deck"].filter(g=>typeof window[g]==="undefined");
+ if(!missingLibs.length&&typeof deck.MapboxOverlay!=="function")missingLibs.push("deck.MapboxOverlay");
+ if(missingLibs.length){
+  document.getElementById("stamp").innerHTML='<span style="color:#D9480F">libs failed: '+missingLibs.join(", ")+' — hard-refresh</span>';
   return;
  }
  try{const sv=sessionStorage.getItem("atlas_view");if(sv)view={...view,...JSON.parse(sv)};}catch(e){}
  const qs=new URLSearchParams(location.search);
  const deep=qs.get("h");
  if(deep){try{const c=h3.cellToLatLng(deep);view={...view,latitude:c[0],longitude:c[1],zoom:14.6};}catch(e){}}
- document.getElementById("shade").value=col;
  map=new maplibregl.Map({container:"map",style:BASEMAP,
   center:[view.longitude,view.latitude],zoom:view.zoom,pitch:view.pitch,bearing:view.bearing,
   minZoom:8.6,maxZoom:17.4,maxPitch:62,maxBounds:[[-74.32,40.46],[-73.62,40.98]],
   attributionControl:{compact:true},antialias:true});
  map.on("move",()=>{const c=map.getCenter();
   view={latitude:c.lat,longitude:c.lng,zoom:map.getZoom(),pitch:map.getPitch(),bearing:map.getBearing()};
-  try{sessionStorage.setItem("atlas_view",JSON.stringify(view));}catch(e){}
-  hudUpdate();});
+  try{sessionStorage.setItem("atlas_view",JSON.stringify(view));}catch(e){}});
  map.on("moveend",maybeNeed);
  map.on("error",e=>{if(e&&e.error)console.error("[map]",e.error.message);});
  map.on("load",()=>{try{
@@ -276,10 +239,13 @@ document.getElementById("shade").onchange=async e=>{
   map.on("mousemove",e=>{
    const now=performance.now();if(now-hoverT<70)return;hoverT=now;
    const info=pickAt(e.point,2);
-   onHover(info?{...info,x:e.point.x,y:e.point.y}:null);
+   const id=info&&/^hex-r9/.test(info.layer.id)?info.object.id:null;
+   if(id!==hoverId){hoverId=id;redraw();}
    map.getCanvas().style.cursor=info?"pointer":"";
   });
+  map.getCanvas().addEventListener("mouseleave",()=>{if(hoverId){hoverId=null;redraw();}});
   loadR5();
+  fetch(STATIC+"/fars_points.json").then(r=>r.json()).then(j=>{fars=j;redraw();}).catch(()=>{});
   if(deep)openCard(deep);
   (async function liveLoop(){
    try{
@@ -289,7 +255,7 @@ document.getElementById("shade").onchange=async e=>{
     }
     if(window.__liveUrl){
      const v=await fetch(window.__liveUrl).then(r=>r.ok?r.json():null).catch(()=>null);
-     if(v){live=v;redraw();hudUpdate();}
+     if(v){live=v;redraw();}
      else window.__liveUrl=null;   // tunnel moved — rediscover next tick
     }
    }catch(e){}
