@@ -1,3 +1,4 @@
+import { GlobeLattice } from "./globe-hero.jsx";
 // Geo — landing page. Hero variants, nav variants, accent palette via Tweaks.
 import React from "react";
 import * as ReactDOM from "react-dom/client";
@@ -776,7 +777,7 @@ function Hero({ variant }) {
   return (
     <section className="hero hero-overlay">
       <div className="hero-bg">
-        <ManhattanLattice />
+        <GlobeLattice />
       </div>
       <div className="container hero-content">
         <div className="hero-text">

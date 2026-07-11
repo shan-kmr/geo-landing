@@ -2277,3 +2277,9 @@ footer.foot {
 .cl-sub{margin-top:18px;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em}
 .cl-sub a{color:rgba(26,24,21,.5);text-decoration:none}
 .cl-sub a:hover{color:var(--accent)}
+
+/* Globe hero (restored) — engine sizes canvas itself; we position + scrim */
+.globe-stage{position:absolute;inset:0;overflow:hidden}
+.globe-stage canvas{position:absolute;inset:0;z-index:0;display:block;opacity:.62}
+.globe-scrimL{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#F6F4EF 0%,#F6F4EF 26%,rgba(246,244,239,.90) 36%,rgba(246,244,239,.55) 44%,rgba(246,244,239,.18) 50%,rgba(246,244,239,0) 56%)}
+.globe-scrimR{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(270deg,#F6F4EF 0%,#F6F4EF 26%,rgba(246,244,239,.90) 36%,rgba(246,244,239,.55) 44%,rgba(246,244,239,.18) 50%,rgba(246,244,239,0) 56%)}
