@@ -52,11 +52,13 @@ const HERO_VARIANTS = {
 const NAV_VARIANTS = {
   // 1. Sparse — Aaru-style, two items max
   sparse: [
+  { label: "Atlas", href: "https://skay97-curbai.hf.space", cta: true },
   { label: "Research", href: "#research" },
   { label: "API", href: "#api", cta: true }],
 
   // 2. Standard — Goodfire-style, named sections
   standard: [
+  { label: "Atlas", href: "https://skay97-curbai.hf.space", cta: true },
   { label: "Product", href: "#product" },
   { label: "Research", href: "#research" },
   { label: "Customers", href: "#why" },
@@ -65,6 +67,7 @@ const NAV_VARIANTS = {
 
   // 3. Mono-label — Nominal-style, tracked uppercase
   mono: [
+  { label: "atlas", href: "https://skay97-curbai.hf.space", mono: true, cta: true },
   { label: "PRODUCT", href: "#product", mono: true },
   { label: "RESEARCH", href: "#research", mono: true },
   { label: "DOCS", href: "#api", mono: true },
@@ -137,6 +140,8 @@ function Nav({ variant }) {
           <a
             key={i}
             href={it.href}
+            target={it.href && it.href.startsWith("http") ? "_blank" : undefined}
+            rel={it.href && it.href.startsWith("http") ? "noopener" : undefined}
             className={[
             it.mono ? "nav-mono" : "",
             it.cta ? "nav-cta" : ""].
@@ -2148,7 +2153,10 @@ function Closing() {
           We're a small team working at the frontier of
           <span className="serif-italic"> geospatial foundation models, visitation analysis, and place embeddings.</span>
         </div>
-        <a className="cl-cta serif" href="#">
+        <a className="cl-cta serif" href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">
+          Open the Atlas — live New York <span className="cl-cta-arrow">→</span>
+        </a>
+        <a className="cl-cta serif" href="#" style={{marginLeft: "28px", opacity: 0.75}}>
           Join us <span className="cl-cta-arrow">→</span>
         </a>
       </div>
