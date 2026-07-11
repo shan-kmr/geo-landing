@@ -6,10 +6,15 @@
 <title>Janus — Atlas · New York</title>
 <link href="./vendor/maplibre-gl.css" rel="stylesheet"/>
 <style>
+@font-face{font-family:"Space Grotesk";font-weight:500;font-display:swap;
+src:url("./vendor/fonts/space-grotesk-500.woff2") format("woff2")}
+@font-face{font-family:"Space Grotesk";font-weight:600;font-display:swap;
+src:url("./vendor/fonts/space-grotesk-600.woff2") format("woff2")}
 :root{--ground:#FCFCFB;--ink:#16181A;--fg2:#4A4E54;--muted:#7A7F85;--faint:#B9BCC1;
 --line:#E9EAEC;--line2:#F2F3F4;--signal:#D9480F;
 --mono:ui-monospace,"SF Mono",Menlo,monospace;
---sans:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;}
+--sans:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;
+--disp:"Space Grotesk",-apple-system,"Helvetica Neue",sans-serif;}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--ground);font-family:var(--sans);color:var(--ink);overflow:hidden}
 #map{position:absolute;inset:0}
@@ -52,17 +57,42 @@ font-family:var(--mono);font-size:11px;padding:5px 10px;cursor:pointer;color:var
 .jx-fac .c{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
 .jx-txt{font-size:.85rem;color:var(--fg2);line-height:1.5;margin-top:4px}
 .jx-sec{margin-top:15px}
-/* v2 dossier card */
-.jx-place{font-size:1.3rem;font-weight:680;letter-spacing:-.015em;margin:3px 0 2px}
-.jx-marks{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px;align-items:center}
-.jx-mark{font-family:var(--mono);font-size:.66rem;border:1px solid var(--line);border-radius:99px;
-padding:4px 10px;color:var(--ink);background:#fff;white-space:nowrap}
-.jx-mark small{color:var(--muted);margin-left:6px;font-size:.58rem}
-.jx-mark.dim{color:var(--fg2);border-style:dashed}
-.jx-marknote{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
-.jx-sig{font-size:.84rem;color:var(--fg2);line-height:1.5;border-left:2px solid var(--ink);
-padding:2px 0 2px 10px;margin:12px 0 12px}
-.jx-sig b{color:var(--ink)}
+/* v3 dossier card — Desk 06 */
+.jx-place{font-family:var(--disp);font-size:1.3rem;font-weight:600;letter-spacing:-.014em;margin:3px 0 2px}
+.jx-lede{font-family:var(--disp);font-size:1.06rem;font-weight:600;letter-spacing:-.012em;
+line-height:1.32;margin:12px 0 4px}
+.jx-lede a{color:var(--ink);border-bottom:1px solid #DADBDD;cursor:pointer}
+.jx-lede a:hover{border-bottom-color:var(--ink)}
+.jx-figs{display:flex;gap:14px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+margin-top:13px;padding:11px 0}
+.jx-fig{flex:1;min-width:0}
+.jx-fig+.jx-fig{border-left:1px solid var(--line2);padding-left:14px}
+.jx-fig b{font-size:1.45rem;font-weight:700;letter-spacing:-.02em;display:block}
+.jx-fig small{font-family:var(--mono);font-size:.56rem;color:var(--muted);line-height:1.55;
+display:block;margin-top:3px;letter-spacing:.02em}
+.jx-anchor{border:1px solid var(--ink);border-radius:8px;background:#fff;padding:11px 14px;margin:6px 0 4px}
+.jx-anchor .tier{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;border:1px solid var(--line);
+border-radius:3px;padding:1.5px 6px;color:var(--fg2)}
+.jx-anchor .nm{font-family:var(--disp);font-size:1.12rem;font-weight:600;letter-spacing:-.012em;display:block;margin-top:6px}
+.jx-anchor .rc{font-family:var(--mono);font-size:.62rem;color:var(--muted);display:block;margin-top:3px}
+.jx-nrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:8px 2px;
+border-bottom:1px solid var(--line2)}
+.jx-nrow .nm{font-size:.9rem;font-weight:600}
+.jx-nrow .rc{font-family:var(--mono);font-size:.58rem;color:var(--muted);text-align:right;flex:none}
+.jx-nrow.dim .nm{color:var(--fg2);font-weight:500}
+.jx-fabric{font-family:var(--mono);font-size:.64rem;color:var(--faint);padding:8px 2px 4px}
+/* distribution strip */
+.jx-ins{margin:9px 0 4px}
+.jx-ins .h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.56rem;
+letter-spacing:.07em;color:var(--muted);text-transform:uppercase}
+.jx-ins .rail{position:relative;height:14px;margin-top:5px}
+.jx-ins .rail i,.jx-ins .rail b{position:absolute;display:block}
+.jx-ins .rail .tr{left:0;right:0;top:6px;height:2px;background:#EDEEEF}
+.jx-ins .rail .bd{top:6px;height:2px;background:#D5D7D9}
+.jx-ins .rail .md{top:2px;width:1px;height:10px;background:var(--faint)}
+.jx-ins .rail .tk{top:0;width:2.5px;height:14px;background:var(--ink)}
+.jx-ins .lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.55rem;
+color:var(--faint);margin-top:4px}
 details.jx-acc{border-top:1px solid var(--line2)}
 details.jx-acc summary{display:flex;justify-content:space-between;align-items:baseline;gap:10px;
 cursor:pointer;list-style:none;padding:11px 0}
@@ -200,6 +230,11 @@ function closeCard(){panel.classList.remove("open");focus=null;redraw();
  history.replaceState(null,"",location.pathname);}
 document.getElementById("panel-close").onclick=closeCard;
 addEventListener("keydown",e=>{if(e.key==="Escape")closeCard();});
+pbody.addEventListener("click",e=>{
+ const j=e.target.closest("[data-jump]");if(!j)return;
+ const d=pbody.querySelector('details[data-sec="'+j.dataset.jump+'"]');
+ if(d){d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"});}
+});
 
 function onClick(info){
  if(!info||!info.object||!info.object.id)return;
