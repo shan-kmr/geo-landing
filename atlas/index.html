@@ -24,9 +24,6 @@ select{appearance:none;font-family:var(--mono);font-size:11.5px;letter-spacing:.
 background:rgba(252,252,251,.85);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:4px;padding:8px 26px 8px 12px;
 background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="6"><path d="M0 0h8L4 6z" fill="%237A7F85"/></svg>');
 background-repeat:no-repeat;background-position:right 10px center;cursor:pointer}
-#hud{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-background:rgba(252,252,251,.85);backdrop-filter:blur(8px);padding:7px 10px;border:1px solid var(--line);border-radius:4px}
-#hud .live{color:var(--signal)}
 /* card panel */
 #panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,92vw);z-index:30;background:var(--ground);
 border-left:1px solid var(--line);transform:translateX(103%);transition:transform .32s cubic-bezier(.2,.8,.25,1);
@@ -80,7 +77,7 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
     <option value="road_count">Roads</option>
     <option value="nightlight_2021">Night-lights</option>
   </select>
-  <div id="hud">res 5</div>
+  
 </div>
 <div id="tip"></div>
 <aside id="panel">
@@ -103,15 +100,13 @@ function ramp(t){t=Math.max(0,Math.min(1,t));
 
 let map,overlay,store={},centers=[],requested=new Set(),vmax={},col="",live=null,focus=null;
 let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
-const hud=document.getElementById("hud"),tip=document.getElementById("tip"),
+const tip=document.getElementById("tip"),
       panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
       ptitle=document.getElementById("panel-title");
-window.onerror=(m,s,l)=>{hud.innerHTML=("ERR "+m).slice(0,120);hud.style.color="#B04A3A";};
+window.onerror=(m)=>{console.error("[atlas]",m);};
 
 function activeRes(z){let r=5;for(const[res,mz]of LADDER)if(z>=mz)r=res;return r;}
-function hudUpdate(){const n=live?live.buses.length:0;
- hud.innerHTML="res "+activeRes(view.zoom)+(view.zoom>=BUILDING_ZOOM?" · buildings":"")+
-   (n?' · <span class="live">'+n+" live</span>":"");}
+function hudUpdate(){}
 
 let R5=null;
 async function loadR5(){
@@ -157,7 +152,7 @@ function maybeNeed(){
 function hexLayer(res,rows,isTop){
  const structure=!col;
  const data=[...rows.entries()].map(([id,r])=>({id,v:r.v}));
- return new deck.H3HexagonLayer({id:"hex-r"+res,data,beforeId:window.__beforeId,
+ return new deck.H3HexagonLayer({id:"hex-r"+res,data,
   getHexagon:d=>d.id,filled:true,extruded:false,stroked:true,coverage:.985,
   getFillColor:d=>{if(structure||d.v==null)return[122,127,133,isTop?4:2];
    const t=Math.log1p(Math.max(0,d.v))/Math.log1p(vmax[res]||1);
@@ -171,18 +166,18 @@ function buildLayers(){
  const order=[5,6,7,8,9].filter(r=>r<=res&&store[String(r)]&&store[String(r)].size);
  for(const r of order)layers.push(hexLayer(r,store[String(r)],r===res||(r===Math.max(...order)&&r<res)));
  if(live){
-  if(live.buses.length)layers.push(new deck.ScatterplotLayer({id:"live-bus",beforeId:window.__beforeId,
+  if(live.buses.length)layers.push(new deck.ScatterplotLayer({id:"live-bus",
    data:[...live.buses].sort((a,b)=>String(a[3])>String(b[3])?1:-1),
    getPosition:d=>[d[0],d[1]],getRadius:16,radiusMinPixels:2.2,radiusMaxPixels:5,
    getFillColor:[22,24,26,205],pickable:false,
    transitions:{getPosition:{duration:18000,easing:t=>t}},updateTriggers:{getPosition:[live.ts]}}));
-  if(live.bikes.length)layers.push(new deck.ScatterplotLayer({id:"live-bike",beforeId:window.__beforeId,
+  if(live.bikes.length)layers.push(new deck.ScatterplotLayer({id:"live-bike",
    data:live.bikes,getPosition:d=>[d[0],d[1]],getRadius:d=>6+d[2]*15,
    radiusMinPixels:1.2,radiusMaxPixels:4,getFillColor:d=>[122,127,133,70+d[2]*100],pickable:false,
    transitions:{getRadius:800},updateTriggers:{getRadius:[live.ts]}}));
  }
  if(focus&&store["9"]&&store["9"].has(focus))
-  layers.push(new deck.H3HexagonLayer({id:"focus",beforeId:window.__beforeId,data:[{id:focus}],
+  layers.push(new deck.H3HexagonLayer({id:"focus",data:[{id:focus}],
    getHexagon:d=>d.id,filled:true,stroked:true,extruded:false,
    getFillColor:[217,72,15,16],getLineColor:[217,72,15,215],lineWidthMinPixels:2,pickable:false}));
  return layers;
