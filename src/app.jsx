@@ -3,7 +3,9 @@ import React from "react";
 import * as ReactDOM from "react-dom/client";
 import "./tokens.css";
 import "./page.css";
+import "./geo-hero.css";
 import { DemoWidget } from "./demo-widget.jsx";
+import { HeroFlowField } from "./hero-flowfield.jsx";
 import {
   useTweaks, TweaksPanel, TweakSection, TweakRadio, TweakColor,
 } from "./tweaks-panel.jsx";
@@ -771,18 +773,24 @@ function TalkToUs() {
 /* =========================================================
    Hero
    ========================================================= */
-function Hero({ variant }) {
-  const v = HERO_VARIANTS[variant];
+function Hero() {
+  const base = import.meta.env.BASE_URL;
   return (
-    <section className="hero hero-overlay">
-      <div className="hero-bg">
-        <ManhattanLattice />
+    <section className="gjhero">
+      <iframe className="gjscene" src={`${base}hero-narrative.html`} title="globe to city to buildings" />
+      <div className="gjscrimL" />
+      <div className="gjscrimB" />
+      <div className="gjtop">
+        <div className="gjmark">Janus</div>
+        <nav className="gjnav"><a>Platform</a><a>Domains</a><a>Company</a></nav>
       </div>
-      <div className="container hero-content">
-        <div className="hero-text">
-          <h1>{v.h1}</h1>
-          <p className="hero-sub" style={{ width: "700px" }}>{v.sub}</p>
-        </div>
+      <div className="gjcopyL">
+        <h1 className="gjh1">Grounding machine intelligence.</h1>
+      </div>
+      <div className="gjcopyR">
+        <p className="gjract">The context layer for the physical world.</p>
+        <hr className="gjrule" />
+        <p className="gjsub">Janus powers <b>location intelligence</b><br />for teams that build in the real world.</p>
       </div>
     </section>);
 
@@ -2230,18 +2238,9 @@ function App() {
   }, [t.accent]);
 
   return (
-    <>
-      <main>
-        <Brand />
-        <Hero variant={t.hero} />
-        <ManifestoFold />
-        <WhatWeKnow />
-        <ProductModules />
-        <Research />
-        <Closing />
-      </main>
-      <GeoTweaks />
-    </>);
+    <main>
+      <Hero />
+    </main>);
 
 }
 
