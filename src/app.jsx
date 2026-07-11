@@ -1,4 +1,3 @@
-import { GlobeLattice } from "./globe-hero.jsx";
 // Geo — landing page. Hero variants, nav variants, accent palette via Tweaks.
 import React from "react";
 import * as ReactDOM from "react-dom/client";
@@ -777,13 +776,12 @@ function Hero({ variant }) {
   return (
     <section className="hero hero-overlay">
       <div className="hero-bg">
-        <GlobeLattice />
+        <ManhattanLattice />
       </div>
       <div className="container hero-content">
         <div className="hero-text">
           <h1>{v.h1}</h1>
           <p className="hero-sub" style={{ width: "700px" }}>{v.sub}</p>
-          <p className="hero-go"><a href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">See it live — the Atlas <span className="hg-arrow">→</span></a></p>
         </div>
       </div>
     </section>);
@@ -2150,10 +2148,9 @@ function Closing() {
           We're a small team working at the frontier of
           <span className="serif-italic"> geospatial foundation models, visitation analysis, and place embeddings.</span>
         </div>
-        <a className="cl-cta serif" href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">
-          Open the Atlas <span className="cl-cta-arrow">→</span>
+        <a className="cl-cta serif" href="#">
+          Join us <span className="cl-cta-arrow">→</span>
         </a>
-        <div className="cl-sub"><a href="#">Join us →</a></div>
       </div>
     </section>);
 
