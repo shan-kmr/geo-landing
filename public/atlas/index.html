@@ -80,15 +80,16 @@ box-shadow:0 2px 8px rgba(22,24,26,.07)}
   
 </div>
 <div id="tip"></div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v14 · same-origin</div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
   <div id="panel-body"></div>
 </aside>
 <script>
-const STATIC="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main";
+const STATIC="./data";
 const LIVE_DISCOVERY="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/live_endpoint.json";
-const TILES="https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/nyc_buildings.pmtiles";
+const TILES=new URL("./data/nyc_buildings.pmtiles",location.href).href;
 const BASEMAP="./basemap-style.json";
 const LADDER=[[5,0],[6,5.8],[7,7.3],[8,8.8],[9,10.3]], BUILDING_ZOOM=13.4;
 const RAMP=[[0,[233,234,236]],[.5,[158,162,168]],[1,[42,45,49]]];
@@ -236,7 +237,7 @@ document.getElementById("shade").onchange=async e=>{
   try{sessionStorage.setItem("atlas_view",JSON.stringify(view));}catch(e){}
   hudUpdate();});
  map.on("moveend",maybeNeed);
- map.on("error",e=>{if(e&&e.error){hud.textContent=("MAP "+e.error.message).slice(0,120);hud.style.color="#B04A3A";}});
+ map.on("error",e=>{if(e&&e.error)console.error("[map]",e.error.message);});
  map.on("load",()=>{
   window.__beforeId=(map.getStyle().layers.find(l=>l.type==="symbol")||{}).id;
   try{
