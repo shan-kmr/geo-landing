@@ -158,7 +158,7 @@ details.jx-acc .jx-bd .jx-lab:first-child{margin-top:2px}
   <input id="sin" placeholder="find a place — bar, café, landmark…" autocomplete="off" spellcheck="false"/>
   <div id="sres"></div>
 </div>
-<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v18 · search<span id="tr"></span></div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v19 · spotlight<span id="tr"></span></div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
@@ -172,7 +172,7 @@ const BASEMAP="./basemap-style.json";
 const LADDER=[[5,0],[6,5.8],[7,7.3],[8,8.8],[9,10.3]], BUILDING_ZOOM=13.4;
 
 let map,overlay,store={},centers=[],requested=new Set(),live=null,focus=null,hoverId=null,
-    fars=null,crashesOn=true;
+    fars=null,crashesOn=true,spotlight=false;
 let view={latitude:40.748,longitude:-73.985,zoom:11.9,pitch:48,bearing:-12};
 const panel=document.getElementById("panel"),pbody=document.getElementById("panel-body"),
       ptitle=document.getElementById("panel-title"),
@@ -245,7 +245,9 @@ function buildLayers(){
  if(focus)
   layers.push(new deck.H3HexagonLayer({id:"focus",data:[{id:focus}],
    getHexagon:d=>d.id,filled:true,stroked:true,extruded:false,
-   getFillColor:[217,72,15,14],getLineColor:[217,72,15,215],lineWidthMinPixels:2,pickable:false}));
+   getFillColor:spotlight?[252,252,251,26]:[217,72,15,14],
+   getLineColor:spotlight?[22,24,26,200]:[217,72,15,215],
+   lineWidthMinPixels:2,pickable:false,updateTriggers:{getFillColor:[spotlight],getLineColor:[spotlight]}}));
  return layers;
 }
 function redraw(){if(overlay)overlay.setProps({layers:buildLayers()});}
@@ -262,10 +264,13 @@ async function openCard(id){
   if(pl)ptitle.textContent=pl.textContent;}
  else pbody.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px 4px">no card for this cell — outside the NYC grid</div>';
 }
-function closeCard(){panel.classList.remove("open");focus=null;redraw();
+function closeCard(){panel.classList.remove("open");focus=null;
  if(marker){marker.remove();marker=null;}
  const hs=map&&map.getSource&&map.getSource("hib");
  if(hs)hs.setData({type:"FeatureCollection",features:[]});
+ if(spotlight){spotlight=false;
+  try{map.setPaintProperty("bldg3d","fill-extrusion-opacity",.8);}catch(e){}}
+ redraw();
  history.replaceState(null,"",location.pathname);}
 document.getElementById("panel-close").onclick=closeCard;
 addEventListener("keydown",e=>{if(e.key==="Escape")closeCard();});
@@ -331,8 +336,10 @@ function goPlace(e){
  if(marker){marker.remove();marker=null;}
  const hs=map.getSource("hib");if(hs)hs.setData({type:"FeatureCollection",features:[]});
  trace("go:"+nm.slice(0,22));
- map.flyTo({center:[lo,la],zoom:16.7,pitch:57,bearing:-18,duration:2600,curve:1.55,essential:true});
+ map.flyTo({center:[lo,la],zoom:15.9,pitch:55,bearing:-18,duration:2600,curve:1.55,essential:true});
  map.once("moveend",()=>{
+  spotlight=true;
+  try{map.setPaintProperty("bldg3d","fill-extrusion-opacity",.1);}catch(e){}
   openCard(cell);
   const el=document.createElement("div");el.className="pmark";
   const dot=document.createElement("i"),lab=document.createElement("span");
@@ -381,8 +388,10 @@ function goPlace(e){
     "fill-extrusion-opacity":.8}},window.__beforeId);
    map.addSource("hib",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
    map.addLayer({id:"hib3d",source:"hib",type:"fill-extrusion",
-    paint:{"fill-extrusion-color":"#D9480F","fill-extrusion-height":["get","h"],
-    "fill-extrusion-base":0,"fill-extrusion-opacity":.34}});
+    paint:{"fill-extrusion-color":"#4A4E54","fill-extrusion-height":["get","h"],
+    "fill-extrusion-base":0,"fill-extrusion-opacity":.92,
+    "fill-extrusion-opacity-transition":{duration:600}}});
+   map.setPaintProperty("bldg3d","fill-extrusion-opacity-transition",{duration:700});
   }catch(e){}
   // deck = renderer only; ALL events flow through maplibre (proven live on every device)
   overlay=new deck.MapboxOverlay({interleaved:false,layers:[]});
