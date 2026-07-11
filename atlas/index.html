@@ -31,6 +31,27 @@ padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:7px}
 .chip i{width:5px;height:5px;border-radius:50%;background:var(--ink);display:inline-block}
 .chip:not(.on){color:var(--muted)}
 .chip:not(.on) i{opacity:.25}
+/* search */
+#sbox{display:none;position:absolute;top:56px;right:18px;z-index:26;width:min(380px,86vw)}
+#sbox input{width:100%;font-family:var(--mono);font-size:12.5px;color:var(--ink);
+background:rgba(252,252,251,.96);backdrop-filter:blur(8px);border:1px solid var(--line);
+border-radius:6px;padding:10px 12px;outline:none}
+#sbox input:focus{border-color:var(--ink)}
+#sres{margin-top:6px;background:rgba(252,252,251,.97);backdrop-filter:blur(8px);
+border:1px solid var(--line);border-radius:6px;overflow:hidden;box-shadow:0 8px 30px rgba(22,24,26,.08)}
+#sres:empty{display:none}
+.srow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+padding:9px 12px;border-top:1px solid var(--line2);cursor:pointer}
+.srow:first-child{border-top:none}
+.srow:hover,.srow.sel{background:#fff}
+.srow .nm{font-size:.86rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .rc{font-family:var(--mono);font-size:.58rem;color:var(--muted);flex:none}
+.srow.muted{color:var(--muted);font-family:var(--mono);font-size:.66rem;cursor:default}
+.pmark{display:flex;align-items:center;gap:7px;pointer-events:none}
+.pmark i{width:9px;height:9px;border-radius:50%;background:var(--ink);display:block;flex:none;
+box-shadow:0 0 0 3px rgba(252,252,251,.85)}
+.pmark span{font-family:var(--disp);font-size:13px;font-weight:600;color:var(--ink);
+text-shadow:0 0 4px var(--ground),0 0 4px var(--ground),0 0 6px var(--ground);white-space:nowrap}
 /* card panel */
 #panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,92vw);z-index:30;background:var(--ground);
 border-left:1px solid var(--line);transform:translateX(103%);transition:transform .32s cubic-bezier(.2,.8,.25,1);
@@ -131,8 +152,13 @@ details.jx-acc .jx-bd .jx-lab:first-child{margin-top:2px}
 <div id="bar">
   <a class="brand" href="../">JANUS<small>ATLAS · NEW YORK</small></a>
   <button id="fq" class="chip on"><i></i>fatal crashes 22–24</button>
+  <button id="sbtn" class="chip" style="margin-left:auto">⌕ search</button>
 </div>
-<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v17 · clean-skin<span id="tr"></span></div>
+<div id="sbox">
+  <input id="sin" placeholder="find a place — bar, café, landmark…" autocomplete="off" spellcheck="false"/>
+  <div id="sres"></div>
+</div>
+<div id="stamp" style="position:absolute;left:10px;bottom:8px;z-index:9;font:10px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;color:#B9BCC1;pointer-events:none">atlas v18 · search<span id="tr"></span></div>
 <aside id="panel">
   <div id="panel-head"><span class="t" id="panel-title">CELL</span>
     <button id="panel-close">esc</button></div>
@@ -237,6 +263,9 @@ async function openCard(id){
  else pbody.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:20px 4px">no card for this cell — outside the NYC grid</div>';
 }
 function closeCard(){panel.classList.remove("open");focus=null;redraw();
+ if(marker){marker.remove();marker=null;}
+ const hs=map&&map.getSource&&map.getSource("hib");
+ if(hs)hs.setData({type:"FeatureCollection",features:[]});
  history.replaceState(null,"",location.pathname);}
 document.getElementById("panel-close").onclick=closeCard;
 addEventListener("keydown",e=>{if(e.key==="Escape")closeCard();});
@@ -262,6 +291,64 @@ document.getElementById("fq").onclick=e=>{
  redraw();
  trace("crashes:"+(crashesOn?"on":"off"));
 };
+
+// ---- place search ----
+const sbox=document.getElementById("sbox"),sin=document.getElementById("sin"),
+      sres=document.getElementById("sres");
+let SIDX=null,marker=null,shownHits=[];
+document.getElementById("sbtn").onclick=async()=>{
+ sbox.style.display="block";sin.focus();trace("search:open");
+ if(!SIDX){
+  sres.innerHTML='<div class="srow muted">reading the index…</div>';
+  SIDX=await fetch(STATIC+"/search.json").then(r=>r.json()).catch(()=>[]);
+  sres.innerHTML='<div class="srow muted">'+SIDX.length.toLocaleString()+' places · type to find one</div>';
+ }
+};
+function closeSearch(){sbox.style.display="none";sin.value="";sres.innerHTML="";shownHits=[];}
+addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch();});
+sin.oninput=()=>{
+ const q=sin.value.trim().toLowerCase();
+ if(q.length<2||!SIDX){sres.innerHTML="";shownHits=[];return;}
+ const hits=[];
+ for(const e of SIDX){
+  const n=e[0].toLowerCase();
+  const s=n.startsWith(q)?3:n.split(/[\s'’]+/).some(w=>w.startsWith(q))?2:n.includes(q)?1:0;
+  if(s)hits.push([s,e]);
+ }
+ hits.sort((a,b)=>b[0]-a[0]||b[1][4]-a[1][4]);
+ shownHits=hits.slice(0,8).map(h=>h[1]);
+ sres.innerHTML=shownHits.map((e,i)=>
+  '<div class="srow" data-i="'+i+'"><span class="nm">'+e[0]+'</span><span class="rc">'
+  +e[3]+(e[4]>=1000?" · "+(e[4]-1000)+" wiki ed.":"")+'</span></div>').join("")
+  ||'<div class="srow muted">nothing by that name</div>';
+};
+sin.onkeydown=e=>{if(e.key==="Enter"&&shownHits.length)goPlace(shownHits[0]);};
+sres.onclick=e=>{const r=e.target.closest(".srow");if(r&&r.dataset.i!=null&&shownHits[+r.dataset.i])goPlace(shownHits[+r.dataset.i]);};
+function goPlace(e){
+ const[nm,la,lo]=e;
+ closeSearch();
+ const cell=h3.latLngToCell(la,lo,9);
+ if(marker){marker.remove();marker=null;}
+ const hs=map.getSource("hib");if(hs)hs.setData({type:"FeatureCollection",features:[]});
+ trace("go:"+nm.slice(0,22));
+ map.flyTo({center:[lo,la],zoom:16.7,pitch:57,bearing:-18,duration:2600,curve:1.55,essential:true});
+ map.once("moveend",()=>{
+  openCard(cell);
+  const el=document.createElement("div");el.className="pmark";
+  const dot=document.createElement("i"),lab=document.createElement("span");
+  lab.textContent=nm;el.appendChild(dot);el.appendChild(lab);
+  marker=new maplibregl.Marker({element:el,anchor:"left",offset:[-4,0]}).setLngLat([lo,la]).addTo(map);
+  setTimeout(()=>{
+   try{
+    const pt=map.project([lo,la]);
+    const fs=map.queryRenderedFeatures([[pt.x-8,pt.y-8],[pt.x+8,pt.y+8]],{layers:["bldg3d"]});
+    if(fs.length&&map.getSource("hib"))
+     map.getSource("hib").setData({type:"FeatureCollection",features:[
+      {type:"Feature",geometry:fs[0].geometry,properties:{h:fs[0].properties.h||18}}]});
+   }catch(err){}
+  },650);
+ });
+}
 
 (async function boot(){
  const missingLibs=["maplibregl","pmtiles","h3","deck"].filter(g=>typeof window[g]==="undefined");
@@ -292,6 +379,10 @@ document.getElementById("fq").onclick=e=>{
     minzoom:BUILDING_ZOOM,paint:{"fill-extrusion-color":"#F1F0ED",
     "fill-extrusion-height":["get","h"],"fill-extrusion-base":0,
     "fill-extrusion-opacity":.8}},window.__beforeId);
+   map.addSource("hib",{type:"geojson",data:{type:"FeatureCollection",features:[]}});
+   map.addLayer({id:"hib3d",source:"hib",type:"fill-extrusion",
+    paint:{"fill-extrusion-color":"#D9480F","fill-extrusion-height":["get","h"],
+    "fill-extrusion-base":0,"fill-extrusion-opacity":.34}});
   }catch(e){}
   // deck = renderer only; ALL events flow through maplibre (proven live on every device)
   overlay=new deck.MapboxOverlay({interleaved:false,layers:[]});
