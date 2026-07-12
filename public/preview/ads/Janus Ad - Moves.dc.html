@@ -17,7 +17,11 @@
       font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #16181A; }
     a { color: #16181A; }
     a:hover { color: #D9480F; }
-  </style>
+      /* phone: the spec panel yields — the spot runs full-bleed */
+    @media (max-width: 700px) {
+      [data-screen-label$="spec"] { display: none !important; }
+    }
+</style>
 </helmet>
 <div style="position: fixed; inset: 0; display: flex;">
   <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
