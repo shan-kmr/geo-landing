@@ -1140,24 +1140,27 @@ function AdMirrorsRoot({ endTagline, endSub }) {
     { t0: 8.4, cell: P.B, screen: "deliv" },
     { t0: 15.0, cell: P.C, screen: "news" },
   ];
-  const END = 20.4;
+  const END = 22.1;   // pushed back so the final pull-back can breathe before the globe
   const FLIP0 = 2.0, FLIP1 = 2.5, RECEDE = 4.6, GONE = 5.4;   // offsets from t0
 
-  // deep dolly-in on each building (the highlight); between neighborhoods a
-  // graceful lift → glide → drop (rise to a mid travel altitude to cross the
-  // real distance, then settle back deep) — never a jarring full pull-out
-  const ZD = 17.3, ZT = 13.0;   // deep arrival zoom · mid travel altitude (neighborhoods are far apart)
+  // ONE zoom-in on the first neighborhood, then STAY at that zoom and pan
+  // straight across town (never lift) — the single pull-back comes only at the
+  // very end, handing off to the globe.
+  const ZD = 17.3, ZI = 13.0, ZW = 14.4;   // stay-zoom (arrival) · intro establishing · gentle end reveal
+  const ZO0 = 20.4, ZO1 = 22.1;            // end pull-back window (only after the last card is done)
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
     const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
-    if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.03, A[1], p), z: lerp(ZT, ZD, p), rot, pitch }; }
+    if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.03, A[1], p), z: lerp(ZI, ZD, p), rot, pitch }; }
     const rec0 = m0 + RECEDE, rec1 = m1 + RECEDE;
-    const trip = (a, b, t0, t1) => { const p = f01(tt, t0, t1); const e = eIO(p); return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: ZD + (ZT - ZD) * Math.sin(p * Math.PI), rot, pitch }; };
+    const pan = (a, b, t0, t1) => { const e = eIO(f01(tt, t0, t1)); return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: ZD, rot, pitch }; };
     if (tt < rec0) return { x: A[0], y: A[1], z: ZD, rot, pitch };
-    if (tt < m1) return trip(A, B, rec0, m1);
+    if (tt < m1)   return pan(A, B, rec0, m1);
     if (tt < rec1) return { x: B[0], y: B[1], z: ZD, rot, pitch };
-    if (tt < m2) return trip(B, C, rec1, m2);
-    return { x: C[0], y: C[1], z: ZD, rot, pitch };
+    if (tt < m2)   return pan(B, C, rec1, m2);
+    if (tt < ZO0)  return { x: C[0], y: C[1], z: ZD, rot, pitch };
+    const e = eIO(f01(tt, ZO0, ZO1));    // everything's done → the one and only pull-back
+    return { x: C[0], y: lerp(C[1], C[1] + 0.12, e), z: lerp(ZD, ZW, e), rot, pitch };
   };
   const optsFn = (tt) => {
     let cell = null, ph = 0;
