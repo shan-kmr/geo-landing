@@ -1040,9 +1040,12 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   else if (t > T2 && t < S3) { sc = 1 - 0.42 * Math.sin(f01(t, T2, S3) * Math.PI); dy = 120 * Math.sin(f01(t, T2, S3) * Math.PI); }
   const phoneK = eO(f01(t, 0.5, 1.2)) * (1 - f01(t, 16.6, 17.1));
 
-  // screens overlap through each transit so the phone is never blank mid-travel
-  const winK = (a, b) => Math.max(0, eO(f01(t, a, a + 0.45)) - f01(t, b - 0.4, b));
-  const kStore = winK(1.9, 7.5), kDeliv = winK(6.9, 12.9), kDisco = winK(12.3, 17.1);
+  // swap the app content in a fast 0.15s cut at each transit midpoint — the
+  // phone is smallest and the map is rushing there, so the cut is masked
+  // (never blank, never a muddy double-exposure)
+  const kStore = 1 - f01(t, 6.75, 6.9);
+  const kDeliv = f01(t, 6.75, 6.9) * (1 - f01(t, 12.15, 12.3));
+  const kDisco = f01(t, 12.15, 12.3);
 
   // "heading to" pill, only while travelling
   const inT1 = t > T1 && t < S2, inT2 = t > T2 && t < S3;
