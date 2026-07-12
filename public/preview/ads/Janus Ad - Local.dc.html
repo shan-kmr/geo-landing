@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Ad 04 · Local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F4F4F2; overflow: hidden;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #16181A; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+    /* phone: the spec panel yields — the spot runs full-bleed */
+    @media (max-width: 700px) {
+      [data-screen-label$="spec"] { display: none !important; }
+    }
+  </style>
+</helmet>
+<div style="position: fixed; inset: 0; display: flex;">
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+    <div style="flex: none; display: flex; align-items: baseline; gap: 14px; padding: 12px 18px 10px;">
+      <span style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 2px 7px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .12em; font-weight: 700;">2d</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85;">AD 04 · "LOCAL" · 22 S · 1080×1920</span>
+      <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; color: #7A7F85;"><a href="Janus Ad - Places.dc.html" style="color: #4A4E54;">ad 01 →</a> · <a href="Janus Ad - One ZIP.dc.html" style="color: #4A4E54;">ad 02 →</a> · <a href="Janus Ad - Moves.dc.html" style="color: #4A4E54;">ad 03 →</a></span>
+    </div>
+    <div style="flex: 1; min-height: 0; position: relative;">
+      <x-import component-from-global-scope="JanusAdLocal" from="./animations.jsx ./atlas-scene.js ./ad-spots.jsx" end-tagline="{{ endTagline }}" end-sub="{{ endSub }}" hint-size="100%,100%"></x-import>
+    </div>
+  </div>
+  <div style="width: 340px; flex: 0 1 340px; min-width: 260px; border-left: 1px solid #DADBDD; background: #FCFCFB; overflow-y: auto; padding: 22px 24px 40px; box-sizing: border-box;" data-screen-label="Ad 04 spec">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 12px;">THE SPOT</div>
+    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -.012em; line-height: 1.2;">One ordinary app. Its homepage re-ranks everywhere you go.</div>
+    <div style="font-size: 12.5px; line-height: 1.6; color: #4A4E54; margin-top: 10px;">The phone is pinned center; the map flies through a day — home, out in the city, home — and the app's feed re-ranks to what matters here and now. Same shell, same person: the hero card and its one action change with the place. The proof is that it re-ranked without any setup — a "PLACED · &lt;why&gt;" ribbon says why each time.</div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">BEATS</div>
+      <div style="display: grid; gap: 7px; font-size: 12px; line-height: 1.5; color: #4A4E54;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:00</span> · "One app. All day." · glide in, the app rises center</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:02.4</span> · STOP 1 · Home, 8:12a — feed: <b>Reorder</b> your usual · PLACED · morning, at home</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:08.2</span> · fly to SoHo · STOP 2, 1:30p — feed re-ranks: <b>Pick up today</b> · PLACED · near you, 2 blocks</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:14</span> · back home · STOP 3, 7:40p — feed re-ranks: <b>Add to cart</b> · PLACED · evening, at home</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:15</span> · "Re-ranked by where you are." · <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:16.9</span> end card over the globe: "Every app is a local app." · "Geospatial infrastructure and intelligence."</div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">RUN IT · ADS MANAGER FIELDS</div>
+      <div style="display: grid; gap: 10px; font-size: 12px; line-height: 1.55; color: #16181A;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PLACEMENT — </span>IG + FB Reels &amp; Stories, 9:16 · also serves feed 4:5 center-crop</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PRIMARY TEXT — </span>"Your homepage shows everyone the same thing. Janus places it — re-ranked to where the user actually is. Evidence attached to every cell of the city."</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">HEADLINE — </span>"Location intelligence for apps"</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">AUDIENCE — </span>product/growth at commerce, marketplace, news &amp; content apps; personalization/ranking teams</div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px; font-size: 11.5px; line-height: 1.55; color: #7A7F85;">Skin swaps cleanly to a news/content feed (headlines re-rank instead of products) — same mechanic, same primitive. Type-only cards keep the paper look premium; no product photos.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;endTagline&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Every app is a local app.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;Every app is a local app.&quot;,&quot;The homepage already knew.&quot;,&quot;Your app, wherever it opens.&quot;,&quot;Placed.&quot;],&quot;section&quot;:&quot;End card&quot;},&quot;endSub&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Geospatial infrastructure and intelligence.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;Geospatial infrastructure and intelligence.&quot;,&quot;Location intelligence for apps in the real world.&quot;],&quot;section&quot;:&quot;End card&quot;}}"></script>
+</body>
+</html>
