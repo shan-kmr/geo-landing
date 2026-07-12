@@ -819,52 +819,68 @@ function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, on
 }
 
 // ── Client-side video export ─────────────────────────────────────────────────
-// The DC host's download button posts a message to window.parent; served
-// standalone there is no host listening, so it does nothing. This records the
-// stage in-browser instead: seek each frame via the engine's sync-seek
-// protocol, rasterize the self-contained <svg> (fonts + images already inlined)
-// onto a canvas, and capture that canvas with MediaRecorder. Driven by wall
-// clock so the file's duration and speed are always correct regardless of how
-// fast frames rasterize (slow machines just yield a lower effective framerate).
+// The DC host's button posts to window.parent; served standalone nothing
+// listens, so it's dead. We can't rasterize the stage to a canvas either — an
+// SVG that contains a <foreignObject> permanently taints any canvas it's drawn
+// to, so captureStream/getImageData are blocked (a hard browser security rule).
+// The one clean in-browser path is getDisplayMedia: the compositor records the
+// real tab, no taint. Desktop-only (iOS Safari has no getDisplayMedia) — there
+// the button explains the screen-recorder route instead.
 
 let __omxBusy = false;
+
+function __omxOverlay(html) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;' +
+    'justify-content:center;background:rgba(10,10,10,.78);color:#fff;-webkit-backdrop-filter:blur(5px);' +
+    'backdrop-filter:blur(5px);font:600 16px/1.55 ui-monospace,Menlo,monospace;letter-spacing:.03em;' +
+    'text-align:center;padding:32px';
+  ov.innerHTML = html;
+  document.body.appendChild(ov);
+  return ov;
+}
 
 async function exportStageVideo() {
   if (__omxBusy) return;
   const svg = document.querySelector('svg[data-om-exportable-video-with-duration-secs]');
-  if (!svg) { alert('Nothing to export yet — let the animation load first.'); return; }
-  if (typeof MediaRecorder === 'undefined' || !HTMLCanvasElement.prototype.captureStream) {
-    alert('This browser can’t record video. Use desktop Chrome, or screen-record.');
+  if (!svg) { alert('Let the animation finish loading, then try again.'); return; }
+  const duration = parseFloat(svg.getAttribute('data-om-exportable-video-with-duration-secs')) || 20;
+
+  const canRecord = typeof MediaRecorder !== 'undefined' &&
+    navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function';
+  if (!canRecord) {
+    __omxOverlay('<div><div style="font-size:18px;margin-bottom:12px">Recording isn’t supported in this browser.</div>' +
+      '<div style="font-weight:400;font-size:13px;color:#B9BCC1;max-width:30ch;margin:0 auto">' +
+      'On iPhone: open Control Center and tap Screen Recording, then play the spot.<br><br>' +
+      'On a computer: open this page in Chrome and the download button records it directly.</div>' +
+      '<div style="margin-top:20px;font-size:12px;color:#7A7F85">tap anywhere to close</div></div>')
+      .addEventListener('click', function () { this.remove(); });
     return;
   }
+
   __omxBusy = true;
+  const seek = (t) => svg.dispatchEvent(new CustomEvent('data-om-seek-to-time-frame',
+    { detail: { time: t, sync: true } }));
 
-  const duration = parseFloat(svg.getAttribute('data-om-exportable-video-with-duration-secs')) || 20;
-  const W = parseInt(svg.getAttribute('width'), 10) || 1080;
-  const H = parseInt(svg.getAttribute('height'), 10) || 1920;
-  const FPS = 30;
-
-  const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;' +
-    'justify-content:center;background:rgba(10,10,10,.74);color:#fff;-webkit-backdrop-filter:blur(4px);' +
-    'backdrop-filter:blur(4px);font:600 15px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.04em';
-  ov.innerHTML = '<div style="text-align:center"><div id="omxp">Rendering… 0%</div>' +
-    '<div style="font-weight:400;font-size:11px;color:#B9BCC1;margin-top:8px">keep this tab in front</div></div>';
-  document.body.appendChild(ov);
-  const pctEl = ov.querySelector('#omxp');
-
-  const cleanup = () => { ov.remove(); __omxBusy = false; };
+  let ov, stream, rec;
+  const cleanup = () => {
+    if (ov) ov.remove();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    __omxBusy = false;
+  };
 
   try {
-    // wait for fonts to finish inlining so the raster isn't set in a fallback face
-    for (let i = 0; i < 60 && svg.getAttribute('data-om-fonts-inlined') !== 'true'; i++) {
+    for (let i = 0; i < 40 && svg.getAttribute('data-om-fonts-inlined') !== 'true'; i++) {
       await new Promise(r => setTimeout(r, 50));
     }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const cx = canvas.getContext('2d');
-    cx.fillStyle = '#FCFCFB'; cx.fillRect(0, 0, W, H);
+    // Chrome honours preferCurrentTab → no picker friction; others show a chooser.
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { frameRate: 30 }, audio: false, preferCurrentTab: true
+      });
+    } catch (e) {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: false });
+    }
 
     const types = ['video/mp4;codecs=h264', 'video/mp4', 'video/webm;codecs=vp9',
                    'video/webm;codecs=vp8', 'video/webm'];
@@ -872,50 +888,35 @@ async function exportStageVideo() {
     for (const t of types) { try { if (MediaRecorder.isTypeSupported(t)) { mime = t; break; } } catch (e) {} }
     const ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
 
-    const stream = canvas.captureStream(FPS);
-    const rec = new MediaRecorder(stream, mime
-      ? { mimeType: mime, videoBitsPerSecond: 12000000 }
-      : { videoBitsPerSecond: 12000000 });
+    rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 12000000 }
+                                         : { videoBitsPerSecond: 12000000 });
     const chunks = [];
     rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
     const stopped = new Promise(res => { rec.onstop = res; });
 
-    const XMLS = new XMLSerializer();
-    const seek = (t) => svg.dispatchEvent(new CustomEvent('data-om-seek-to-time-frame',
-      { detail: { time: t, sync: true } }));
-    const rasterize = () => new Promise((res) => {
-      const clone = svg.cloneNode(true);
-      clone.style.transform = 'none';
-      clone.style.boxShadow = 'none';
-      clone.setAttribute('width', W);
-      clone.setAttribute('height', H);
-      const url = URL.createObjectURL(new Blob([XMLS.serializeToString(clone)],
-        { type: 'image/svg+xml;charset=utf-8' }));
-      const img = new Image();
-      img.onload = () => { try { cx.drawImage(img, 0, 0, W, H); } catch (e) {} URL.revokeObjectURL(url); res(); };
-      img.onerror = () => { URL.revokeObjectURL(url); res(); };
-      img.src = url;
-    });
+    ov = __omxOverlay('<div><div id="omxp">Recording… 0%</div>' +
+      '<div style="font-weight:400;font-size:12px;color:#B9BCC1;margin-top:10px">' +
+      'keep this tab in front · don’t switch windows</div></div>');
+    const pctEl = ov.querySelector('#omxp');
 
-    // draw frame 0 before the recorder starts so there's no blank lead-in
-    seek(0); await rasterize();
+    seek(0);
+    await new Promise(r => setTimeout(r, 200));
     rec.start();
     const start = performance.now();
     for (;;) {
       const el = (performance.now() - start) / 1000;
       if (el >= duration) break;
       seek(el);
-      await rasterize();
-      pctEl.textContent = 'Rendering… ' + Math.min(99, Math.round((el / duration) * 100)) + '%';
+      pctEl.textContent = 'Recording… ' + Math.min(99, Math.round((el / duration) * 100)) + '%';
       await new Promise(r => requestAnimationFrame(r));
     }
-    await new Promise(r => setTimeout(r, 150));   // let the last frame flush
+    await new Promise(r => setTimeout(r, 150));
     rec.stop();
     await stopped;
     seek(0);
 
     const blob = new Blob(chunks, { type: mime || 'video/webm' });
-    if (!blob.size) { alert('Recording came back empty — try desktop Chrome.'); cleanup(); return; }
+    if (!blob.size) { alert('Recording came back empty — try again and choose “This Tab”.'); cleanup(); return; }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -923,7 +924,11 @@ async function exportStageVideo() {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (err) {
-    alert('Export failed: ' + (err && err.message ? err.message : err));
+    if (err && (err.name === 'NotAllowedError' || err.name === 'AbortError')) {
+      /* user cancelled the share picker — silent */
+    } else {
+      alert('Recording failed: ' + (err && err.message ? err.message : err));
+    }
   } finally {
     cleanup();
   }
