@@ -775,21 +775,53 @@
   // spot.bldg variant: the veil stays, but the signal mark is the actual
   // building footprint (roof wash + edges) instead of a radius circle —
   // the place, not a geofence radius.
-  function drawSpotBldg(ctx, X, W, H, spot, phase, lit) {
+  function drawSpotBldg(ctx, X, W, H, spot, phase, lit, blink) {
     const [px, py] = X.px(spot.x, spot.y);
     const r = Math.max(26, (spot.rKm || 0.05) * X.s);
-    ctx.save();
-    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 2.1, 0, Math.PI * 2, true);
-    ctx.fillStyle = "rgba(252,252,251," + (0.20 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
-    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 1.45, 0, Math.PI * 2, true);
-    ctx.fillStyle = "rgba(252,252,251," + (0.16 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
-    ctx.restore();
     const pc = lit.pc, dh = lit.dh || 0;
     const path = (off) => {
       ctx.beginPath();
       pc.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1] - off) : ctx.moveTo(p[0], p[1] - off)));
       ctx.closePath();
     };
+    // live "this place" highlight — deep red, glowing, pulsing (opt-in via `blink`,
+    // so the Atlas POI highlight keeps its original signal-orange static look)
+    if (blink != null) {
+      const b = blink, RED = "208,36,24", cy = py - dh * 0.5;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, cy, r * 2.4, 0, Math.PI * 2, true);
+      ctx.fillStyle = "rgba(250,250,249," + (0.17 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+      ctx.restore();
+      ctx.save();
+      const g = ctx.createRadialGradient(px, cy, r * 0.15, px, cy, r * 2.5);
+      g.addColorStop(0, "rgba(" + RED + "," + ((0.34 + 0.32 * b) * phase).toFixed(3) + ")");
+      g.addColorStop(0.55, "rgba(" + RED + "," + ((0.10 + 0.12 * b) * phase).toFixed(3) + ")");
+      g.addColorStop(1, "rgba(" + RED + ",0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px, cy, r * 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = "rgba(" + RED + "," + (0.5 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.4;
+      for (const p of pc) { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0], p[1] - dh); ctx.stroke(); }
+      ctx.save();
+      path(dh);
+      ctx.shadowColor = "rgba(" + RED + "," + (0.95 * phase).toFixed(3) + ")";
+      ctx.shadowBlur = 16 + 26 * b;
+      ctx.fillStyle = "rgba(" + RED + "," + ((0.32 + 0.18 * b) * phase).toFixed(3) + ")";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(" + RED + "," + ((0.72 + 0.28 * b) * phase).toFixed(3) + ")";
+      ctx.lineWidth = 2.4 + 1.6 * b;
+      ctx.stroke();
+      ctx.restore();
+      path(0);
+      ctx.strokeStyle = "rgba(" + RED + "," + (0.5 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.2; ctx.stroke();
+      return;
+    }
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 2.1, 0, Math.PI * 2, true);
+    ctx.fillStyle = "rgba(252,252,251," + (0.20 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 1.45, 0, Math.PI * 2, true);
+    ctx.fillStyle = "rgba(252,252,251," + (0.16 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+    ctx.restore();
     path(dh);
     ctx.fillStyle = "rgba(217,72,15," + (0.13 * phase).toFixed(3) + ")"; ctx.fill();
     ctx.strokeStyle = "rgba(217,72,15," + (0.92 * phase).toFixed(3) + ")"; ctx.lineWidth = 2.2; ctx.stroke();
@@ -845,7 +877,7 @@
     if (opts.spot) {
       const sp = opts.spotPhase == null ? 1 : opts.spotPhase;
       if (sp > 0.01) {
-        if (opts.spot.bldg && X.__lit) drawSpotBldg(ctx, X, W, H, opts.spot, sp, X.__lit);
+        if (opts.spot.bldg && X.__lit) drawSpotBldg(ctx, X, W, H, opts.spot, sp, X.__lit, opts.spotBlink);
         else drawSpot(ctx, X, W, H, opts.spot, sp);
       }
     }
