@@ -331,17 +331,17 @@ function PhoneShot({ t }) {
       const buf = document.createElement("canvas"); buf.width = 576; buf.height = 380;
       const [cx, cy] = J.m2w(-0.06, -2.56);
       J.drawCity(buf.getContext("2d"), 576, 380, { x: cx, y: cy, z: 17.8, rot: 0.32, pitch: 0.7 },
-        { hexOpacity: 0, spot: { x: cx, y: cy, rKm: 0.038 }, spotPhase: 0.9, live: { on: true, t: 44, alpha: 0.8 }, labels: true });
+        { hexOpacity: 0, spot: { x: cx, y: cy, rKm: 0.038, bldg: true }, spotPhase: 0.9, live: { on: true, t: 44, alpha: 0.8 }, labels: true });
       cacheRef.current = buf.toDataURL("image/jpeg", 0.92);
     }
     if (!imgRef.current.src) imgRef.current.src = cacheRef.current;
   }, [t]);
   const up = eO(f01(t, 6.5, 7.3));
-  const down = eIO(f01(t, 14.6, 15.2));
+  const down = eIO(f01(t, 12.9, 13.5));
   if (t < 6.5 || down >= 1) return null;
   const ty = lerp(1560, 430, up) + down * 1560;
   const noteK = eO(f01(t, 7.5, 8.1));
-  const inStore = eO(f01(t, 12.0, 12.7));
+  const inStore = eO(f01(t, 10.4, 11.0));
   const xf = Math.abs(inStore - 0.5) * 2;              // crossfade helper
   const ctxRow = (t0, k, v, warm) => {
     const rk = f01(t, t0, t0 + 0.4);
@@ -367,9 +367,9 @@ function PhoneShot({ t }) {
         </div>
         <img ref={imgRef} width={576} height={380} alt="" style={{ width: "100%", height: 380, display: "block", background: "#FAFAF9" }} />
         <div style={{ padding: "6px 38px 12px" }}>
-          {ctxRow(9.0, "At the door", "just now", true)}
-          {ctxRow(9.35, "12th visit this month", "regular")}
-          {ctxRow(9.7, "Counter pickup", "2 ahead, 3 min")}
+          {ctxRow(8.4, "At the door", "just now", true)}
+          {ctxRow(8.7, "12th visit this month", "regular")}
+          {ctxRow(9.0, "Counter pickup", "2 ahead, 3 min")}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 38px 20px", borderTop: "1.5px solid " + LINE }}>
           <div style={{ opacity: 0.4 + 0.6 * xf }}>
@@ -384,7 +384,7 @@ function PhoneShot({ t }) {
         </div>
         <div style={{
           position: "absolute", left: 24, right: 24, top: 78,
-          transform: `translateY(${lerp(-160, 0, noteK)}px)`, opacity: noteK * (1 - eO(f01(t, 11.4, 12.0))),
+          transform: `translateY(${lerp(-160, 0, noteK)}px)`, opacity: noteK * (1 - eO(f01(t, 9.9, 10.4))),
           background: "rgba(252,252,251,.98)", border: "1.5px solid " + LINE, borderRadius: 24,
           boxShadow: "0 14px 40px rgba(22,24,26,.13)", padding: "22px 26px", display: "flex", gap: 18, alignItems: "center"
         }}>
@@ -411,27 +411,27 @@ function AdPlacesRoot({ endTagline, endSub }) {
   const camFn = (tt) => {
     const glideU = lerp(-1.92, -2.44, f01(tt, 0, 4.5));      // street run
     const settle = eIO(f01(tt, 4.5, 6.5));                    // the turn
-    const creep = 0.018 * f01(tt, 6.5, 14.6);
-    const rise = eIO(f01(tt, 14.8, 16.7));                    // pull up
+    const creep = 0.018 * f01(tt, 6.5, 13.4);
+    const rise = eIO(f01(tt, 13.6, 15.2));                    // gentle lift — stays in the neighborhood
     const [gx, gy] = J.m2w(-0.004, glideU);
     const [sx, sy] = J.m2w(-0.052, -2.532 - creep);
-    const [rx, ry] = J.m2w(-0.062, -2.47);
+    const [rx, ry] = J.m2w(-0.058, -2.505);
     return {
       x: lerp(lerp(gx, sx, settle), rx, rise),
       y: lerp(lerp(gy, sy, settle), ry, rise),
-      z: lerp(lerp(17.95, 18.3, settle), 14.4, rise),
-      rot: lerp(lerp(tl.rot0, 0.3, settle), 0.24, rise),
-      pitch: lerp(0.86, 0.78, rise)
+      z: lerp(lerp(17.95, 18.3, settle), 16.1, rise),
+      rot: lerp(lerp(tl.rot0, 0.3, settle), 0.27, rise),
+      pitch: lerp(0.86, 0.81, rise)
     };
   };
   const optsFn = (tt) => {
-    const spotPhase = eO(f01(tt, 5.3, 6.1)) * (1 - f01(tt, 14.8, 15.6));
+    const spotPhase = eO(f01(tt, 5.3, 6.1)) * (1 - f01(tt, 13.5, 14.3));
     return {
       hexOpacity: 0,
-      spot: spotPhase > 0.02 ? { x: tl.cell[0], y: tl.cell[1], rKm: 0.052 } : null,
+      spot: spotPhase > 0.02 ? { x: tl.cell[0], y: tl.cell[1], rKm: 0.052, bldg: true } : null,
       spotPhase,
       live: (function () {
-        const la = lerp(0.5, 1, f01(tt, 15.0, 16.0)) * (1 - f01(tt, 16.9, 17.5));
+        const la = lerp(0.5, 1, f01(tt, 13.8, 14.7)) * (1 - f01(tt, 15.0, 15.6));
         return la > 0.01 ? { on: true, t: 30 + tt, alpha: la } : null;
       })(),
       labels: true, __f: 1
@@ -450,12 +450,11 @@ function AdPlacesRoot({ endTagline, endSub }) {
       <PhoneShot t={t} />
       <CaptionTop t={t} beats={[
         { t0: 0.6, t1: 4.6, text: "Intent arrives first.", size: 62 },
-        { t0: 8.2, t1: 11.4, text: "The usual in one tap.", size: 54 }
+        { t0: 8.2, t1: 10.1, text: "The usual in one tap.", size: 54 }
       ]} />
-      {closeLine(15.3, 16.8, "Location intelligence for restaurants.")}
-      <EndCard t={t} t0={16.8} globe={true} tagline={endTagline || "Regulars aren't luck."}
-        sub={endSub || "Geofencing that knows the place."}
-        subline="arrivals · place context · one API" />
+      {closeLine(11.8, 13.4, "Location intelligence for restaurants.")}
+      <EndCard t={t} t0={14.6} globe={true} tagline={endTagline || "Regulars aren't luck."}
+        sub={endSub || "Geofencing that knows the place."} />
     </div>
   );
 }
