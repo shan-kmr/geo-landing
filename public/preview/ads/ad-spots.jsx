@@ -1210,7 +1210,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         { t0: 15.7, t1: 20.2, text: "News that knows your block.", size: 42 },
       ]} />
 
-      <EndCard t={t} t0={END} globe={true} tagline=""
+      <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
         sub={endSub || "Geospatial infrastructure and intelligence."} />
     </div>
   );
