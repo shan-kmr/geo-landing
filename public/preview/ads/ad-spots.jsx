@@ -1129,9 +1129,9 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const J = window.JanusScene;
   const P = React.useMemo(() => {
     if (!J) return null;
-    // three buildings in three DIFFERENT neighborhoods — a real trip across town
-    // A ~ Canal/SoHo · B ~ Flatiron (north) · C ~ Lower East Side (east)
-    return { A: J.m2w(-0.045, -2.53), B: J.m2w(0.05, -2.31), C: J.m2w(-0.12, -2.44) };
+    // real neighborhood world-coords (from JanusScene.LABELS) — a true trip across town
+    // A ~ Canal/SoHo · B ~ Flatiron/Gramercy (north) · C ~ Lower East Side (east)
+    return { A: [-1.12, -2.12], B: [0.5, 0.34], C: [-0.44, -1.9] };
   }, [J]);
   if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
 
@@ -1146,7 +1146,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   // deep dolly-in on each building (the highlight); between neighborhoods a
   // graceful lift → glide → drop (rise to a mid travel altitude to cross the
   // real distance, then settle back deep) — never a jarring full pull-out
-  const ZD = 17.3, ZT = 14.2;   // deep arrival zoom · mid travel altitude
+  const ZD = 17.3, ZT = 13.0;   // deep arrival zoom · mid travel altitude (neighborhoods are far apart)
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
     const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
