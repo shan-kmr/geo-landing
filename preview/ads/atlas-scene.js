@@ -578,6 +578,23 @@
       if (!pc.some(([px, py]) => px > -80 && px < W + 80 && py > -260 && py < H + 80)) continue;
       proj.push({ pc, h: b.h, dh: b.h * X.s * K, yBase: Math.max(...pc.map((p) => p[1])), seed: b.seed });
     }
+    // spot.bldg mode: remember the building at (or nearest) the spot point
+    if (X.__litPt) {
+      const [qx, qy] = X.__litPt;
+      let best = null, bestD = 110 * 110;
+      for (const b of proj) {
+        const cx = b.pc.reduce((t, p) => t + p[0], 0) / 4, cy = b.pc.reduce((t, p) => t + p[1], 0) / 4;
+        let inside = false;
+        for (let i = 0, j = 3; i < 4; j = i++) {
+          const [xi, yi] = b.pc[i], [xj, yj] = b.pc[j];
+          if ((yi > qy) !== (yj > qy) && qx < ((xj - xi) * (qy - yi)) / (yj - yi) + xi) inside = !inside;
+        }
+        const d = (cx - qx) * (cx - qx) + (cy - qy) * (cy - qy);
+        if (inside) { best = b; break; }
+        if (d < bestD) { bestD = d; best = b; }
+      }
+      X.__lit = best;
+    }
     proj.sort((a, b2) => a.yBase - b2.yBase);
     if (hiZoom) {
       ctx.fillStyle = "rgba(22,24,26," + (0.045 * fade).toFixed(3) + ")";
@@ -755,6 +772,33 @@
     return cell;
   }
 
+  // spot.bldg variant: the veil stays, but the signal mark is the actual
+  // building footprint (roof wash + edges) instead of a radius circle —
+  // the place, not a geofence radius.
+  function drawSpotBldg(ctx, X, W, H, spot, phase, lit) {
+    const [px, py] = X.px(spot.x, spot.y);
+    const r = Math.max(26, (spot.rKm || 0.05) * X.s);
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 2.1, 0, Math.PI * 2, true);
+    ctx.fillStyle = "rgba(252,252,251," + (0.20 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+    ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, py, r * 1.45, 0, Math.PI * 2, true);
+    ctx.fillStyle = "rgba(252,252,251," + (0.16 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+    ctx.restore();
+    const pc = lit.pc, dh = lit.dh || 0;
+    const path = (off) => {
+      ctx.beginPath();
+      pc.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1] - off) : ctx.moveTo(p[0], p[1] - off)));
+      ctx.closePath();
+    };
+    path(dh);
+    ctx.fillStyle = "rgba(217,72,15," + (0.13 * phase).toFixed(3) + ")"; ctx.fill();
+    ctx.strokeStyle = "rgba(217,72,15," + (0.92 * phase).toFixed(3) + ")"; ctx.lineWidth = 2.2; ctx.stroke();
+    path(0);
+    ctx.strokeStyle = "rgba(217,72,15," + (0.45 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.3; ctx.stroke();
+    ctx.strokeStyle = "rgba(217,72,15," + (0.55 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.3;
+    for (const p of pc) { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0], p[1] - dh); ctx.stroke(); }
+  }
+
   // premium focus: paper veil outside a soft circle + one signal ring
   function drawSpot(ctx, X, W, H, spot, phase) {
     const [px, py] = X.px(spot.x, spot.y);
@@ -783,6 +827,8 @@
     opts = opts || {};
     ctx.save();
     const X = makeXform(W, H, cam);
+    X.__lit = null;
+    X.__litPt = (opts.spot && opts.spot.bldg) ? X.px(opts.spot.x, opts.spot.y) : null;
     drawGround(ctx, W, H, X);
     drawFabric(ctx, X, W, H, cam.z);
     drawHexes(ctx, X, W, H, cam, opts);
@@ -798,7 +844,10 @@
     if (opts.selected2) drawSelected(ctx, X, opts.selected2, opts.selected2Phase);
     if (opts.spot) {
       const sp = opts.spotPhase == null ? 1 : opts.spotPhase;
-      if (sp > 0.01) drawSpot(ctx, X, W, H, opts.spot, sp);
+      if (sp > 0.01) {
+        if (opts.spot.bldg && X.__lit) drawSpotBldg(ctx, X, W, H, opts.spot, sp, X.__lit);
+        else drawSpot(ctx, X, W, H, opts.spot, sp);
+      }
     }
     if (opts.labels !== false) drawLabels(ctx, X, W, H, z);
     ctx.restore();
