@@ -897,3 +897,199 @@ function JanusAdCatalog(props) {
   return <Stage width={1080} height={1920} duration={22} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdCatalogRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
 }
 window.JanusAdCatalog = JanusAdCatalog;
+
+/* ============================================================
+   AD 05 — MIRRORS ("Three apps. One layer.")
+   Same person moving through the city; at each move the phone shows
+   a DIFFERENT real app doing its real location behavior:
+     move 1 · Store Mode      (walk in → the app becomes the store)   [live geofence]
+     move 2 · Delivery        (get home → a different storefront)     [DoorDash-style]
+     move 3 · Local discovery (head out → what's good right here)     [Yelp/Snap-style]
+   Movement shows in the transitions: the phone shrinks and rides the
+   flying map between moves, then grows so each app reads clearly.
+   New page, own component; nothing existing changes.
+   ============================================================ */
+
+function MStatus() {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "20px 34px 6px", fontFamily: MONO, fontSize: 19, color: INK }}>
+      <span>9:41</span><span style={{ letterSpacing: ".1em", color: MUT }}>▪ ▪ ▪</span>
+    </div>
+  );
+}
+function MBrand({ mark, name, right, live }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "4px 34px 14px", borderBottom: "1.5px solid " + LINE }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: INK }} />
+      <span style={{ fontFamily: GROT, fontWeight: 700, fontSize: 25, color: INK, letterSpacing: "-.01em" }}>{name}</span>
+      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 16, color: INK }}>
+        {live && <span style={{ width: 9, height: 9, borderRadius: 5, background: SIG, display: "inline-block" }} />}{right}
+      </span>
+    </div>
+  );
+}
+function MThumb({ letter, w }) {
+  return (
+    <div style={{ width: w || 96, height: w || 96, borderRadius: 16, flex: "none",
+      background: "linear-gradient(150deg,#F6F5F2,#E9E9E5)", display: "flex", alignItems: "center", justifyContent: "center",
+      fontFamily: GROT, fontWeight: 700, fontSize: 40, color: "#C4C7CB" }}>{letter}</div>
+  );
+}
+function MRow({ thumb, title, sub, r1, r2, warm }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "13px 0", borderBottom: "1.5px solid " + LINE }}>
+      {thumb != null && <MThumb letter={thumb} />}
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 25, color: INK, lineHeight: 1.1 }}>{title}</div>
+        <div style={{ fontFamily: MONO, fontSize: 15, color: MUT, marginTop: 4 }}>{sub}</div>
+      </div>
+      <div style={{ textAlign: "right", flex: "none" }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 22, color: INK }}>{r1}</div>
+        {r2 && <div style={{ fontFamily: MONO, fontSize: 14, color: warm ? SIG : MUT, marginTop: 3 }}>{r2}</div>}
+      </div>
+    </div>
+  );
+}
+
+function ScreenStore() {
+  return (
+    <div>
+      <MStatus />
+      <MBrand name="FIELD" right="IN STORE" live />
+      <div style={{ padding: "16px 34px 0" }}>
+        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".14em", color: FNT, marginBottom: 12 }}>STORE MODE · SOHO</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          background: INK, color: PAPER, borderRadius: 16, padding: "20px 0", marginBottom: 18 }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={PAPER} strokeWidth="1.6"><path d="M4 5v14M8 5v14M11 5v14M14 5v14M18 5v14M21 5v14" /></svg>
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 24 }}>Scan a barcode</span>
+        </div>
+        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, margin: "6px 0 2px" }}>In this store</div>
+        <MRow title="Trail runners, your size" sub="in stock here" r1="Aisle 7" />
+        <MRow title="20% off jackets" sub="today only" r1="→" r2="ends 6pm" warm />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 0" }}>
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 22, color: INK }}>FIELD+ rewards</span>
+          <span style={{ fontFamily: MONO, fontSize: 18, color: INK }}>2,140 pts</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+function ScreenDelivery() {
+  return (
+    <div>
+      <MStatus />
+      <MBrand name="munch" right="Home · 12 min" />
+      <div style={{ padding: "16px 34px 0" }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>Fastest near you</div>
+        <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>delivering to Home · West Village</div>
+        <MRow thumb="R" title="Rowdy Rooster" sub="Indian · ★ 4.8" r1="11 min" r2="$0 fee" warm />
+        <MRow thumb="S" title="Sena Sushi" sub="Japanese · ★ 4.7" r1="14 min" r2="$1.99" />
+        <MRow thumb="N" title="Nonna's" sub="Italian · ★ 4.6" r1="18 min" r2="$0 fee" warm />
+        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ Top 10 in the West Village</div>
+      </div>
+    </div>
+  );
+}
+function ScreenDiscovery() {
+  return (
+    <div>
+      <MStatus />
+      <MBrand name="roam" right="SoHo" live />
+      <div style={{ padding: "16px 34px 0" }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>What's good, right here</div>
+        <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>trending near you now</div>
+        <MRow thumb="M" title="Maman" sub="Café · ★ 4.7 · 2 min" r1="Open" r2="busy now" warm />
+        <MRow thumb="O" title="The Otheroom" sub="Wine bar · ★ 4.6 · 4 min" r1="Open" r2="til late" />
+        <MRow thumb="R" title="Rappaport" sub="Gallery · 5 min" r1="Open" r2="quiet" />
+        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ 40 more places around you</div>
+      </div>
+    </div>
+  );
+}
+
+function AdMirrorsRoot({ endTagline, endSub }) {
+  const t = useTime();
+  const J = window.JanusScene;
+  const P = React.useMemo(() => {
+    if (!J) return null;
+    return { A: J.m2w(-0.05, -2.55), B: J.m2w(0.04, -2.42), C: J.m2w(-0.11, -2.60) };
+  }, [J]);
+  if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
+
+  // timeline
+  const S1 = 2.2, T1 = 6.2, S2 = 7.6, T2 = 11.6, S3 = 13.0, CLOSE = 17.0, END = 18.4;
+
+  const camFn = (tt) => {
+    let a = P.A, b = P.A, seg = 0;
+    if (tt < T1) { a = P.A; b = P.A; }
+    else if (tt < S2) { a = P.A; b = P.B; seg = f01(tt, T1, S2); }
+    else if (tt < T2) { a = P.B; b = P.B; }
+    else if (tt < S3) { a = P.B; b = P.C; seg = f01(tt, T2, S3); }
+    else { a = P.C; b = P.C; }
+    const e = eIO(seg);
+    const gliding = (tt > T1 && tt < S2) || (tt > T2 && tt < S3);
+    return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: gliding ? 14.6 : 15.9, rot: 0.28, pitch: 0.9 };
+  };
+  const optsFn = () => ({ hexOpacity: 0, spot: null, live: null, labels: true });
+
+  // phone transform
+  let sc = 1, dy = 0;
+  if (t < S1) sc = lerp(0.25, 1, eO(f01(t, 0.6, S1)));
+  else if (t > T1 && t < S2) { sc = 1 - 0.42 * Math.sin(f01(t, T1, S2) * Math.PI); dy = 120 * Math.sin(f01(t, T1, S2) * Math.PI); }
+  else if (t > T2 && t < S3) { sc = 1 - 0.42 * Math.sin(f01(t, T2, S3) * Math.PI); dy = 120 * Math.sin(f01(t, T2, S3) * Math.PI); }
+  const phoneK = eO(f01(t, 0.5, 1.2)) * (1 - f01(t, CLOSE + 0.2, END - 0.1));
+
+  const winK = (a, b) => Math.max(0, eO(f01(t, a, a + 0.45)) - f01(t, b - 0.35, b));
+  const kStore = winK(1.9, T1 + 0.2), kDeliv = winK(S2 - 0.2, T2 + 0.2), kDisco = winK(S3 - 0.2, CLOSE + 0.2);
+
+  // "heading to" pill, only while travelling
+  const inT1 = t > T1 && t < S2, inT2 = t > T2 && t < S3;
+  const dest = inT1 ? "getting home" : inT2 ? "heading out · SoHo" : null;
+
+  const PB = { w: 640, h: 1210, left: 220, top: 300 };
+
+  return (
+    <div data-screen-label={"ad-mirrors t=" + Math.floor(t) + "s"} style={{ position: "absolute", inset: 0, background: PAPER, overflow: "hidden" }}>
+      <MapShot t={t} on={true} camFn={camFn} optsFn={optsFn} fadeIn={f01(t, 0, 0.5)} />
+
+      {dest && (
+        <div style={{ position: "absolute", left: 0, right: 0, top: 210, textAlign: "center", opacity: 0.9,
+          fontFamily: MONO, fontSize: 22, letterSpacing: ".14em", textTransform: "uppercase", color: MUT }}>→ {dest}</div>
+      )}
+
+      {phoneK > 0.01 && (
+        <div style={{ position: "absolute", left: PB.left, top: PB.top, width: PB.w, height: PB.h,
+          transform: `translateY(${dy}px) scale(${sc})`, transformOrigin: "center center", opacity: phoneK }}>
+          <div style={{ position: "absolute", inset: 0, background: "#FFFFFF", borderRadius: 58,
+            border: "3px solid rgba(22,24,26,.8)", boxShadow: "0 34px 100px rgba(22,24,26,.20)", overflow: "hidden" }}>
+            <div style={{ position: "absolute", inset: 0, opacity: kStore }}><ScreenStore /></div>
+            <div style={{ position: "absolute", inset: 0, opacity: kDeliv }}><ScreenDelivery /></div>
+            <div style={{ position: "absolute", inset: 0, opacity: kDisco }}><ScreenDiscovery /></div>
+          </div>
+        </div>
+      )}
+
+      <CaptionTop t={t} y={132} beats={[
+        { t0: 2.5, t1: 5.9, text: "Walk in. It becomes the store.", size: 44 },
+        { t0: 8.0, t1: 11.3, text: "Get home. A new storefront.", size: 44 },
+        { t0: 13.3, t1: 16.6, text: "Head out. What's good, here.", size: 44 },
+      ]} />
+
+      {(() => {
+        const k = f01(t, CLOSE, CLOSE + 0.5) - f01(t, END - 0.3, END);
+        if (k <= 0) return null;
+        return <div style={{ position: "absolute", left: 60, right: 60, top: 820, textAlign: "center",
+          fontFamily: GROT, fontWeight: 600, fontSize: 62, letterSpacing: "-.015em", color: INK,
+          opacity: k, transform: `translateY(${(1 - eO(k)) * 14}px)` }}>Three apps.<br />One layer.</div>;
+      })()}
+
+      <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
+        sub={endSub || "Geospatial infrastructure and intelligence."} />
+    </div>
+  );
+}
+function JanusAdMirrors(props) {
+  return <Stage width={1080} height={1920} duration={24} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMirrorsRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
+}
+window.JanusAdMirrors = JanusAdMirrors;
