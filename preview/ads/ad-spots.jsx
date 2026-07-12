@@ -69,11 +69,11 @@ function EndCard({ t, t0, tagline, sub, subline, globe }) {
     const ctx = bufRef.current.getContext("2d");
     ctx.fillStyle = PAPER; ctx.fillRect(0, 0, 1080, 1920);
     if (globe) {
-      // alive, not static: the globe keeps turning slowly through the dwell
-      // (Places v2 picture notes: alpha .15, R 560, cy 1140, rotation halved)
+      // alive, not static: the globe turns at the hero rig's natural rate,
+      // set whisper-light behind the type
       window.JanusScene.drawGlobe(ctx, 1080, 1920, {
-        cx: 540, cy: 1140, R: 560, rot: -2.86 + (t - t0) * 0.045, tilt: 0.55,
-        alpha: 0.15, pulse: { lat: 40.7, lon: -74, amt: 0.25 }
+        cx: 540, cy: 1140, R: 560, rot: -2.86 + (t - t0) * 0.09, tilt: 0.55,
+        alpha: 0.10, pulse: { lat: 40.7, lon: -74, amt: 0.25 }
       });
     }
     window.JanusScene.blitToImg(bufRef.current, imgRef.current, true, 0.9);
@@ -454,7 +454,7 @@ function AdPlacesRoot({ endTagline, endSub }) {
       ]} />
       {closeLine(11.8, 13.4, "Location intelligence for restaurants.")}
       <EndCard t={t} t0={14.6} globe={true} tagline={endTagline || "Regulars aren't luck."}
-        sub={endSub || "Geofencing that knows the place."} />
+        sub={endSub || "Location intelligence for apps in the real world."} />
     </div>
   );
 }
