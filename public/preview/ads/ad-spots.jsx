@@ -973,7 +973,7 @@ function GTile({ g, name, price, st }) {
 }
 
 function ScreenShopping({ placed, tt }) {
-  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
+  const R = (d) => { const k = eO(f01(tt, d * 0.55, d * 0.55 + 0.32)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   if (!placed) return (
     <div>
       <MStatus />
@@ -1011,7 +1011,7 @@ function ScreenShopping({ placed, tt }) {
   );
 }
 function ScreenDelivery({ placed, tt }) {
-  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
+  const R = (d) => { const k = eO(f01(tt, d * 0.55, d * 0.55 + 0.32)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   if (!placed) return (
     <div>
       <MStatus />
@@ -1044,7 +1044,7 @@ function ScreenDelivery({ placed, tt }) {
   );
 }
 function ScreenNews({ placed, tt }) {
-  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
+  const R = (d) => { const k = eO(f01(tt, d * 0.55, d * 0.55 + 0.32)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   if (!placed) return (
     <div>
       <MStatus />
@@ -1101,11 +1101,11 @@ function AdMirrorsRoot({ endTagline, endSub }) {
 
   const moves = [
     { t0: 1.8, cell: P.A, screen: "shop" },
-    { t0: 8.0, cell: P.B, screen: "deliv" },
-    { t0: 14.2, cell: P.C, screen: "news" },
+    { t0: 8.4, cell: P.B, screen: "deliv" },
+    { t0: 15.0, cell: P.C, screen: "news" },
   ];
-  const SPACING = 6.2, END = 19.4;
-  const FLIP0 = 2.2, FLIP1 = 2.7, RECEDE = 4.2, GONE = 5.0;   // offsets from t0
+  const END = 20.4;
+  const FLIP0 = 2.0, FLIP1 = 2.5, RECEDE = 4.6, GONE = 5.4;   // offsets from t0
 
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
@@ -1166,9 +1166,9 @@ function AdMirrorsRoot({ endTagline, endSub }) {
       )}
 
       <CaptionTop t={t} y={472} beats={[
-        { t0: 2.5, t1: 6.4, text: "Local the second you walk in.", size: 46 },
-        { t0: 8.7, t1: 12.6, text: "Local the second you're home.", size: 46 },
-        { t0: 14.9, t1: 18.8, text: "Local the second you arrive.", size: 46 },
+        { t0: 2.5, t1: 6.9, text: "Local the second you walk in.", size: 46 },
+        { t0: 9.1, t1: 13.5, text: "Local the second you're home.", size: 46 },
+        { t0: 15.7, t1: 20.2, text: "Local the second you arrive.", size: 46 },
       ]} />
 
       <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
@@ -1177,6 +1177,6 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   );
 }
 function JanusAdMirrors(props) {
-  return <Stage width={1080} height={1920} duration={25} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMirrorsRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
+  return <Stage width={1080} height={1920} duration={26} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMirrorsRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
 }
 window.JanusAdMirrors = JanusAdMirrors;
