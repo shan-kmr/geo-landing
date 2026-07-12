@@ -1045,22 +1045,29 @@ function ScreenDelivery({ placed, tt }) {
 }
 function ScreenNews({ placed, tt }) {
   const R = (d) => { const k = eO(f01(tt, d * 0.55, d * 0.55 + 0.32)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
+  const IMG = (w, h) => ({ width: w, height: h, borderRadius: 12, flex: "none", background: "linear-gradient(135deg,#EBEBE7,#D8D8D3 55%,#E6E6E1)" });
+  const NRow = (title, meta, st) => (
+    <div style={{ ...st, display: "flex", gap: 16, alignItems: "center", padding: "13px 0", borderBottom: "1.5px solid " + LINE }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 21, color: INK, lineHeight: 1.2 }}>{title}</div>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: MUT, marginTop: 5 }}>{meta}</div>
+      </div>
+      <div style={IMG(116, 84)} />
+    </div>
+  );
   if (!placed) return (
     <div>
       <MStatus />
       <div style={{ padding: "2px 34px 12px", borderBottom: "2px solid " + INK }}>
-        <div style={{ fontFamily: GROT, fontWeight: 700, fontSize: 34, letterSpacing: "-.02em", color: INK }}>The Dispatch</div>
+        <div style={{ fontFamily: GROT, fontWeight: 700, fontSize: 33, letterSpacing: "-.02em", color: INK }}>The Dispatch</div>
         <div style={{ fontFamily: MONO, fontSize: 13, color: MUT, marginTop: 2 }}>Tuesday · Top stories</div>
       </div>
-      <div style={{ padding: "10px 34px 0" }}>
-        {HL("Fed holds rates steady as markets rally", "Business · 2h ago")}
-        {HL("Congress nears budget deadline", "Politics · 3h ago")}
-        {HL("Global summit opens in Geneva", "World · 5h ago")}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "14px 0 0" }}>
-          {["World", "Politics", "Business", "Tech"].map((c, i) => (
-            <span key={i} style={{ fontFamily: MONO, fontSize: 13, color: MUT, border: "1.5px solid " + LINE, borderRadius: 99, padding: "6px 12px" }}>{c}</span>
-          ))}
-        </div>
+      <div style={{ padding: "12px 34px 0" }}>
+        <div style={IMG("100%", 176)} />
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 26, color: INK, lineHeight: 1.18, margin: "12px 0 3px" }}>Fed holds rates steady as markets rally</div>
+        <div style={{ fontFamily: MONO, fontSize: 13, color: MUT, marginBottom: 4 }}>Business · 2h ago</div>
+        {NRow("Congress nears budget deadline", "Politics · 3h ago")}
+        {NRow("Global summit opens in Geneva", "World · 5h ago")}
       </div>
     </div>
   );
@@ -1069,21 +1076,22 @@ function ScreenNews({ placed, tt }) {
       <MStatus />
       <div style={{ padding: "2px 34px 12px", borderBottom: "2px solid " + INK }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <div style={{ fontFamily: GROT, fontWeight: 700, fontSize: 34, letterSpacing: "-.02em", color: INK }}>The Dispatch</div>
+          <div style={{ fontFamily: GROT, fontWeight: 700, fontSize: 33, letterSpacing: "-.02em", color: INK }}>The Dispatch</div>
           <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 7, fontFamily: MONO, fontSize: 15, color: INK }}>
             <span style={{ width: 9, height: 9, borderRadius: 5, background: SIG, display: "inline-block" }} />SoHo</span>
         </div>
         <div style={{ fontFamily: MONO, fontSize: 13, color: MUT, marginTop: 2 }}>Tuesday · Your neighborhood</div>
       </div>
       <div style={{ padding: "12px 34px 0" }}>
-        <div style={{ ...R(0.0), display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div style={{ ...R(0.0), display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
           <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: ".14em", color: SIG }}>LOCAL · SOHO, NYC</span>
           <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 14, color: MUT }}>◐ 54° · clear</span>
         </div>
-        {HL("Broome St repaving starts Monday", "Your block · 20 min ago", R(0.14))}
-        {HL("New café opens on Prince Street", "2 blocks away · 1h ago", R(0.28))}
-        {HL("PS 130 board vote tonight", "Local · schools", R(0.42))}
-        <div style={{ ...R(0.54), fontFamily: MONO, fontSize: 13, letterSpacing: ".1em", color: FNT, padding: "12px 0 0" }}>▾ National headlines below</div>
+        <div style={{ ...R(0.14), ...IMG("100%", 172) }} />
+        <div style={{ ...R(0.24), fontFamily: GROT, fontWeight: 600, fontSize: 26, color: INK, lineHeight: 1.18, margin: "12px 0 3px" }}>Broome St repaving starts Monday</div>
+        <div style={{ ...R(0.3), fontFamily: MONO, fontSize: 13, color: MUT, marginBottom: 4 }}>Your block · 20 min ago</div>
+        {NRow("New café opens on Prince Street", "2 blocks away · 1h ago", R(0.42))}
+        {NRow("PS 130 board vote tonight", "Local · schools", R(0.54))}
       </div>
     </div>
   );
@@ -1094,8 +1102,8 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const J = window.JanusScene;
   const P = React.useMemo(() => {
     if (!J) return null;
-    // three visibly distinct buildings, different parts of the map
-    return { A: J.m2w(-0.06, -2.50), B: J.m2w(0.07, -2.39), C: J.m2w(-0.13, -2.63) };
+    // three distinct nearby buildings — close enough to pan between at street zoom
+    return { A: J.m2w(-0.035, -2.505), B: J.m2w(0.0, -2.475), C: J.m2w(-0.03, -2.44) };
   }, [J]);
   if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
 
@@ -1107,18 +1115,18 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const END = 20.4;
   const FLIP0 = 2.0, FLIP1 = 2.5, RECEDE = 4.6, GONE = 5.4;   // offsets from t0
 
+  // dolly IN once on the first building, then HOLD that close zoom and pan
+  // laterally between the three buildings (highlight each) — never zoom back out
   const camFn = (tt) => {
-    const rot = 0.28, pitch = 0.9;
-    if (tt < moves[0].t0) { const p = eIO(f01(tt, 0, moves[0].t0)); const c = moves[0].cell; return { x: c[0], y: lerp(c[1] - 0.03, c[1], p), z: lerp(14.4, 15.6, p), rot, pitch }; }
-    for (let i = 0; i < moves.length; i++) {
-      const m = moves[i], c = m.cell, dollyEnd = m.t0 + 2.0, holdEnd = m.t0 + RECEDE, pullEnd = m.t0 + GONE, next = moves[i + 1];
-      if (tt < pullEnd) {
-        if (tt < holdEnd) return { x: c[0], y: c[1], z: lerp(15.6, 17.7, eIO(f01(tt, m.t0, dollyEnd))), rot, pitch };  // dolly IN deep
-        return { x: c[0], y: c[1], z: lerp(17.7, 15.1, eIO(f01(tt, holdEnd, pullEnd))), rot, pitch };                  // pull OUT
-      }
-      if (next && tt < next.t0) { const p = eIO(f01(tt, pullEnd, next.t0)); return { x: lerp(c[0], next.cell[0], p), y: lerp(c[1], next.cell[1], p), z: 14.4, rot, pitch }; }
-    }
-    const c = moves[moves.length - 1].cell; return { x: c[0], y: c[1], z: 15.1, rot, pitch };
+    const Z = 17.1, rot = 0.28, pitch = 0.9;
+    const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
+    if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.02, A[1], p), z: lerp(15.0, Z, p), rot, pitch }; }
+    const rec0 = m0 + RECEDE, rec1 = m1 + RECEDE;
+    if (tt < rec0) return { x: A[0], y: A[1], z: Z, rot, pitch };
+    if (tt < m1) { const p = eIO(f01(tt, rec0, m1)); return { x: lerp(A[0], B[0], p), y: lerp(A[1], B[1], p), z: Z, rot, pitch }; }
+    if (tt < rec1) return { x: B[0], y: B[1], z: Z, rot, pitch };
+    if (tt < m2) { const p = eIO(f01(tt, rec1, m2)); return { x: lerp(B[0], C[0], p), y: lerp(B[1], C[1], p), z: Z, rot, pitch }; }
+    return { x: C[0], y: C[1], z: Z, rot, pitch };
   };
   const optsFn = (tt) => {
     let cell = null, ph = 0;
