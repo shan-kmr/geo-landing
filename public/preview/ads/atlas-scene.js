@@ -831,10 +831,11 @@
     for (const p of pc) { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0], p[1] - dh); ctx.stroke(); }
   }
 
-  // premium focus: paper veil outside a soft circle + one signal ring
-  function drawSpot(ctx, X, W, H, spot, phase) {
+  // premium focus: paper veil outside a soft circle + a signal ring.
+  // With `blink` (ads) it becomes a deep-red glowing/pulsing "this place is live" marker.
+  function drawSpot(ctx, X, W, H, spot, phase, blink) {
     const [px, py] = X.px(spot.x, spot.y);
-    const r = Math.max(26, (spot.rKm || 0.05) * X.s);
+    const r = Math.max(blink != null ? 112 : 26, (spot.rKm || 0.05) * X.s);
     ctx.save();
     ctx.beginPath();
     ctx.rect(0, 0, W, H);
@@ -847,6 +848,24 @@
     ctx.fillStyle = "rgba(252,252,251," + (0.16 * phase).toFixed(3) + ")";
     ctx.fill("evenodd");
     ctx.restore();
+    if (blink != null) {
+      const b = blink, RED = "208,36,24";
+      ctx.save();
+      const g = ctx.createRadialGradient(px, py, r * 0.1, px, py, r * 2.0);
+      g.addColorStop(0, "rgba(" + RED + "," + ((0.28 + 0.30 * b) * phase).toFixed(3) + ")");
+      g.addColorStop(0.5, "rgba(" + RED + "," + ((0.11 + 0.14 * b) * phase).toFixed(3) + ")");
+      g.addColorStop(1, "rgba(" + RED + ",0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, r * 2.0, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = "rgba(" + RED + "," + (0.9 * phase).toFixed(3) + ")";
+      ctx.shadowBlur = 14 + 26 * b;
+      ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(" + RED + "," + ((0.66 + 0.34 * b) * phase).toFixed(3) + ")";
+      ctx.lineWidth = 3.2 + 2.6 * b; ctx.stroke();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(px, py, Math.max(6, r * 0.12), 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(" + RED + "," + ((0.82 + 0.18 * b) * phase).toFixed(3) + ")"; ctx.fill();
+      return;
+    }
     ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(217,72,15," + (0.92 * phase).toFixed(3) + ")";
     ctx.lineWidth = 2.2; ctx.stroke();
@@ -879,7 +898,7 @@
       const sp = opts.spotPhase == null ? 1 : opts.spotPhase;
       if (sp > 0.01) {
         if (opts.spot.bldg && X.__lit) drawSpotBldg(ctx, X, W, H, opts.spot, sp, X.__lit, opts.spotBlink);
-        else drawSpot(ctx, X, W, H, opts.spot, sp);
+        else drawSpot(ctx, X, W, H, opts.spot, sp, opts.spotBlink);
       }
     }
     if (opts.labels !== false) drawLabels(ctx, X, W, H, z);
