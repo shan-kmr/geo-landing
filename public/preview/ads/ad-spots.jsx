@@ -83,13 +83,17 @@ function EndCard({ t, t0, tagline, sub, subline, globe }) {
   return (
     <div style={{ position: "absolute", inset: 0, background: PAPER, opacity: k, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 90px" }}>
       <img ref={imgRef} width={1080} height={1920} alt="" style={{ position: "absolute", inset: 0, opacity: f01(t, t0 + 0.1, t0 + 0.6) }} />
-      <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 76, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, opacity: f01(t, t0 + 0.1, t0 + 0.5) }}>{tagline}</div>
-      <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "44px 0", opacity: f01(t, t0 + 0.25, t0 + 0.6) }}></div>
-      <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK, opacity: f01(t, t0 + 0.35, t0 + 0.7) }}>JANUS</div>
-      <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20, opacity: f01(t, t0 + 0.45, t0 + 0.8) }}>{sub || "The context layer for the physical world."}</div>
-      {subline && <div style={{ fontFamily: MONO, fontSize: 21, letterSpacing: ".1em", color: MUT, marginTop: 16, opacity: f01(t, t0 + 0.5, t0 + 0.85) }}>{subline}</div>}
-      <div style={{ fontFamily: MONO, fontSize: 25, color: INK, marginTop: 46, opacity: f01(t, t0 + 0.55, t0 + 0.95) }}>
-        <span style={{ borderBottom: "2px solid " + INK, paddingBottom: 4 }}>janus.earth →</span>
+      {/* relative wrapper: keeps the type painting ABOVE the absolutely-
+          positioned backdrop img even after fade ramps hit opacity 1 */}
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 76, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, opacity: f01(t, t0 + 0.1, t0 + 0.5) }}>{tagline}</div>
+        <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "44px 0", opacity: f01(t, t0 + 0.25, t0 + 0.6) }}></div>
+        <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK, opacity: f01(t, t0 + 0.35, t0 + 0.7) }}>JANUS</div>
+        <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20, opacity: f01(t, t0 + 0.45, t0 + 0.8) }}>{sub || "The context layer for the physical world."}</div>
+        {subline && <div style={{ fontFamily: MONO, fontSize: 21, letterSpacing: ".1em", color: MUT, marginTop: 16, opacity: f01(t, t0 + 0.5, t0 + 0.85) }}>{subline}</div>}
+        <div style={{ fontFamily: MONO, fontSize: 25, color: INK, marginTop: 46, opacity: f01(t, t0 + 0.55, t0 + 0.95) }}>
+          <span style={{ borderBottom: "2px solid " + INK, paddingBottom: 4 }}>janus.earth →</span>
+        </div>
       </div>
     </div>
   );
