@@ -86,8 +86,8 @@ function EndCard({ t, t0, tagline, sub, subline, globe }) {
       {/* relative wrapper: keeps the type painting ABOVE the absolutely-
           positioned backdrop img even after fade ramps hit opacity 1 */}
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 76, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, opacity: f01(t, t0 + 0.1, t0 + 0.5) }}>{tagline}</div>
-        <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "44px 0", opacity: f01(t, t0 + 0.25, t0 + 0.6) }}></div>
+        {tagline && <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 76, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, opacity: f01(t, t0 + 0.1, t0 + 0.5) }}>{tagline}</div>}
+        <div style={{ width: 60, borderTop: "2px solid " + INK, margin: tagline ? "44px 0" : "0 0 40px", opacity: f01(t, t0 + 0.25, t0 + 0.6) }}></div>
         <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK, opacity: f01(t, t0 + 0.35, t0 + 0.7) }}>JANUS</div>
         <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20, opacity: f01(t, t0 + 0.45, t0 + 0.8) }}>{sub || "The context layer for the physical world."}</div>
         {subline && <div style={{ fontFamily: MONO, fontSize: 21, letterSpacing: ".1em", color: MUT, marginTop: 16, opacity: f01(t, t0 + 0.5, t0 + 0.85) }}>{subline}</div>}
@@ -962,10 +962,11 @@ function HL(title, meta, st) {
     </div>
   );
 }
+function imbox(w, h, r) { return { width: w, height: h, borderRadius: r || 14, flex: "none", background: "linear-gradient(135deg,#EDEDEA,#D8D8D3 55%,#E7E7E2)" }; }
 function GTile({ g, name, price, st }) {
   return (
     <div style={{ ...st, width: "47%" }}>
-      <div style={{ height: 128, borderRadius: 14, background: "linear-gradient(150deg,#F6F5F2,#ECECE8)", display: "flex", alignItems: "center", justifyContent: "center" }}><PGlyph kind={g} s={56} /></div>
+      <div style={{ ...imbox("100%", 128, 14), display: "flex", alignItems: "center", justifyContent: "center" }}><PGlyph kind={g} s={56} /></div>
       <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 20, color: INK, marginTop: 9, lineHeight: 1.1 }}>{name}</div>
       <div style={{ fontFamily: MONO, fontSize: 15, color: MUT, marginTop: 3 }}>{price}</div>
     </div>
@@ -988,21 +989,30 @@ function ScreenShopping({ placed, tt }) {
       </div>
     </div>
   );
+  const PTile = (name, meta, st) => (
+    <div style={{ ...st, width: "47%" }}>
+      <div style={imbox("100%", 150, 14)} />
+      <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 21, color: INK, marginTop: 9, lineHeight: 1.1 }}>{name}</div>
+      <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginTop: 3 }}>{meta}</div>
+    </div>
+  );
   return (
     <div>
       <MStatus />
       <MBrand name="Aisle" right="In store" live />
       <div style={{ padding: "16px 34px 0" }}>
         <div style={{ ...R(0.0), fontFamily: MONO, fontSize: 14, letterSpacing: ".14em", color: FNT, marginBottom: 12 }}>STORE MODE · SOHO</div>
-        <div style={{ ...R(0.1), display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-          background: INK, color: PAPER, borderRadius: 16, padding: "20px 0", marginBottom: 18 }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={PAPER} strokeWidth="1.6"><path d="M4 5v14M8 5v14M11 5v14M14 5v14M18 5v14M21 5v14" /></svg>
-          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 24 }}>Scan a barcode</span>
+        <div style={{ ...R(0.08), display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          background: INK, color: PAPER, borderRadius: 16, padding: "18px 0", marginBottom: 18 }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={PAPER} strokeWidth="1.6"><path d="M4 5v14M8 5v14M11 5v14M14 5v14M18 5v14M21 5v14" /></svg>
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 23 }}>Scan a barcode</span>
         </div>
-        <div style={{ ...R(0.26), fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, margin: "6px 0 2px" }}>Here in this store</div>
-        <MRow st={R(0.38)} title="Everyday runner, your size" sub="in stock on this floor" r1="Aisle 7" />
-        <MRow st={R(0.5)} title="20% off outerwear" sub="this store, today only" r1="→" r2="ends 6pm" warm />
-        <div style={{ ...R(0.62), display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 0" }}>
+        <div style={{ ...R(0.18), fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, marginBottom: 14 }}>Picked for you here</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 28px" }}>
+          {PTile("Everyday runner", "Aisle 7 · your size", R(0.26))}
+          {PTile("Trail jacket", "20% off · today", R(0.34))}
+        </div>
+        <div style={{ ...R(0.46), display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 0 0" }}>
           <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 22, color: INK }}>Your rewards</span>
           <span style={{ fontFamily: MONO, fontSize: 18, color: INK }}>2,140 pts</span>
         </div>
@@ -1012,19 +1022,32 @@ function ScreenShopping({ placed, tt }) {
 }
 function ScreenDelivery({ placed, tt }) {
   const R = (d) => { const k = eO(f01(tt, d * 0.55, d * 0.55 + 0.32)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
+  const DRow = (name, sub, r1, r2, warm, st) => (
+    <div style={{ ...st, display: "flex", alignItems: "center", gap: 15, padding: "12px 0", borderBottom: "1.5px solid " + LINE }}>
+      <div style={imbox(94, 94, 16)} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 23, color: INK }}>{name}</div>
+        <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginTop: 4 }}>{sub}</div>
+      </div>
+      <div style={{ textAlign: "right", flex: "none" }}>
+        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 21, color: INK }}>{r1}</div>
+        {r2 && <div style={{ fontFamily: MONO, fontSize: 14, color: warm ? SIG : MUT, marginTop: 3 }}>{r2}</div>}
+      </div>
+    </div>
+  );
   if (!placed) return (
     <div>
       <MStatus />
       <MBrand name="Munch" right="Set address" />
-      <div style={{ padding: "16px 34px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F6F5F2", borderRadius: 14, padding: "18px 18px", marginBottom: 18 }}>
+      <div style={{ padding: "14px 34px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#F6F5F2", borderRadius: 14, padding: "16px 18px", marginBottom: 14 }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={MUT} strokeWidth="1.6"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>
-          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 21, color: FG2 }}>Where should we deliver?</span>
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 20, color: FG2 }}>Where should we deliver?</span>
         </div>
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, marginBottom: 8 }}>Popular chains</div>
-        <MRow thumb="C" title="Chipotle" sub="Mexican · national" r1="—" />
-        <MRow thumb="S" title="Sweetgreen" sub="Salads · national" r1="—" />
-        <MRow thumb="S" title="Shake Shack" sub="Burgers · national" r1="—" />
+        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, marginBottom: 6 }}>Popular chains</div>
+        {DRow("Chipotle", "Mexican · national", "—", null)}
+        {DRow("Sweetgreen", "Salads · national", "—", null)}
+        {DRow("Shake Shack", "Burgers · national", "—", null)}
       </div>
     </div>
   );
@@ -1032,13 +1055,17 @@ function ScreenDelivery({ placed, tt }) {
     <div>
       <MStatus />
       <MBrand name="Munch" right="Home" live />
-      <div style={{ padding: "16px 34px 0" }}>
-        <div style={{ ...R(0.0), fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>Delivering to you now</div>
-        <div style={{ ...R(0.06), fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>fastest to Home · West Village</div>
-        <MRow st={R(0.2)} thumb="R" title="Rowdy Rooster" sub="Indian · ★ 4.8" r1="11 min" r2="$0 fee" warm />
-        <MRow st={R(0.34)} thumb="S" title="Sena Sushi" sub="Japanese · ★ 4.7" r1="14 min" r2="$1.99" />
-        <MRow st={R(0.48)} thumb="N" title="Nonna's" sub="Italian · ★ 4.6" r1="18 min" r2="$0 fee" warm />
-        <div style={{ ...R(0.6), fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ 40 more that deliver here</div>
+      <div style={{ padding: "14px 34px 0" }}>
+        <div style={{ ...R(0.0), fontFamily: GROT, fontWeight: 600, fontSize: 26, color: INK, marginBottom: 4 }}>Delivering to you now</div>
+        <div style={{ ...R(0.04), fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>fastest to Home · West Village</div>
+        <div style={{ ...R(0.1), display: "flex", gap: 8, marginBottom: 8 }}>
+          {["Indian", "Sushi", "Italian", "Thai"].map((c, i) => (
+            <span key={i} style={{ fontFamily: MONO, fontSize: 14, color: i === 0 ? PAPER : MUT, background: i === 0 ? INK : "transparent", border: "1.5px solid " + (i === 0 ? INK : LINE), borderRadius: 99, padding: "6px 13px" }}>{c}</span>
+          ))}
+        </div>
+        {DRow("Rowdy Rooster", "Indian · ★ 4.8", "11 min", "$0 fee", true, R(0.2))}
+        {DRow("Sena Sushi", "Japanese · ★ 4.7", "14 min", "$1.99", false, R(0.32))}
+        {DRow("Nonna's", "Italian · ★ 4.6", "18 min", "$0 fee", true, R(0.44))}
       </div>
     </div>
   );
@@ -1102,8 +1129,9 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const J = window.JanusScene;
   const P = React.useMemo(() => {
     if (!J) return null;
-    // three distinct nearby buildings — close enough to pan between at street zoom
-    return { A: J.m2w(-0.035, -2.505), B: J.m2w(0.0, -2.475), C: J.m2w(-0.03, -2.44) };
+    // three buildings in three DIFFERENT neighborhoods — a real trip across town
+    // A ~ Canal/SoHo · B ~ Flatiron (north) · C ~ Lower East Side (east)
+    return { A: J.m2w(-0.045, -2.53), B: J.m2w(0.05, -2.31), C: J.m2w(-0.12, -2.44) };
   }, [J]);
   if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
 
@@ -1115,18 +1143,21 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const END = 20.4;
   const FLIP0 = 2.0, FLIP1 = 2.5, RECEDE = 4.6, GONE = 5.4;   // offsets from t0
 
-  // dolly IN once on the first building, then HOLD that close zoom and pan
-  // laterally between the three buildings (highlight each) — never zoom back out
+  // deep dolly-in on each building (the highlight); between neighborhoods a
+  // graceful lift → glide → drop (rise to a mid travel altitude to cross the
+  // real distance, then settle back deep) — never a jarring full pull-out
+  const ZD = 17.3, ZT = 14.2;   // deep arrival zoom · mid travel altitude
   const camFn = (tt) => {
-    const Z = 17.1, rot = 0.28, pitch = 0.9;
+    const rot = 0.28, pitch = 0.9;
     const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
-    if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.02, A[1], p), z: lerp(15.0, Z, p), rot, pitch }; }
+    if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.03, A[1], p), z: lerp(ZT, ZD, p), rot, pitch }; }
     const rec0 = m0 + RECEDE, rec1 = m1 + RECEDE;
-    if (tt < rec0) return { x: A[0], y: A[1], z: Z, rot, pitch };
-    if (tt < m1) { const p = eIO(f01(tt, rec0, m1)); return { x: lerp(A[0], B[0], p), y: lerp(A[1], B[1], p), z: Z, rot, pitch }; }
-    if (tt < rec1) return { x: B[0], y: B[1], z: Z, rot, pitch };
-    if (tt < m2) { const p = eIO(f01(tt, rec1, m2)); return { x: lerp(B[0], C[0], p), y: lerp(B[1], C[1], p), z: Z, rot, pitch }; }
-    return { x: C[0], y: C[1], z: Z, rot, pitch };
+    const trip = (a, b, t0, t1) => { const p = f01(tt, t0, t1); const e = eIO(p); return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: ZD + (ZT - ZD) * Math.sin(p * Math.PI), rot, pitch }; };
+    if (tt < rec0) return { x: A[0], y: A[1], z: ZD, rot, pitch };
+    if (tt < m1) return trip(A, B, rec0, m1);
+    if (tt < rec1) return { x: B[0], y: B[1], z: ZD, rot, pitch };
+    if (tt < m2) return trip(B, C, rec1, m2);
+    return { x: C[0], y: C[1], z: ZD, rot, pitch };
   };
   const optsFn = (tt) => {
     let cell = null, ph = 0;
@@ -1173,13 +1204,13 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         </div>
       )}
 
-      <CaptionTop t={t} y={472} beats={[
-        { t0: 2.5, t1: 6.9, text: "Local the second you walk in.", size: 46 },
-        { t0: 9.1, t1: 13.5, text: "Local the second you're home.", size: 46 },
-        { t0: 15.7, t1: 20.2, text: "Local the second you arrive.", size: 46 },
+      <CaptionTop t={t} y={468} beats={[
+        { t0: 2.5, t1: 6.9, text: "A store that knows the aisle you're in.", size: 42 },
+        { t0: 9.1, t1: 13.5, text: "Dinner that knows your doorstep.", size: 42 },
+        { t0: 15.7, t1: 20.2, text: "News that knows your block.", size: 42 },
       ]} />
 
-      <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
+      <EndCard t={t} t0={END} globe={true} tagline=""
         sub={endSub || "Geospatial infrastructure and intelligence."} />
     </div>
   );
