@@ -1173,7 +1173,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         break;
       }
     }
-    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
+    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true, litR: 900 } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
   };
 
   let phoneTop = 1920, phoneK = 0, screen = null, gK = 0, pK = 0, gTime = 0, pTime = 0;
