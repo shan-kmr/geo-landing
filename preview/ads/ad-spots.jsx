@@ -737,3 +737,163 @@ function JanusAdLocal(props) {
   return <Stage width={1080} height={1920} duration={22} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdLocalRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
 }
 window.JanusAdLocal = JanusAdLocal;
+
+/* ============================================================
+   AD 04b — CATALOG ("Every app is a local app.")
+   Same thesis, catalog treatment: the map is the TOP zone (flying,
+   unobstructed — the travel reads), the shop is a bottom sheet with
+   a real product grid that re-ranks per place. New page, own component;
+   existing JanusAdLocal is untouched.
+   ============================================================ */
+
+function PGlyph({ kind, s, c }) {
+  const P = {
+    coffee: "M7 9h10v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5z M17 10h2a2 2 0 0 1 0 4h-2",
+    bottle: "M10 3h4v3l1 2v10a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V8l1-2z",
+    umbrella: "M4 12a8 8 0 0 1 16 0z M12 12v6a2 2 0 0 0 3 0",
+    bag: "M7 8h10l1 11H6z M9 8a3 3 0 0 1 6 0",
+    jacket: "M8 4l4 3 4-3v15h-3v-7 M8 4v15h3",
+    shoe: "M3 15h12l4 2v2H3z M3 15v-3",
+    glasses: "M4 12a3 3 0 0 1 6 0 3 3 0 0 1-6 0z M14 12a3 3 0 0 1 6 0 3 3 0 0 1-6 0z M10 12h4",
+    wine: "M9 3h6l-1 6a2 2 0 0 1-4 0z M12 11v6 M9 19h6",
+    leaf: "M12 4c6 3 6 11 0 15-6-4-6-12 0-15z",
+    box: "M4 8l8-4 8 4-8 4z M4 8v8l8 4 8-4V8 M12 12v8",
+  };
+  return (
+    <svg width={s || 88} height={s || 88} viewBox="0 0 24 24" fill="none" stroke={c || "#9A9EA4"}
+      strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d={P[kind] || P.box} /></svg>
+  );
+}
+
+function ProdTile({ p, w }) {
+  return (
+    <div style={{ width: w }}>
+      <div style={{ position: "relative", height: 300, borderRadius: 22,
+        background: "linear-gradient(155deg,#F6F5F2,#ECECE8)", display: "flex",
+        alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <PGlyph kind={p.g} s={94} />
+        <span style={{ position: "absolute", top: 16, right: 20, fontFamily: GROT, fontSize: 26, color: "#C4C7CB" }}>♡</span>
+        {p.tag && <span style={{ position: "absolute", left: 16, top: 16, fontFamily: MONO, fontSize: 14,
+          letterSpacing: ".06em", color: PAPER, background: SIG, borderRadius: 7, padding: "5px 11px" }}>{p.tag}</span>}
+      </div>
+      <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 25, color: INK, marginTop: 12, lineHeight: 1.14 }}>{p.name}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 5 }}>
+        <span style={{ fontFamily: MONO, fontSize: 22, color: INK }}>{p.price}</span>
+        {p.note && <span style={{ fontFamily: MONO, fontSize: 15, color: MUT }}>{p.note}</span>}
+      </div>
+    </div>
+  );
+}
+
+function CatalogSheet({ t, stops }) {
+  const up = eO(f01(t, 0.8, 1.8));
+  const sheetY = lerp(1920, 706, up);
+  const active = stops.reduce((a, s, i) => (t >= s.t0 ? i : a), 0);
+  const cur = stops[active];
+  const w = (1080 - 80 - 28) / 2;
+  return (
+    <div style={{ position: "absolute", left: 0, right: 0, top: 0, transform: `translateY(${sheetY}px)`,
+      height: 1220, background: "#FFFFFF", borderTopLeftRadius: 44, borderTopRightRadius: 44,
+      boxShadow: "0 -22px 60px rgba(22,24,26,.10)" }}>
+      <div style={{ width: 54, height: 5, borderRadius: 3, background: "#E2E3E5", margin: "14px auto 2px" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 40px 0" }}>
+        <div style={{ width: 30, height: 30, borderRadius: 8, background: INK }} />
+        <span style={{ fontFamily: GROT, fontWeight: 700, fontSize: 26, color: INK }}>Shop</span>
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8, fontFamily: MONO, fontSize: 18, color: INK }}>
+          <span style={{ width: 9, height: 9, borderRadius: 5, background: SIG, display: "inline-block" }} />{cur.place}
+        </span>
+      </div>
+      <div style={{ margin: "16px 40px 0", height: 52, borderRadius: 14, border: "1.5px solid " + LINE,
+        display: "flex", alignItems: "center", padding: "0 18px", fontFamily: MONO, fontSize: 17, color: "#B9BCC1" }}>Search Shop</div>
+      {stops.map((s, i) => {
+        const next = stops[i + 1];
+        const kin = eO(f01(t, s.t0, s.t0 + 0.5));
+        const kout = next ? f01(t, next.t0 - 0.1, next.t0 + 0.4) : 0;
+        const k = Math.max(0, kin - kout);
+        if (k <= 0.001) return null;
+        const gy = (1 - eO(f01(t, s.t0, s.t0 + 0.7))) * 20;
+        return (
+          <div key={i} style={{ position: "absolute", left: 0, right: 0, top: 202, padding: "0 40px", opacity: k }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 22 }}>
+              <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 31, color: INK, letterSpacing: "-.01em" }}>{s.title}</span>
+              <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 15, color: MUT }}>{s.time}</span>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "30px 28px", transform: `translateY(${gy}px)` }}>
+              {s.items.map((p, j) => <ProdTile key={j} p={p} w={w} />)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function AdCatalogRoot({ endTagline, endSub }) {
+  const t = useTime();
+  const J = window.JanusScene;
+  const P = React.useMemo(() => {
+    if (!J) return null;
+    return { A: J.m2w(0.0, -2.40), B: J.m2w(-0.12, -2.63), C: J.m2w(0.0, -2.40) };
+  }, [J]);
+  if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
+
+  const camFn = (tt) => {
+    let a = P.A, b = P.A, seg = 0;
+    if (tt < 6.8) { a = P.A; b = P.A; }
+    else if (tt < 8.2) { a = P.A; b = P.B; seg = f01(tt, 6.8, 8.2); }
+    else if (tt < 12.6) { a = P.B; b = P.B; }
+    else if (tt < 14.0) { a = P.B; b = P.C; seg = f01(tt, 12.6, 14.0); }
+    else { a = P.C; b = P.C; }
+    const e = eIO(seg);
+    const gliding = (tt > 6.8 && tt < 8.2) || (tt > 12.6 && tt < 14.0);
+    return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: gliding ? 14.7 : 15.9, rot: 0.28, pitch: 0.9 };
+  };
+  const optsFn = () => ({ hexOpacity: 0, spot: null, live: null, labels: true });
+
+  const stops = [
+    { t0: 2.4, place: "Home", time: "8:12a", title: "Your morning",
+      items: [
+        { g: "coffee", name: "Blue Bottle beans", price: "$18", note: "your usual", tag: "REORDER" },
+        { g: "bottle", name: "Oatly oat milk ×2", price: "$9", note: "running low" },
+        { g: "umbrella", name: "Compact umbrella", price: "$24", note: "rain today" },
+        { g: "box", name: "Weekly basket", price: "$54", note: "refill" }] },
+    { t0: 8.2, place: "SoHo", time: "1:30p", title: "Near you · SoHo",
+      items: [
+        { g: "jacket", name: "The jacket you saved", price: "$128", note: "0.2 mi", tag: "PICK UP TODAY" },
+        { g: "shoe", name: "Runners, your size", price: "$95", note: "in stock" },
+        { g: "bag", name: "Weekend tote", price: "$210", note: "new in" },
+        { g: "glasses", name: "Sun, trending here", price: "$60", note: "nearby" }] },
+    { t0: 14.0, place: "Home", time: "7:40p", title: "Tonight",
+      items: [
+        { g: "box", name: "Your usual grocery run", price: "$54", note: "12 items", tag: "DINNER IN 30" },
+        { g: "wine", name: "Pairs with tonight", price: "$22", note: "delivered" },
+        { g: "leaf", name: "Produce box", price: "$16", note: "15% off" },
+        { g: "coffee", name: "Decaf for later", price: "$14", note: "add on" }] },
+  ];
+
+  const active = stops.reduce((a, s, i) => (t >= s.t0 ? i : a), 0);
+  const cur = stops[active];
+  const pin = eO(f01(t, 3.4, 4.1)) * (1 - f01(t, 16.5, 16.9));
+
+  return (
+    <div data-screen-label={"ad-catalog t=" + Math.floor(t) + "s"} style={{ position: "absolute", inset: 0, background: PAPER, overflow: "hidden" }}>
+      <MapShot t={t} on={true} camFn={camFn} optsFn={optsFn} fadeIn={f01(t, 0, 0.5)} />
+      {pin > 0.01 && (
+        <div style={{ position: "absolute", left: 60, top: 494, display: "flex", alignItems: "center", gap: 14, opacity: pin }}>
+          <span style={{ width: 16, height: 16, borderRadius: 8, background: SIG, boxShadow: "0 0 0 6px rgba(217,72,15,.15)" }} />
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 36, letterSpacing: "-.01em", color: INK,
+            textShadow: "0 0 8px #FCFCFB, 0 1px 12px #FCFCFB" }}>{cur.place}</span>
+          <span style={{ fontFamily: MONO, fontSize: 20, color: MUT, textShadow: "0 0 6px #FCFCFB" }}>{cur.time}</span>
+        </div>
+      )}
+      <CatalogSheet t={t} stops={stops} />
+      <CaptionTop t={t} beats={[{ t0: 0.6, t1: 3.8, text: "One app. Every place.", size: 58 }]} />
+      <EndCard t={t} t0={16.9} globe={true} tagline={endTagline || "Every app is a local app."}
+        sub={endSub || "Geospatial infrastructure and intelligence."} />
+    </div>
+  );
+}
+function JanusAdCatalog(props) {
+  return <Stage width={1080} height={1920} duration={22} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdCatalogRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
+}
+window.JanusAdCatalog = JanusAdCatalog;
