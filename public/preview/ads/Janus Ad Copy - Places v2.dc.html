@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <title>Janus · Places v2 · copy pass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #F4F4F2; color: #16181A;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+    ::selection { background: rgba(217,72,15,.12); }
+  </style>
+</helmet>
+
+<section style="padding: 56px 64px 120px; max-width: 2600px;">
+
+  <div style="max-width: 1240px; margin-bottom: 40px;" data-screen-label="Copy pass header">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 3px 8px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .12em; font-weight: 700;">3a</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85;">"PLACES" V2 · COPY PASS BEFORE PICTURE · 20 S CUT</span>
+    </div>
+    <h1 style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-size: 42px; font-weight: 600; letter-spacing: -.015em; line-height: 1.06; margin: 18px 0 12px;">The story is arrival. The proof is one tap.</h1>
+    <p style="font-size: 15px; line-height: 1.6; color: #4A4E54; max-width: 76ch; margin: 0 0 10px;">Audience: <b style="color:#16181A;">restaurant-chain app owners who already have an app.</b> The promise: geofenced arrival · the app knows the moment a regular reaches the door, greets them, puts their usual one tap away, and switches modes once they're inside. Every line below serves that story; anything about crash rates, footfall percentiles or sidewalks is product truth but ad noise · cut.</p>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; color: #4A4E54;">
+      <span style="border: 1px solid #E2E3E5; border-radius: 999px; padding: 5px 12px;">say: arrive · the door · your usual · one tap · in-store</span>
+      <span style="border: 1px solid #E2E3E5; border-radius: 999px; padding: 5px 12px;">avoid: context layer · cells · denominators · geodata jargon</span>
+      <span style="border: 1px solid #E2E3E5; border-radius: 999px; padding: 5px 12px;">"geofence" appears once, as the mechanism · never twice</span>
+    </div>
+  </div>
+
+  <!-- 20s beat map -->
+  <div style="max-width: 1240px; border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px;" data-screen-label="20s beat map">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 14px;">THE 20-SECOND CUT · SAME PICTURE LANGUAGE, ONE NEW BEAT (IN-STORE SHIFT)</div>
+    <div style="display: flex; gap: 0; align-items: stretch;">
+      <sc-for list="{{ beatBar }}" as="b" hint-placeholder-count="7">
+        <div style="flex: {{ b.flex }}; min-width: 0; border-left: 2px solid #FCFCFB; background: {{ b.bg }}; padding: 10px 12px; border-radius: 4px;">
+          <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; font-weight: 700; color: {{ b.fg }};">{{ b.tc }}</div>
+          <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .06em; color: {{ b.fg }}; opacity: .75; margin-top: 3px;">{{ b.name }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size: 12.5px; line-height: 1.55; color: #4A4E54; margin-top: 12px;">Timing note: 15 s felt rushed because the app beat carried four jobs. At 20 s the notification breathes (1.5 s alone on screen), the order beat gets its own room, and the new <b style="color:#16181A;">in-store shift</b> beat (“things change the moment they walk in”) lands before the close. Globe end card runs 3.5 s · long enough to feel intentional.</div>
+  </div>
+
+  <!-- per-beat copy options -->
+  <div style="display: flex; flex-direction: column; gap: 22px; max-width: 1240px; margin-bottom: 44px;" data-screen-label="Beat copy options">
+    <sc-for list="{{ beats }}" as="bt" hint-placeholder-count="6">
+      <div style="border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; overflow: hidden;">
+        <div style="display: flex; align-items: baseline; gap: 12px; padding: 14px 20px; border-bottom: 1px solid #EDEEEF;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; color: #FCFCFB; background: #16181A; border-radius: 3px; padding: 2px 7px;">{{ bt.tc }}</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .12em; font-weight: 700;">{{ bt.name }}</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; color: #7A7F85;">{{ bt.picture }}</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap;">
+          <sc-for list="{{ bt.options }}" as="op" hint-placeholder-count="3">
+            <div style="flex: 1; min-width: 300px; padding: 16px 20px; border-right: 1px solid #F2F3F4; position: relative; background: {{ op.bg }};">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .1em; color: #7A7F85;">{{ op.voice }}</span>
+                <sc-if value="{{ op.rec }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.5px; letter-spacing: .08em; font-weight: 700; color: #FCFCFB; background: #D9480F; border-radius: 3px; padding: 2px 6px;">PICK</span>
+                </sc-if>
+              </div>
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -.012em; line-height: 1.25;">{{ op.line }}</div>
+              <sc-if value="{{ op.note }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 12px; line-height: 1.5; color: #7A7F85; margin-top: 8px;">{{ op.note }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- notification deep-dive -->
+  <div style="display: flex; gap: 32px; max-width: 2440px; margin-bottom: 44px; flex-wrap: wrap;" data-screen-label="Notification and app copy">
+    <div style="width: 620px; flex: none;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700; margin-bottom: 4px;">THE NOTIFICATION · THE ONE LINE THAT MATTERS</div>
+      <div style="font-size: 12.5px; color: #7A7F85; margin-bottom: 16px;">arrival-triggered push, sender is the chain's own app · ≤ 2 lines · verb inside</div>
+      <div style="display: grid; gap: 12px;">
+        <sc-for list="{{ pushes }}" as="p" hint-placeholder-count="4">
+          <div style="background: rgba(252,252,251,.98); border: 1.5px solid {{ p.border }}; border-radius: 16px; box-shadow: 0 8px 26px rgba(22,24,26,.08); padding: 14px 16px; display: flex; gap: 13px; align-items: center;">
+            <div style="width: 44px; height: 44px; border-radius: 10px; background: #16181A; color: #FCFCFB; display: flex; align-items: center; justify-content: center; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-weight: 700; font-size: 20px; flex: none;">C</div>
+            <div style="min-width: 0;">
+              <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 16.5px; color: #16181A;">{{ p.title }}</div>
+              <div style="font-size: 14.5px; color: #4A4E54; margin-top: 2px; line-height: 1.35;">{{ p.body }}</div>
+            </div>
+            <div style="margin-left: auto; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: none;">
+              <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #B9BCC1;">now</span>
+              <sc-if value="{{ p.rec }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.5px; letter-spacing: .08em; font-weight: 700; color: #FCFCFB; background: #D9480F; border-radius: 3px; padding: 2px 6px;">PICK</span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-size: 12.5px; line-height: 1.6; color: #4A4E54; border-top: 1px solid #E2E3E5; margin-top: 14px; padding-top: 12px;">Rules: name the moment (<i>you're here / welcome in</i>), name the action (<i>one tap</i>), never name the tech. No discounts in the hero push · this ad sells recognition, not coupons. The push owns the frame for 1.5 s before the app rows appear.</div>
+    </div>
+    <div style="width: 620px; flex: none;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700; margin-bottom: 4px;">IN-APP ROWS · ARRIVAL → ORDER → INSIDE</div>
+      <div style="font-size: 12.5px; color: #7A7F85; margin-bottom: 16px;">replaces "8:15 rush / sidewalk closed" · every row now advances the order</div>
+      <div style="border: 1px solid #DADBDD; border-radius: 14px; background: #FFFFFF; overflow: hidden;">
+        <div style="padding: 16px 20px 12px; border-bottom: 1.5px solid #E9EAEC;">
+          <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 22px;">Canal St Café</div>
+          <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; color: #7A7F85; margin-top: 3px;">your app · open till 7</div>
+        </div>
+        <sc-for list="{{ appRows }}" as="r" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 13px 20px; border-bottom: 1px solid #F2F3F4;">
+            <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: #16181A;">{{ r.k }}</span>
+            <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; color: {{ r.vColor }};">{{ r.v }}</span>
+          </div>
+        </sc-for>
+        <div style="display: flex; align-items: center; gap: 14px; padding: 14px 20px;">
+          <div>
+            <div style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 17px;">Oat flat white</div>
+            <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; color: #7A7F85; margin-top: 2px;">your usual · $5.25</div>
+          </div>
+          <div style="margin-left: auto; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; color: #FCFCFB; background: #16181A; border-radius: 10px; padding: 10px 22px;">Reorder</div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; padding: 14px 18px;">
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .12em; color: #7A7F85; margin-bottom: 8px;">THE IN-STORE SHIFT (NEW BEAT, 0:12–0:15)</div>
+        <div style="font-size: 13px; line-height: 1.6; color: #4A4E54;">They cross the threshold; the same screen re-arranges itself: header flips to <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #16181A;">In store · counter pickup</span>, the order card becomes <b style="color:#16181A;">"On the bar in 2 min"</b>, and a pay chip appears. One cut, no new screens · the point is the app <i>changed because they walked in</i>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- the close — keyword pass -->
+  <div style="max-width: 1240px; border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; padding: 20px 24px; margin-bottom: 40px;" data-screen-label="The close · keyword pass">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; font-weight: 700; margin-bottom: 8px;">THE CLOSE · WHAT THE BUYER TYPES INTO GOOGLE</div>
+    <div style="font-size: 13px; line-height: 1.6; color: #4A4E54; max-width: 84ch; margin-bottom: 12px;">"Arrival-powered ordering for your app" is a restaurant close on a spot that should sell the platform. The end card's sub-line is the one line that must match a search. Radar's buyers type <b style="color:#16181A;">geofencing SDK / geofencing API</b>; Foursquare's type <b style="color:#16181A;">places API / POI data / visit detection</b>; both funnels pass through <b style="color:#16181A;">location intelligence</b>. The close should own the highest-volume category word and attach our claim to it — category for the search, claim for the memory.</div>
+    <div style="display: grid; gap: 7px; font-size: 12.5px; line-height: 1.55; color: #4A4E54;">
+      <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .08em; color: #FCFCFB; background: #16181A; border-radius: 3px; padding: 1.5px 6px;">PICK</span> <b style="color:#16181A;">"Geofencing that knows the place."</b> — the category keyword verbatim + the differentiator in five words. Broad enough for delivery, retail, mobility, fintech; specific enough that a buyer knows we do exactly what they searched.</div>
+      <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; color: #7A7F85;">ALT</span> "Location intelligence for apps in the real world." — the broader category; safer, softer.</div>
+      <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; color: #7A7F85;">ALT</span> "Your app knows who. Janus tells it where." — strongest line, weakest keyword; keep for brand cuts.</div>
+      <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; color: #7A7F85;">KEEP</span> the mono receipts line under the sub — <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px;">arrivals · place context · one API</span> — three more search terms, whisper-set.</div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 12px; padding-top: 10px; font-size: 12px; line-height: 1.55; color: #7A7F85;">Ads-manager fields inherit the same words: headline "Geofencing that knows the place", primary text keeps "evidence attached to every cell". The end card now runs over the globe per the picture notes below — lightly turning through the whole dwell, never pausing.</div>
+  </div>
+
+  <!-- production notes -->
+  <div style="max-width: 1240px; border: 1px solid #16181A; border-radius: 8px; background: #FCFCFB; padding: 20px 24px;" data-screen-label="Production notes">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; font-weight: 700; margin-bottom: 10px;">PICTURE NOTES RIDING WITH THIS COPY (applied when we cut the 20 s)</div>
+    <div style="display: grid; gap: 8px; font-size: 13px; line-height: 1.6; color: #4A4E54;">
+      <div><b style="color:#16181A;">Globe, quieter:</b> alpha .34 → <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace;">.15</span>, radius 660 → 560, pushed lower (cy 1140), rotation halved. It should read as texture behind the tagline, not a second subject.</div>
+      <div><b style="color:#16181A;">Length:</b> 15 s → 20 s per the beat map above; all existing camera grammar retained, holds extended, in-store beat inserted at 0:12.</div>
+      <div><b style="color:#16181A;">Close lines:</b> "8:15 rush / sidewalk close" retired · replaced by the arrival-story close picked above.</div>
+      <div><b style="color:#16181A;">Notification:</b> single push, the PICK above, 1.5 s solo hold before rows animate in.</div>
+    </div>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const PAPER = "#FCFCFB", INKBG = "#16181A";
+    const seg = (tc, name, flex, dark) => ({ tc, name, flex, bg: dark ? INKBG : "#EFEFED", fg: dark ? PAPER : "#16181A" });
+    return {
+      beatBar: [
+        seg("0:00–4.5", "STREET RUN", 4.5, false),
+        seg("4.5–6.5", "ARRIVAL", 2, true),
+        seg("6.5–8", "THE PUSH", 1.5, false),
+        seg("8–12", "ONE TAP", 4, true),
+        seg("12–15", "IN-STORE SHIFT", 3, false),
+        seg("15–16.5", "CLOSE LINE", 1.5, true),
+        seg("16.5–20", "END CARD + GLOBE", 3.5, false)
+      ],
+      beats: [
+        {
+          tc: "0:00", name: "STREET RUN · set the stakes", picture: "deep procedural run down Lafayette, as cut",
+          options: [
+            { voice: "LOCKED", line: "Know when your regulars are near.", note: "Your template, one word filled: near. Alternates that also fit: here, back, close.", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "B · PRODUCT", line: "Your customers go places.", note: "The current line · brandable but generic for this audience.", rec: false, bg: "transparent" },
+            { voice: "C · EDITORIAL", line: "Every morning, they walk the same block.", note: "Nice rhythm, spends 2 s more reading time than A.", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:04.5", name: "ARRIVAL · the geofence moment", picture: "the turn; spotlight settles on the door",
+          options: [
+            { voice: "LOCKED", line: "Notice their arrival.", note: "", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "B · PRODUCT", line: "A geofence, drawn to your door.", note: "The one permitted 'geofence' · use here or nowhere.", rec: false, bg: "transparent" },
+            { voice: "C · EDITORIAL", line: "Arrival, noticed.", note: "Elegant but abstract; weakest for a cold audience.", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:06.5", name: "THE PUSH · see options at right", picture: "phone rises; push holds solo 1.5 s",
+          options: [
+            { voice: "RULE", line: "The push speaks as the restaurant, never as Janus.", note: "Copy candidates in the notification panel →", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:08", name: "ONE TAP · order flow accelerated", picture: "rows animate; Reorder card; thumb taps",
+          options: [
+            { voice: "A · OPERATOR", line: "Their usual · one tap, already moving.", note: "", rec: false, bg: "transparent" },
+            { voice: "LOCKED", line: "The usual in one tap.", note: "", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "C · EDITORIAL", line: "No menu. No line. Just theirs.", note: "Strong but risks implying no menu exists.", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:12", name: "IN-STORE SHIFT · the app changes with them", picture: "threshold cross; same screen re-arranges",
+          options: [
+            { voice: "A · OPERATOR", line: "Inside, the app becomes the counter.", note: "", rec: false, bg: "transparent" },
+            { voice: "LOCKED", line: "No caption. The screen change carries the beat.", note: "", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "C · EDITORIAL", line: "The door is the interface.", note: "Poster-worthy; save for the /argument/ page.", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:15", name: "CLOSE LINE · one sentence before the card", picture: "pull up over procedural roofs",
+          options: [
+            { voice: "LOCKED", line: "Arrive. Tap. Pick up.", note: "Three verbs, three seconds. Tighter variant if ever needed: Tap. Pick up.", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "ALT", line: "They walked in. It was already ordered.", note: "", rec: false, bg: "transparent" },
+            { voice: "C · EDITORIAL", line: "Recognition, at the door.", note: "", rec: false, bg: "transparent" }
+          ]
+        },
+        {
+          tc: "0:16.5", name: "END CARD · over the quiet globe", picture: "globe at 15% alpha, half-speed spin",
+          options: [
+            { voice: "A · TAGLINE", line: "Regulars aren't luck.", note: "Your pick · it IS the thesis of this cut. Keep.", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "SUB-LINE", line: "Arrival-powered ordering for your app · janus.earth", note: "Replaces 'the context layer…' · precise to the offer.", rec: true, bg: "rgba(217,72,15,.03)" },
+            { voice: "ALT TAGLINE", line: "Know the moment they arrive.", note: "If a second flight is wanted for A/B.", rec: false, bg: "transparent" }
+          ]
+        }
+      ],
+      pushes: [
+        { title: "Welcome in.", body: "Oat flat white, again? Next one's on us.", rec: true, border: "#D9480F" },
+        { title: "You're here.", body: "Oat flat white, again? Tap once · it's on the bar in 2.", rec: false, border: "#E9EAEC" },
+        { title: "Right on time.", body: "Skip the line · your last order is ready to reorder.", rec: false, border: "#E9EAEC" },
+        { title: "Hey, it's Tuesday.", body: "Your Tuesday order is one tap away.", rec: false, border: "#E9EAEC" }
+      ],
+      appRows: [
+        { k: "At the door", v: "just now", vColor: "#D9480F" },
+        { k: "Counter pickup", v: "2 ahead · ~3 min", vColor: "#7A7F85" },
+        { k: "Order ahead", v: "ready on arrival", vColor: "#7A7F85" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

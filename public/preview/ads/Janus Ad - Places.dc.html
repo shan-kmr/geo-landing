@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Ad 01 · Places</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F4F4F2; overflow: hidden;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #16181A; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+  </style>
+</helmet>
+<div style="position: fixed; inset: 0; display: flex;">
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+    <div style="flex: none; display: flex; align-items: baseline; gap: 14px; padding: 12px 18px 10px;">
+      <span id="2a" style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 2px 7px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .12em; font-weight: 700;">2a</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85;">AD 01 / 03 · "PLACES" · 22 S · 1080×1920</span>
+      <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; color: #7A7F85;"><a href="Janus Ad — One ZIP.dc.html" style="color: #4A4E54;">ad 02 →</a> · <a href="Janus Ad — Moves.dc.html" style="color: #4A4E54;">ad 03 →</a> · <a href="Janus Demo Film.dc.html" style="color: #4A4E54;">the film ↗</a></span>
+    </div>
+    <div style="flex: 1; min-height: 0; position: relative;">
+      <x-import component-from-global-scope="JanusAdPlaces" from="./animations.jsx ./atlas-scene.js ./ad-spots.jsx" end-tagline="{{ endTagline }}" end-sub="{{ endSub }}" hint-size="100%,100%"></x-import>
+    </div>
+  </div>
+  <div style="width: 340px; flex: 0 1 340px; min-width: 260px; border-left: 1px solid #DADBDD; background: #FCFCFB; overflow-y: auto; padding: 22px 24px 40px; box-sizing: border-box;" data-screen-label="Ad 01 spec">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 12px;">THE SPOT</div>
+    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -.012em; line-height: 1.2;">Your customers go places. Your app should know the place.</div>
+    <div style="font-size: 12.5px; line-height: 1.6; color: #4A4E54; margin-top: 10px;">One continuous procedural shot. No figures, no illustration, map or UI only. A deep street-level run down Lafayette (building shadows, window grids, street names sliding past), a swing into the corner with a circular spotlight, no hex chrome anywhere in this spot. Then the merchant's own app rises with the welcome push, the in-store shift, and the close line.</div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">BEATS</div>
+      <div style="display: grid; gap: 7px; font-size: 12px; line-height: 1.5; color: #4A4E54;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:00</span> · "Intent arrives first." · deep street run down Lafayette (z 18)</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:04.5</span> · the turn, picture only: the spotlight settles on the door, no caption</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:06.5</span> · Canal St Café app rises; the push holds solo: "Welcome in. Oat flat white, again? Next one's on us."</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:08</span> · "The usual in one tap." rows: At the door · 12th visit this month · Counter pickup; <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:12</span> in-store shift, no caption; <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:15</span> "Location intelligence for restaurants."</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:16.8</span> · end card over the globe — lightly turning through the dwell (alpha .10, no pause), fully formed by 0:17.7, dwell to 0:22: "Regulars aren't luck." · "Geofencing that knows the place." · <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px;">arrivals · place context · one API</span></div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">RUN IT · ADS MANAGER FIELDS</div>
+      <div style="display: grid; gap: 10px; font-size: 12px; line-height: 1.55; color: #16181A;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PLACEMENT — </span>IG + FB Reels &amp; Stories, 9:16 · also serves as feed 4:5 center-crop</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PRIMARY TEXT — </span>"Your app knows who. Janus tells it where — evidence attached to every 174 m cell of the city. No scores, no black boxes."</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">HEADLINE — </span>"Context for the physical world"</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">CTA — </span>Learn more → janus.earth/atlas (?plate=canal-st-8am)</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">AUDIENCE — </span>product/growth at delivery, mobility, local-discovery apps; lookalike on Atlas visitors</div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px; font-size: 11.5px; line-height: 1.55; color: #7A7F85;">Safe zones respected: all type inside the center band (Stories UI owns top/bottom 250 px). Silent-safe: no meaning carried by sound. Loops cleanly for Reels.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;endTagline&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Regulars aren't luck.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;Grounding machine intelligence.&quot;,&quot;The corner already knows.&quot;,&quot;Know the block. Win the block.&quot;,&quot;Regulars aren't luck.&quot;],&quot;section&quot;:&quot;End card&quot;},&quot;endSub&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Geofencing that knows the place.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;Geofencing that knows the place.&quot;,&quot;Location intelligence for apps in the real world.&quot;,&quot;Your app knows who. Janus tells it where.&quot;,&quot;Arrival-powered ordering for your app.&quot;],&quot;section&quot;:&quot;End card&quot;}}"></script>
+</body>
+</html>

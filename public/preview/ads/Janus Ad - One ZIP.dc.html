@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Ad 02 · One ZIP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F4F4F2; overflow: hidden;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #16181A; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+  </style>
+</helmet>
+<div style="position: fixed; inset: 0; display: flex;">
+  <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+    <div style="flex: none; display: flex; align-items: baseline; gap: 14px; padding: 12px 18px 10px;">
+      <span id="2b" style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 2px 7px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .12em; font-weight: 700;">2b</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85;">AD 02 / 03 · "ONE ZIP" · 15 S · 1080×1920</span>
+      <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; color: #7A7F85;"><a href="Janus Ad — Places.dc.html" style="color: #4A4E54;">← ad 01</a> · <a href="Janus Ad — Moves.dc.html" style="color: #4A4E54;">ad 03 →</a> · <a href="Janus Demo Film.dc.html" style="color: #4A4E54;">the film ↗</a></span>
+    </div>
+    <div style="flex: 1; min-height: 0; position: relative;">
+      <x-import component-from-global-scope="JanusAdZip" from="./animations.jsx ./atlas-scene.js ./ad-spots.jsx" hint-size="100%,100%"></x-import>
+    </div>
+  </div>
+  <div style="width: 340px; flex: 0 1 340px; min-width: 260px; border-left: 1px solid #DADBDD; background: #FCFCFB; overflow-y: auto; padding: 22px 24px 40px; box-sizing: border-box;" data-screen-label="Ad 02 spec">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 12px;">THE SPOT</div>
+    <div style="font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -.012em; line-height: 1.2;">Same ZIP. Not the same street.</div>
+    <div style="font-size: 12.5px; line-height: 1.6; color: #4A4E54; margin-top: 10px;">The insurance spot. Two cells, 400 m apart, one ZIP code — and a 6× gap in fatal rate. The signal ring marks cell A; cell B is a dashed ink outline (signal never ranks). The ledger counts up live, denominators attached, then the camera pulls out to show the whole halftone.</div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">BEATS</div>
+      <div style="display: grid; gap: 7px; font-size: 12px; line-height: 1.5; color: #4A4E54;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:00</span> — street level, two cells marked: ring vs dashed ink</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:02</span> — ledger slides in; rate / hazard / traffic tick up per cell</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:07</span> — "same ZIP · 400 m apart · six times the rate"</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:08</span> — pull out; movement shade fades over the metro</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #16181A;">0:12</span> — end card: "Price the street, not the ZIP."</div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 10px;">RUN IT — ADS MANAGER FIELDS</div>
+      <div style="display: grid; gap: 10px; font-size: 12px; line-height: 1.55; color: #16181A;">
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PLACEMENT — </span>LinkedIn feed + IG/FB Reels (this vertical master; 1:1 crop keeps the ledger)</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">PRIMARY TEXT — </span>"ZIP-level pricing averages away the street. Janus carries crash rates per exposure, hazard dollars and live work zones on every 174 m cell — measured vs inferred, flagged."</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">HEADLINE — </span>"Rates with named denominators"</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">CTA — </span>See the Atlas → janus.earth/atlas?h=892a1072cb3ffff&amp;lens=underwriting</div>
+        <div><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .1em; color: #7A7F85;">AUDIENCE — </span>actuarial, telematics, portfolio-risk titles; retarget /argument/ readers</div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid #E9EAEC; margin-top: 16px; padding-top: 14px; font-size: 11.5px; line-height: 1.55; color: #7A7F85;">Numbers are the authored demo cell's; swap per campaign geography. Grayscale-safe by construction — runs as print one-pager unchanged.</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
