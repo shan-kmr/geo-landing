@@ -1173,12 +1173,12 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         break;
       }
     }
-    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true, litR: 900 } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
+    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.06 } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
   };
 
   let phoneTop = 1920, phoneK = 0, screen = null, gK = 0, pK = 0, gTime = 0, pTime = 0;
   for (const m of moves) {
-    const rise0 = m.t0 + 0.6, rise1 = m.t0 + 1.3, flip0 = m.t0 + FLIP0, flip1 = m.t0 + FLIP1, rs = m.t0 + RECEDE, re = m.t0 + GONE;
+    const rise0 = m.t0 + 1.0, rise1 = m.t0 + 1.7, flip0 = m.t0 + FLIP0, flip1 = m.t0 + FLIP1, rs = m.t0 + RECEDE, re = m.t0 + GONE;
     if (t >= rise0 - 0.01 && t < re) {
       const riseP = eO(f01(t, rise0, rise1)), recP = eIO(f01(t, rs, re));
       phoneTop = 636 + (1 - riseP) * 1300 + recP * 1300;
