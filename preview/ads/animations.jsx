@@ -802,10 +802,12 @@ function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, on
         {fmt(duration)}
       </div>
 
-      {typeof VideoEncoder !== 'undefined' && (
+      {(typeof MediaRecorder !== 'undefined' &&
+        typeof HTMLCanvasElement !== 'undefined' &&
+        HTMLCanvasElement.prototype.captureStream) && (
         <IconButton
-          title="Export video"
-          onClick={() => window.parent.postMessage({ type: 'omelette:request-video-export' }, '*')}
+          title="Download video"
+          onClick={() => exportStageVideo()}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M7 2v7m0 0L4 6m3 3l3-3M2 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -814,6 +816,117 @@ function PlaybackBar({ time, duration, playing, onPlayPause, onReset, onSeek, on
       )}
     </div>
   );
+}
+
+// ── Client-side video export ─────────────────────────────────────────────────
+// The DC host's download button posts a message to window.parent; served
+// standalone there is no host listening, so it does nothing. This records the
+// stage in-browser instead: seek each frame via the engine's sync-seek
+// protocol, rasterize the self-contained <svg> (fonts + images already inlined)
+// onto a canvas, and capture that canvas with MediaRecorder. Driven by wall
+// clock so the file's duration and speed are always correct regardless of how
+// fast frames rasterize (slow machines just yield a lower effective framerate).
+
+let __omxBusy = false;
+
+async function exportStageVideo() {
+  if (__omxBusy) return;
+  const svg = document.querySelector('svg[data-om-exportable-video-with-duration-secs]');
+  if (!svg) { alert('Nothing to export yet — let the animation load first.'); return; }
+  if (typeof MediaRecorder === 'undefined' || !HTMLCanvasElement.prototype.captureStream) {
+    alert('This browser can’t record video. Use desktop Chrome, or screen-record.');
+    return;
+  }
+  __omxBusy = true;
+
+  const duration = parseFloat(svg.getAttribute('data-om-exportable-video-with-duration-secs')) || 20;
+  const W = parseInt(svg.getAttribute('width'), 10) || 1080;
+  const H = parseInt(svg.getAttribute('height'), 10) || 1920;
+  const FPS = 30;
+
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;' +
+    'justify-content:center;background:rgba(10,10,10,.74);color:#fff;-webkit-backdrop-filter:blur(4px);' +
+    'backdrop-filter:blur(4px);font:600 15px/1.5 ui-monospace,Menlo,monospace;letter-spacing:.04em';
+  ov.innerHTML = '<div style="text-align:center"><div id="omxp">Rendering… 0%</div>' +
+    '<div style="font-weight:400;font-size:11px;color:#B9BCC1;margin-top:8px">keep this tab in front</div></div>';
+  document.body.appendChild(ov);
+  const pctEl = ov.querySelector('#omxp');
+
+  const cleanup = () => { ov.remove(); __omxBusy = false; };
+
+  try {
+    // wait for fonts to finish inlining so the raster isn't set in a fallback face
+    for (let i = 0; i < 60 && svg.getAttribute('data-om-fonts-inlined') !== 'true'; i++) {
+      await new Promise(r => setTimeout(r, 50));
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const cx = canvas.getContext('2d');
+    cx.fillStyle = '#FCFCFB'; cx.fillRect(0, 0, W, H);
+
+    const types = ['video/mp4;codecs=h264', 'video/mp4', 'video/webm;codecs=vp9',
+                   'video/webm;codecs=vp8', 'video/webm'];
+    let mime = '';
+    for (const t of types) { try { if (MediaRecorder.isTypeSupported(t)) { mime = t; break; } } catch (e) {} }
+    const ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+
+    const stream = canvas.captureStream(FPS);
+    const rec = new MediaRecorder(stream, mime
+      ? { mimeType: mime, videoBitsPerSecond: 12000000 }
+      : { videoBitsPerSecond: 12000000 });
+    const chunks = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => { rec.onstop = res; });
+
+    const XMLS = new XMLSerializer();
+    const seek = (t) => svg.dispatchEvent(new CustomEvent('data-om-seek-to-time-frame',
+      { detail: { time: t, sync: true } }));
+    const rasterize = () => new Promise((res) => {
+      const clone = svg.cloneNode(true);
+      clone.style.transform = 'none';
+      clone.style.boxShadow = 'none';
+      clone.setAttribute('width', W);
+      clone.setAttribute('height', H);
+      const url = URL.createObjectURL(new Blob([XMLS.serializeToString(clone)],
+        { type: 'image/svg+xml;charset=utf-8' }));
+      const img = new Image();
+      img.onload = () => { try { cx.drawImage(img, 0, 0, W, H); } catch (e) {} URL.revokeObjectURL(url); res(); };
+      img.onerror = () => { URL.revokeObjectURL(url); res(); };
+      img.src = url;
+    });
+
+    // draw frame 0 before the recorder starts so there's no blank lead-in
+    seek(0); await rasterize();
+    rec.start();
+    const start = performance.now();
+    for (;;) {
+      const el = (performance.now() - start) / 1000;
+      if (el >= duration) break;
+      seek(el);
+      await rasterize();
+      pctEl.textContent = 'Rendering… ' + Math.min(99, Math.round((el / duration) * 100)) + '%';
+      await new Promise(r => requestAnimationFrame(r));
+    }
+    await new Promise(r => setTimeout(r, 150));   // let the last frame flush
+    rec.stop();
+    await stopped;
+    seek(0);
+
+    const blob = new Blob(chunks, { type: mime || 'video/webm' });
+    if (!blob.size) { alert('Recording came back empty — try desktop Chrome.'); cleanup(); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (document.title || 'janus-ad').replace(/[^\w.-]+/g, '-').toLowerCase().replace(/^-+|-+$/g, '') + '.' + ext;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (err) {
+    alert('Export failed: ' + (err && err.message ? err.message : err));
+  } finally {
+    cleanup();
+  }
 }
 
 function IconButton({ children, onClick, title }) {
