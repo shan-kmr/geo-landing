@@ -787,33 +787,18 @@
     // live "this place" highlight — deep red, glowing, pulsing (opt-in via `blink`,
     // so the Atlas POI highlight keeps its original signal-orange static look)
     if (blink != null) {
-      const b = blink, RED = "208,36,24", cy = py - dh * 0.5;
+      const RED = "170,26,20", cy = py - dh * 0.5;   // darker red, steady — no halo, no glow
       ctx.save();
-      ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, cy, r * 2.4, 0, Math.PI * 2, true);
-      ctx.fillStyle = "rgba(250,250,249," + (0.12 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
+      ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(px, cy, r * 2.3, 0, Math.PI * 2, true);
+      ctx.fillStyle = "rgba(250,250,249," + (0.09 * phase).toFixed(3) + ")"; ctx.fill("evenodd");
       ctx.restore();
-      ctx.save();
-      const g = ctx.createRadialGradient(px, cy, r * 0.15, px, cy, r * 2.5);
-      g.addColorStop(0, "rgba(" + RED + "," + ((0.23 + 0.22 * b) * phase).toFixed(3) + ")");
-      g.addColorStop(0.55, "rgba(" + RED + "," + ((0.07 + 0.08 * b) * phase).toFixed(3) + ")");
-      g.addColorStop(1, "rgba(" + RED + ",0)");
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(px, cy, r * 2.5, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-      ctx.strokeStyle = "rgba(" + RED + "," + (0.38 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.3;
+      ctx.strokeStyle = "rgba(" + RED + "," + (0.42 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.3;
       for (const p of pc) { ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(p[0], p[1] - dh); ctx.stroke(); }
-      ctx.save();
       path(dh);
-      ctx.shadowColor = "rgba(" + RED + "," + (0.7 * phase).toFixed(3) + ")";
-      ctx.shadowBlur = 11 + 17 * b;
-      ctx.fillStyle = "rgba(" + RED + "," + ((0.21 + 0.12 * b) * phase).toFixed(3) + ")";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(" + RED + "," + ((0.54 + 0.22 * b) * phase).toFixed(3) + ")";
-      ctx.lineWidth = 2.0 + 1.2 * b;
-      ctx.stroke();
-      ctx.restore();
+      ctx.fillStyle = "rgba(" + RED + "," + (0.34 * phase).toFixed(3) + ")"; ctx.fill();
+      ctx.strokeStyle = "rgba(" + RED + "," + (0.95 * phase).toFixed(3) + ")"; ctx.lineWidth = 2.6; ctx.stroke();
       path(0);
-      ctx.strokeStyle = "rgba(" + RED + "," + (0.38 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.1; ctx.stroke();
+      ctx.strokeStyle = "rgba(" + RED + "," + (0.6 * phase).toFixed(3) + ")"; ctx.lineWidth = 1.3; ctx.stroke();
       return;
     }
     ctx.save();
