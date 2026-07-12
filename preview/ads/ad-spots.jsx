@@ -57,7 +57,7 @@ function ChipStack({ t, items, x, y }) {
     </div>
   );
 }
-function EndCard({ t, t0, tagline, sub, subline, globe }) {
+function EndCard({ t, t0, tagline, taglineFlip, flipAt, sub, subline, globe }) {
   const imgRef = React.useRef(null);
   const bufRef = React.useRef(null);
   React.useLayoutEffect(() => {
@@ -80,6 +80,42 @@ function EndCard({ t, t0, tagline, sub, subline, globe }) {
   }, [t, t0, globe]);
   const k = f01(t, t0, t0 + 0.4);
   if (k <= 0) return null;
+
+  // TWO-BEAT storyline (Mirrors): beat 1 (observation) holds ~30%, flips upward,
+  // beat 2 (CTA + brand) rises into place and dwells ~70%.
+  if (taglineFlip) {
+    const fa = flipAt != null ? flipAt : t0 + 1.8;
+    const FL = 0.6;
+    const b1in = f01(t, t0 + 0.15, t0 + 0.7);
+    const b1out = eIO(f01(t, fa, fa + FL));
+    const b1op = b1in * (1 - b1out);
+    const b1t = "translateY(" + (-92 * b1out).toFixed(1) + "px) perspective(900px) rotateX(" + (36 * b1out).toFixed(1) + "deg)";
+    const b2p = eIO(f01(t, fa + FL * 0.35, fa + FL + 0.4));
+    const b2op = f01(t, fa + FL * 0.35, fa + FL + 0.2);
+    const b2t = "translateY(" + (84 * (1 - b2p)).toFixed(1) + "px)";
+    return (
+      <div style={{ position: "absolute", inset: 0, background: PAPER, opacity: k, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 90px" }}>
+        <img ref={imgRef} width={1080} height={1920} alt="" style={{ position: "absolute", inset: 0, opacity: f01(t, t0 + 0.1, t0 + 0.6) }} />
+        {b1op > 0.01 && (
+          <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 90px", opacity: b1op, transform: b1t, transformOrigin: "center 42%" }}>
+            <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 74, letterSpacing: "-.015em", lineHeight: 1.12, color: INK, textWrap: "balance" }}>{tagline}</div>
+          </div>
+        )}
+        {b2op > 0.01 && (
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", opacity: b2op, transform: b2t }}>
+            <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 74, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, textWrap: "balance" }}>{taglineFlip}</div>
+            <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "42px 0" }}></div>
+            <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK }}>JANUS</div>
+            <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20 }}>{sub || "The context layer for the physical world."}</div>
+            <div style={{ fontFamily: MONO, fontSize: 25, color: INK, marginTop: 46 }}>
+              <span style={{ borderBottom: "2px solid " + INK, paddingBottom: 4 }}>janus.earth →</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ position: "absolute", inset: 0, background: PAPER, opacity: k, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 90px" }}>
       <img ref={imgRef} width={1080} height={1920} alt="" style={{ position: "absolute", inset: 0, opacity: f01(t, t0 + 0.1, t0 + 0.6) }} />
@@ -1140,24 +1176,25 @@ function AdMirrorsRoot({ endTagline, endSub }) {
     { t0: 8.4, cell: P.B, screen: "deliv" },
     { t0: 15.0, cell: P.C, screen: "news" },
   ];
-  const END = 21.2;   // hero begins fading in WHILE the map is still zooming out — crossfade, not a cut
+  const END = 20.9, FLIPAT = 22.7;   // end card starts; observation flips up to the CTA at ~30% (of the ~6.1s end card, Stage=27)
   const FLIP0 = 2.0, FLIP1 = 2.35, RECEDE = 4.6, GONE = 5.15;   // offsets from t0 (snappier flip + recede)
 
   // ONE zoom-in on the first neighborhood, then STAY at that zoom and pan
   // straight across town (never lift) — the single pull-back comes only at the
   // very end, handing off to the globe.
   const ZD = 18.0, ZI = 13.0, ZW = 14.0;   // stay-zoom (arrival, a little tighter) · intro establishing · gentle end reveal
-  const ZO0 = 20.3, ZO1 = 22.0;            // end pull-back — keeps drifting THROUGH the hero crossfade (no pause), a touch faster
+  const ZO0 = 20.2, ZO1 = 21.3;            // end pull-back — quicker out of the zoom-out, crossfading into the hero
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
     const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
     if (tt < m0) { const p = eIO(f01(tt, 0, m0)); return { x: A[0], y: lerp(A[1] - 0.03, A[1], p), z: lerp(ZI, ZD, p), rot, pitch }; }
-    const rec0 = m0 + RECEDE, rec1 = m1 + RECEDE;
+    const PANDUR = 1.35;                        // quicker neighborhood-to-neighborhood move
+    const p0 = m1 - PANDUR, p1 = m2 - PANDUR;   // hold on the spot, then a snappy pan (starts after the card is gone)
     const pan = (a, b, t0, t1) => { const e = eIO(f01(tt, t0, t1)); return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: ZD, rot, pitch }; };
-    if (tt < rec0) return { x: A[0], y: A[1], z: ZD, rot, pitch };
-    if (tt < m1)   return pan(A, B, rec0, m1);
-    if (tt < rec1) return { x: B[0], y: B[1], z: ZD, rot, pitch };
-    if (tt < m2)   return pan(B, C, rec1, m2);
+    if (tt < p0)   return { x: A[0], y: A[1], z: ZD, rot, pitch };
+    if (tt < m1)   return pan(A, B, p0, m1);
+    if (tt < p1)   return { x: B[0], y: B[1], z: ZD, rot, pitch };
+    if (tt < m2)   return pan(B, C, p1, m2);
     if (tt < ZO0)  return { x: C[0], y: C[1], z: ZD, rot, pitch };
     const e = eO(f01(tt, ZO0, ZO1));    // ease-out: reveal fast, then keep drifting as the hero fades in over it
     return { x: C[0], y: lerp(C[1], C[1] + 0.14, e), z: lerp(ZD, ZW, e), rot, pitch };
@@ -1213,12 +1250,15 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         { t0: 15.7, t1: 20.2, text: "News that knows your block.", size: 42 },
       ]} />
 
-      <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
+      <EndCard t={t} t0={END} globe={true}
+        tagline={endTagline || "Every app is a local app."}
+        taglineFlip="Build location-powered apps."
+        flipAt={FLIPAT}
         sub={endSub || "Geospatial infrastructure and intelligence."} />
     </div>
   );
 }
 function JanusAdMirrors(props) {
-  return <Stage width={1080} height={1920} duration={26} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMirrorsRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
+  return <Stage width={1080} height={1920} duration={27} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMirrorsRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
 }
 window.JanusAdMirrors = JanusAdMirrors;
