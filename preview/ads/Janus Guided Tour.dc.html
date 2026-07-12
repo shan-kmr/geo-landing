@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Atlas guided tour</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #FCFCFB; color: #16181A;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+    ::selection { background: rgba(217,72,15,.12); }
+  </style>
+</helmet>
+
+<div data-screen-label="Guided tour" style="position: fixed; inset: 0; background: #FCFCFB; overflow: hidden;">
+  <canvas data-map="" style="position: absolute; inset: 0; width: 100%; height: 100%; cursor: {{ cursor }};"
+    onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onWheel="{{ onWheel }}" onClick="{{ onMapClick }}"></canvas>
+
+  <!-- top bar — verbatim atlas chrome -->
+  <div style="position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 14px 18px; pointer-events: none;">
+    <a href="Janus Flow & States.dc.html" style="pointer-events: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; letter-spacing: .28em; font-weight: 700; color: #16181A; text-decoration: none; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 8px 12px; border: 1px solid #E9EAEC; border-radius: 4px;">JANUS<span style="letter-spacing: .14em; color: #7A7F85; font-weight: 400; margin-left: 8px;">ATLAS · NEW YORK · TOUR</span></a>
+    <span style="pointer-events: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; letter-spacing: .06em; color: #16181A; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 26px 8px 12px; position: relative;">{{ shadeLabel }}<svg width="8" height="6" viewBox="0 0 8 6" style="position: absolute; right: 10px; top: 50%; margin-top: -3px;"><path d="M0 0h8L4 6z" fill="#7A7F85"></path></svg></span>
+    <span style="margin-left: auto; pointer-events: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 7px 10px; border: 1px solid #E9EAEC; border-radius: 4px;">{{ hudLeft }}<sc-if value="{{ hudLive }}" hint-placeholder-val="{{ true }}"><span> · </span><span style="color: #D9480F;">{{ hudLive }}</span></sc-if></span>
+  </div>
+
+  <!-- shade caption -->
+  <sc-if value="{{ showCaption }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 60px; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none;">
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 7px 11px; color: #16181A;"><b>Population</b> · residents / cell · kontur 400 m · 2023 <span style="color: #B9BCC1;">|</span> <span style="color: #7A7F85;">×</span></span>
+    </div>
+  </sc-if>
+
+  <!-- tooltip (dive step) -->
+  <sc-if value="{{ showTip }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 44%; top: 42%; pointer-events: none;">
+      <svg width="15" height="15" viewBox="0 0 15 15"><path d="M1 1 L1 12 L4.4 8.9 L6.6 13.6 L8.9 12.6 L6.7 8 L11.4 8z" fill="#16181A" stroke="#FCFCFB" stroke-width="1.2"></path></svg>
+      <div style="position: absolute; left: 16px; top: 16px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; line-height: 1.45; color: #16181A; background: #FCFCFB; border: 1px solid #E9EAEC; border-radius: 4px; padding: 7px 10px; box-shadow: 0 2px 8px rgba(22,24,26,.07); white-space: nowrap;"><b>1,284</b> residents · kontur 400 m<br>click to open</div>
+    </div>
+  </sc-if>
+
+  <!-- share url chip + toast -->
+  <sc-if value="{{ showShare }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; top: 60px; left: 0; right: 0; display: flex; justify-content: center; pointer-events: none;">
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; background: #FFFFFF; border: 1px solid #E9EAEC; border-radius: 5px; padding: 8px 12px; box-shadow: 0 2px 8px rgba(22,24,26,.07); white-space: nowrap;"><span style="color: #B9BCC1;">janus.earth/atlas/</span><span style="color: #16181A; font-weight: 700;">?h=892a1072cb3ffff</span></span>
+      <span style="margin-left: 10px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #FCFCFB; background: #16181A; border-radius: 4px; padding: 8px 10px;">copied — opens on this cell, card open</span>
+    </div>
+  </sc-if>
+
+  <!-- retiring hint (arrival step) -->
+  <sc-if value="{{ showHint }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 148px; display: flex; justify-content: center; pointer-events: none;">
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .08em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 14px;">the grid splits as you dive — <b>scroll to go deeper</b><span style="color: #B9BCC1;"> · shown once, retires forever</span></span>
+    </div>
+  </sc-if>
+
+  <!-- plate rail (plates step + free mode) -->
+  <sc-if value="{{ showPlates }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 16px; bottom: 16px; display: flex; gap: 6px;">
+      <span onClick="{{ goPlate0 }}" style="cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #FCFCFB; background: #16181A; border: 1px solid #16181A; border-radius: 4px; padding: 6px 10px;">Canal St, 8 a.m.</span>
+      <span onClick="{{ goPlate1 }}" style="cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">The dark blocks</span>
+      <span onClick="{{ goPlate2 }}" style="cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">Who works here</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #7A7F85; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">⋯</span>
+    </div>
+  </sc-if>
+
+  <!-- card panel -->
+  <div style="position: absolute; top: 0; right: 0; bottom: 0; width: min(430px, 92vw); z-index: 30; background: #FCFCFB; border-left: 1px solid #E9EAEC; box-shadow: -18px 0 44px rgba(22,24,26,.07); display: flex; flex-direction: column; transform: {{ panelTx }}; transition: transform .32s cubic-bezier(.2,.8,.25,1);">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #F2F3F4; flex: none;">
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #7A7F85;">{{ cellLabel }}</span>
+      <span style="margin-left: auto; border: 1px solid #E9EAEC; background: #FFFFFF; border-radius: 4px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; padding: 5px 10px; color: #4A4E54;">share</span>
+      <span onClick="{{ closePanel }}" style="cursor: pointer; border: 1px solid #E9EAEC; background: #FFFFFF; border-radius: 4px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; padding: 5px 10px; color: #4A4E54;">esc</span>
+    </div>
+    <div style="overflow-y: auto; padding: 14px 16px 40px; flex: 1;">
+      <div style="border: 1px solid #E9EAEC; border-radius: 8px; background: #FFFFFF; padding: 18px 20px;">
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.9px; letter-spacing: .1em; text-transform: uppercase; color: #7A7F85;">CELL 892A1072CB3FFFF · ~174 M ACROSS · CANAL &amp; LAFAYETTE</div>
+        <div style="font-size: 36.8px; font-weight: 700; line-height: 1; margin: 8px 0 2px; letter-spacing: -.02em;">3 <span style="font-size: 13.6px; color: #7A7F85; font-family: ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .04em; font-weight: 400;">fatal crashes · 2001–2023 · NHTSA FARS</span></div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 14px 0 6px;">BY HOUR OF DAY</div>
+        <div data-hist="0,0,1,0,0,0,0,0,0,0,0,0,0,0,2,1,0,3,2,1,0,0,1,0" style="display: flex; align-items: flex-end; gap: 2px; height: 46px;"></div>
+        <div style="display: flex; justify-content: space-between; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.8px; color: #B9BCC1; margin-top: 3px;"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 15px 0 6px;">EXPOSURE</div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Traffic, AADT</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">24,300</b> veh/day · <span style="color: #7A7F85;">measured</span></span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Fatal rate</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">0.34</b> / 100 M veh-mi</span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Work zones now</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #D9480F; font-weight: 650;">1 active</b> · <span style="color: #7A7F85;">NYC DOT</span></span></div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 15px 0 6px;">HAZARD · FEMA NRI</div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Expected annual loss</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">$412 K</b> / yr</span></div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 15px 0 6px;">WHO IS HERE · ACS + LODES</div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Median HH income</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">$96,400</b> · <span style="color: #7A7F85;">tract → cell</span></span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Work here / live here</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">4,120</b> / <b style="font-weight: 650;">610</b></span></div>
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 15px 0 6px;">SIDEWALK PHYSICS</div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Walk vibration, RMS</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">2.1</b> m/s² · <span style="color: #7A7F85;">measured, 14 traces</span></span></div>
+        <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Effective sidewalk width</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="font-weight: 650;">3.4</b> m · OSM</span></div>
+      </div>
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .06em; color: #7A7F85; padding: 12px 4px 0; line-height: 1.6;">tour shows one authored cell — the live Atlas serves the full res-9 grid · every number names source + vintage</div>
+    </div>
+  </div>
+
+  <!-- tour caption card -->
+  <sc-if value="{{ tourOn }}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 24px; display: flex; justify-content: center; pointer-events: none;">
+      <div style="pointer-events: auto; width: 620px; max-width: 92vw; background: rgba(252,252,251,.97); border: 1px solid #DADBDD; border-radius: 8px; box-shadow: 0 8px 32px rgba(22,24,26,.1); padding: 16px 20px 14px; opacity: {{ cardOpacity }}; transition: opacity .22s ease;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .12em; color: #7A7F85;">{{ stepNo }} / 06</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700; color: #16181A;">{{ stepTitle }}</span>
+          <span onClick="{{ exitTour }}" style="cursor: pointer; margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85; border: 1px solid #E9EAEC; border-radius: 4px; padding: 4px 8px; background: #FFFFFF;">exit — free explore</span>
+        </div>
+        <div style="font-size: 13.5px; line-height: 1.55; color: #4A4E54; margin-top: 8px;">{{ stepBody }}</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px;">
+          <span onClick="{{ prevStep }}" style="cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; color: #4A4E54; border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 12px; background: #FFFFFF; opacity: {{ backOpacity }};">← back</span>
+          <span onClick="{{ nextStep }}" style="cursor: pointer; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; font-weight: 700; color: #FCFCFB; background: #16181A; border: 1px solid #16181A; border-radius: 4px; padding: 6px 14px;">{{ nextLabel }}</span>
+          <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .05em; color: #B9BCC1;">→ next · ← back · esc exits</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- free-mode chip -->
+  <sc-if value="{{ freeChip }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 24px; display: flex; justify-content: center; pointer-events: none;">
+      <span style="pointer-events: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .05em; color: #4A4E54; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 13px;">free explore — drag to pan · scroll to dive (tiles split) · click a coarse tile to fly one rung · click a res-9 cell to open it · <span onClick="{{ restartTour }}" style="cursor: pointer; color: #16181A; border-bottom: 1px solid currentColor;">T restarts the tour</span></span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { step: 0, tourOn: true, panelOpen: false, cardFade: 1, shade: "", cellLabel: "R9 · A1072CB3FFFF", dragging: false };
+
+  STEPS = [
+    { title: "ARRIVAL — THE AUTHORED APPROACH", body: "The Atlas opens as structure: hairline hexagons over a near-white city, nothing colored that wasn't asked for. The camera has just performed the last ladder step for you — the split you'll make yourself in a moment.", cam: { vu: [0.35, 0.4], z: 11.85, rot: 0.21, pitch: 0.75 }, shade: "", live: 1, ring: 0, panel: false, hint: true },
+    { title: "THE DIVE — INK IS DENSITY", body: "Shade on: population renders as ink, white to graphite on a log ramp — never hue. Hover any cell and the tooltip states a count, names its denominator, and ends with the same four words at every resolution.", cam: { vu: [-0.18, -2.3], z: 12.6, rot: 0.21, pitch: 0.62 }, shade: "kontur_population", live: 0.35, ring: 0, panel: false, tip: true, caption: true },
+    { title: "THE CELL — A RECORD, NOT A SCORE", body: "Click a res-9 cell: the ring is the only warm mark on the map, and the card is a ledger — counts, rates with named denominators, measured vs tract→cell flags. Fifteen sections, every one traceable.", cam: { vu: [-0.2, -2.62], z: 14.7, rot: 0.3, pitch: 0.8 }, shade: "", live: 0.3, ring: 1, panel: true },
+    { title: "SHARE — THE CELL IS A URL", body: "The address bar already carries ?h= for this cell. Share copies a link that reopens this exact camera with the card open — evidence that travels like a citation, into memos and models alike.", cam: { vu: [-0.2, -2.62], z: 14.7, rot: 0.3, pitch: 0.8 }, shade: "", live: 0.3, ring: 1, panel: true, share: true },
+    { title: "ALIVE — THE ONLY COLOR", body: "One rung up: buses glide along their routes in 18-second tweens between GPS fixes; bike docks breathe by fill level. The HUD counts them in the signal color — the one hue this map permits, reserved for what is true right now.", cam: { vu: [-0.12, -2.3], z: 13.2, rot: 0.26, pitch: 0.72 }, shade: "", live: 1, ring: 0, panel: false },
+    { title: "PLATES — AUTHORED VIEWS", body: "Named cameras with a thesis: Canal St at 8 a.m., the dark blocks, who works here. One keystroke apart, reproducible in any demo, and every one is a URL. Exit to explore freely — or open the real Atlas.", cam: { vu: [-0.06, -2.5], z: 14.9, rot: 0.3, pitch: 0.8 }, shade: "", live: 1, ring: 1, panel: false, plates: true, last: true }
+  ];
+
+  PLATES = [
+    { cam: { vu: [-0.06, -2.5], z: 14.9, rot: 0.3, pitch: 0.8 }, shade: "", ring: 1 },
+    { cam: { xy: [1.1, -3.3], z: 12.6, rot: 0.1, pitch: 0.6 }, shade: "nightlight_2021", ring: 0 },
+    { cam: { vu: [0, 2.0], z: 12.4, rot: 0.21, pitch: 0.62 }, shade: "wt_visit_count", ring: 0 }
+  ];
+
+  renderVals() {
+    const s = this.state;
+    const st = this.STEPS[s.step];
+    const shadeNames = { "": "Structure · none", kontur_population: "Population", wt_visit_count: "Movement", nightlight_2021: "Night-lights" };
+    return {
+      tourOn: s.tourOn,
+      freeChip: !s.tourOn,
+      stepNo: "0" + (s.step + 1),
+      stepTitle: st.title,
+      stepBody: st.body,
+      nextLabel: st.last ? "finish → free explore" : "next →",
+      backOpacity: s.step === 0 ? 0.35 : 1,
+      cardOpacity: s.cardFade,
+      cursor: s.dragging ? "grabbing" : "grab",
+      shadeLabel: shadeNames[s.shade] != null ? shadeNames[s.shade] : "Structure · none",
+      hudLeft: s.hudLeft || "res 9",
+      hudLive: s.hudLive || "",
+      showTip: s.tourOn && !!st.tip,
+      showCaption: (s.tourOn && !!st.caption) || (!s.tourOn && s.shade === "kontur_population"),
+      showShare: s.tourOn && !!st.share,
+      showHint: s.tourOn && !!st.hint,
+      showPlates: (s.tourOn && !!st.plates) || !s.tourOn,
+      panelTx: s.panelOpen ? "translateX(0%)" : "translateX(103%)",
+      cellLabel: s.cellLabel,
+      nextStep: () => this.go(s.step + 1),
+      prevStep: () => this.go(s.step - 1),
+      exitTour: () => this.exit(),
+      restartTour: () => this.restart(),
+      closePanel: () => this.setState({ panelOpen: false }, () => { this.T.ring = 0; }),
+      onDown: (e) => this.down(e), onMove: (e) => this.move(e), onUp: (e) => this.up(e),
+      onWheel: (e) => this.wheel(e), onMapClick: (e) => this.click(e),
+      goPlate0: () => this.flyPlate(0), goPlate1: () => this.flyPlate(1), goPlate2: () => this.flyPlate(2)
+    };
+  }
+
+  /* ---------- tour navigation ---------- */
+  go(n) {
+    if (n < 0) return;
+    if (n >= this.STEPS.length) { this.exit(); return; }
+    this.setState({ cardFade: 0 });
+    setTimeout(() => {
+      const st = this.STEPS[n];
+      this.applyStep(st);
+      this.setState({ step: n, cardFade: 1, panelOpen: !!st.panel, shade: st.shade });
+    }, 220);
+  }
+  applyStep(st) {
+    const J = window.JanusScene;
+    const cam = st.cam;
+    const [x, y] = cam.vu ? J.m2w(cam.vu[0], cam.vu[1]) : (cam.xy || [0, 0]);
+    this.flyTo({ x, y, z: cam.z, rot: cam.rot, pitch: cam.pitch }, st.shade, st.ring, st.live);
+  }
+  exit() { this.setState({ tourOn: false, panelOpen: false }); this.T.ring = 0; this.T.liveTarget = 1; }
+  restart() { this.setState({ tourOn: true, step: 0, cardFade: 1 }); this.applyStep(this.STEPS[0]); this.setState({ shade: "", panelOpen: false }); }
+
+  /* ---------- camera + render loop ---------- */
+  componentDidMount() {
+    this.T = { cam: null, from: null, to: null, t0: 0, dur: 0, shadeMix: 0, shadeTarget: 0, ring: 0, ringNow: 0, liveTarget: 1, liveNow: 0, sel: null };
+    const s = document.createElement("script");
+    s.src = "atlas-scene.js";
+    s.onload = () => this.boot();
+    document.head.appendChild(s);
+    this._key = (e) => {
+      if (e.key === "ArrowRight" && this.state.tourOn) this.go(this.state.step + 1);
+      else if (e.key === "ArrowLeft" && this.state.tourOn) this.go(this.state.step - 1);
+      else if (e.key === "Escape") { if (this.state.panelOpen) { this.setState({ panelOpen: false }); this.T.ring = 0; } else if (this.state.tourOn) this.exit(); }
+      else if ((e.key === "t" || e.key === "T") && !this.state.tourOn) this.restart();
+    };
+    addEventListener("keydown", this._key);
+    // histogram bars (async mount safe)
+    let tries = 0;
+    const dec = () => {
+      const els = document.querySelectorAll("[data-hist]");
+      els.forEach((el) => {
+        const vals = el.getAttribute("data-hist").split(",").map(Number);
+        const mx = Math.max(...vals, 1);
+        el.innerHTML = vals.map((v) => '<div style="flex:1;background:#16181A;border-radius:1px 1px 0 0;opacity:.78;min-height:1px;height:' + Math.max(2, (v / mx) * 100) + '%"></div>').join("");
+        el.removeAttribute("data-hist");
+      });
+      if (els.length === 0 && tries++ < 60) setTimeout(dec, 120);
+    };
+    dec();
+  }
+  componentWillUnmount() { cancelAnimationFrame(this._raf); removeEventListener("keydown", this._key); }
+
+  boot() {
+    const J = window.JanusScene;
+    const [x, y] = J.m2w(0.35, 0.4);
+    this.T.cam = { x, y, z: 11.85, rot: 0.21, pitch: 0.75 };
+    this.T.sel = (() => { const [sx, sy] = J.m2w(-0.06, -2.56); return { x: sx, y: sy }; })();
+    this.T.liveNow = 0; this.T.liveTarget = 1;
+    this._reduced = matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    this._clock0 = performance.now();
+    this._base = document.createElement("canvas");
+    this._baseKey = "";
+    const tick = () => { this.frame(); this._raf = requestAnimationFrame(tick); };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  flyTo(cam, shade, ring, live) {
+    const T = this.T;
+    if (!T.cam) return;
+    T.from = Object.assign({}, T.cam);
+    T.to = cam;
+    T.t0 = performance.now();
+    T.dur = this._reduced ? 0 : 1450;
+    T.shadeTarget = shade ? 1 : 0;
+    if (shade) this._shadeCol = shade;
+    T.ring = ring || 0;
+    T.liveTarget = live != null ? live : 1;
+  }
+  flyPlate(i) {
+    const p = this.PLATES[i];
+    const J = window.JanusScene;
+    const [x, y] = p.cam.vu ? J.m2w(p.cam.vu[0], p.cam.vu[1]) : p.cam.xy;
+    this.flyTo({ x, y, z: p.cam.z, rot: p.cam.rot, pitch: p.cam.pitch }, p.shade, p.ring, 1);
+    this.setState({ shade: p.shade });
+  }
+
+  frame() {
+    const J = window.JanusScene, T = this.T;
+    const cv = document.querySelector("canvas[data-map]");
+    if (!cv || !T.cam) return;
+    const dpr = Math.min(devicePixelRatio || 1, 1.6);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    // camera tween
+    if (T.to) {
+      const k = T.dur === 0 ? 1 : Math.min(1, (performance.now() - T.t0) / T.dur);
+      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      T.cam = J.easeCam(T.from, T.to, e);
+      if (k >= 1) { T.cam = Object.assign({}, T.to); T.to = null; }
+    }
+    // scalar tweens
+    T.shadeMix += (T.shadeTarget - T.shadeMix) * 0.09;
+    T.ringNow += (T.ring - T.ringNow) * 0.16;
+    T.liveNow += (T.liveTarget - T.liveNow) * 0.05;
+    const clock = (performance.now() - this._clock0) / 1000;
+    const shade = T.shadeMix > 0.02 ? this._shadeCol : "";
+    // base cache: everything except live dots + ring
+    const bk = [T.cam.x.toFixed(4), T.cam.y.toFixed(4), T.cam.z.toFixed(3), T.cam.rot.toFixed(3), T.cam.pitch.toFixed(3), shade, T.shadeMix.toFixed(2), W, H].join("|");
+    if (bk !== this._baseKey) {
+      this._baseKey = bk;
+      this._base.width = cv.width; this._base.height = cv.height;
+      const bctx = this._base.getContext("2d");
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      J.drawCity(bctx, W, H, T.cam, { shade, shadeMix: T.shadeMix, labels: T.cam.z < 13.6 });
+    }
+    const ctx = cv.getContext("2d");
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(this._base, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (T.liveNow > 0.01) J.drawLiveLayer(ctx, W, H, T.cam, { t: 60 + clock, alpha: T.liveNow });
+    if (T.ringNow > 0.02) J.drawSelectedLayer(ctx, W, H, T.cam, T.sel, T.ringNow);
+    // hud
+    const res = J.activeRes(T.cam.z);
+    const hudLeft = "res " + res + (T.cam.z >= J.BUILDING_ZOOM ? " · buildings" : "");
+    const hudLive = T.liveNow > 0.4 ? (41 + Math.round(2 * Math.sin(clock * 0.21))) + " live" : "";
+    if (hudLeft !== this.state.hudLeft || hudLive !== this.state.hudLive) this.setState({ hudLeft, hudLive });
+  }
+
+  /* ---------- free-explore input ---------- */
+  down(e) { if (this.state.tourOn) return; this._drag = { x: e.clientX, y: e.clientY }; this.setState({ dragging: true }); }
+  move(e) {
+    if (!this._drag || !this.T.cam) return;
+    const J = window.JanusScene, T = this.T;
+    const s = J.pxPerKm(T.cam.z);
+    const dx = (e.clientX - this._drag.x) / s, dy = (e.clientY - this._drag.y) / s;
+    const c = Math.cos(T.cam.rot), si = Math.sin(T.cam.rot);
+    T.cam.x -= dx * c - dy * si;
+    T.cam.y += dx * si + dy * c;
+    T.to = null;
+    this._drag = { x: e.clientX, y: e.clientY };
+    this._moved = true;
+  }
+  up() { this._drag = null; this.setState({ dragging: false }); setTimeout(() => { this._moved = false; }, 50); }
+  wheel(e) {
+    if (this.state.tourOn || !this.T.cam) return;
+    e.preventDefault && e.preventDefault();
+    this.T.cam.z = Math.max(8.6, Math.min(17.4, this.T.cam.z - e.deltaY * 0.0022));
+    this.T.to = null;
+  }
+  click(e) {
+    if (this.state.tourOn || this._moved || !this.T.cam) return;
+    const J = window.JanusScene, T = this.T;
+    const cv = e.target;
+    const rect = cv.getBoundingClientRect();
+    const px = e.clientX - rect.left, py = e.clientY - rect.top;
+    // invert transform
+    const s = J.pxPerKm(T.cam.z), c = Math.cos(T.cam.rot), si = Math.sin(T.cam.rot);
+    const u = (px - rect.width / 2) / s, v = -(py - rect.height / 2) / s;
+    const wx = T.cam.x + u * c + v * si, wy = T.cam.y - u * si + v * c;
+    const res = J.activeRes(T.cam.z);
+    if (res >= 9) {
+      const cell = J.cellAt(9, wx, wy);
+      T.sel = { x: cell.x, y: cell.y };
+      T.ring = 1;
+      this.setState({ panelOpen: true, cellLabel: "R9 · " + J.cellId(9, cell.q, cell.r).slice(-12).toUpperCase() });
+    } else {
+      const next = J.LADDER.find(([r]) => r === Math.min(res + 1, 9));
+      this.flyTo({ x: wx, y: wy, z: (next ? next[1] : 11) + 0.55, rot: T.cam.rot, pitch: T.cam.pitch }, this.state.shade, 0, 1);
+    }
+  }
+}
+</script>
+</body>
+</html>

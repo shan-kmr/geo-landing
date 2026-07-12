@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="design_doc_mode" content="canvas">
+  <title>Janus — Product flow &amp; states</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; background: #F4F4F2; color: #16181A;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+    ::selection { background: rgba(217,72,15,.12); }
+    @media print { body { background: #FFFFFF; } }
+  </style>
+</helmet>
+
+<section style="padding: 56px 64px 120px; max-width: 3120px;">
+
+  <!-- ============ HEADER ============ -->
+  <div id="1a" style="max-width: 1180px; margin-bottom: 56px;" data-screen-label="Header">
+    <div style="display: flex; align-items: baseline; gap: 14px;">
+      <span style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 3px 8px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .12em; font-weight: 700;">1a</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85;">PRODUCT FLOW &amp; STATES · DESK 01 · JUL 2026</span>
+    </div>
+    <h1 style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-size: 46px; font-weight: 600; letter-spacing: -.015em; line-height: 1.04; margin: 18px 0 14px;">The flow: globe → grid → cell → number.</h1>
+    <p style="font-size: 15.5px; line-height: 1.6; color: #4A4E54; max-width: 68ch; margin: 0;">
+      One journey, six stations. Every frame below is pixel-true to the live Atlas — same palette, same ladder, same chrome — rendered from the shipped stylesheet, not from memory. Ink for information; <span style="color: #D9480F;">signal</span> only for what is alive or selected. Companion documents: <a href="Janus UI System.dc.html">UI system</a> · <a href="Janus Demo Film.dc.html">demo film</a> · <a href="Janus Guided Tour.dc.html">guided tour</a> · <a href="Janus Demo Script.dc.html">shot list</a>.
+    </p>
+  </div>
+
+  <!-- ============ FLOW MAP ============ -->
+  <div style="border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; padding: 28px 32px 24px; margin-bottom: 64px; max-width: 2440px;" data-screen-label="Flow map">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 20px;">THE JOURNEY · SIX STATIONS · TWO HESITATION POINTS</div>
+    <div style="display: flex; align-items: stretch; gap: 0;">
+      <sc-for list="{{ flowNodes }}" as="n" hint-placeholder-count="6">
+        <div style="display: flex; align-items: stretch; flex: 1; min-width: 252px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="border: 1px solid #E2E3E5; border-radius: 6px; background: #FFFFFF; padding: 14px 16px 16px; height: 100%; box-sizing: border-box;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; color: #FCFCFB; background: #16181A; border-radius: 3px; padding: 2px 6px;">{{ n.id }}</span>
+                <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .12em; font-weight: 700;">{{ n.name }}</span>
+              </div>
+              <canvas data-scene="{{ n.scene }}" width="416" height="240" style="width: 100%; height: auto; display: block; border: 1px solid #EDEEEF; border-radius: 4px; margin-bottom: 10px; box-sizing: border-box;"></canvas>
+              <div style="font-size: 12.5px; line-height: 1.5; color: #4A4E54;">{{ n.beat }}</div>
+              <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85; margin-top: 8px;">{{ n.teach }}</div>
+            </div>
+          </div>
+          <sc-if value="{{ n.arrow }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; flex: none;">
+              <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; color: #16181A;">→</div>
+              <sc-if value="{{ n.hesit }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top: 8px; max-width: 92px; border-top: 1px solid #16181A; padding-top: 6px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .05em; line-height: 1.5; color: #16181A; text-align: center;">{{ n.hesit }}</div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 32px; margin-top: 18px; border-top: 1px solid #EDEEEF; padding-top: 14px;">
+      <div style="font-size: 12.5px; line-height: 1.55; color: #4A4E54; max-width: 62ch;"><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; color: #16181A;">HESITATION 1 —</span> after the CTA, the map is beautiful but mute: nothing says the tiles respond to zoom. The fix is an authored approach (frame <a href="#2a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px;">2a</a>): the camera performs one ladder step on arrival, so splitting is witnessed before it is asked of the user.</div>
+      <div style="font-size: 12.5px; line-height: 1.55; color: #4A4E54; max-width: 62ch;"><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; color: #16181A;">HESITATION 2 —</span> at street level, res-9 cells are small and nothing marks them as openable. The fix is the hover contract (frame <a href="#3a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px;">3a</a>): cursor becomes a pointer, the cell highlights, and the tooltip always ends with the same four words — <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px;">click to open</span>.</div>
+    </div>
+  </div>
+
+  <!-- ============ F1 LANDING ============ -->
+  <div id="2f1" style="display: flex; gap: 28px; margin-bottom: 56px; align-items: flex-start;" data-screen-label="F1 Landing">
+    <div style="flex: none;">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F1 · LANDING</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">geo-landing / — the globe descends: planet → city → buildings, 22 s loop</span>
+      </div>
+      <div style="position: relative; width: 1180px; height: 700px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"hero"}' width="2360" height="1400" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+        <div style="position: absolute; left: 5%; right: 5%; top: 4%; display: flex; align-items: center; justify-content: space-between;">
+          <div style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-weight: 700; letter-spacing: -.02em; font-size: 19px; color: #1A1815;">Janus</div>
+          <div style="font-family: 'Space Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #8C887E; display: flex; gap: 26px;">
+            <span>Platform</span><span>Domains</span><span>Company</span>
+          </div>
+        </div>
+        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 52%; display: flex; flex-direction: column; justify-content: center; padding-left: 5%;">
+          <div style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-size: 33px; font-weight: 600; letter-spacing: -.012em; line-height: 1.06; color: #1A1815; white-space: nowrap;">Grounding machine intelligence.</div>
+        </div>
+        <div style="position: absolute; right: 5%; bottom: 8%; display: flex; flex-direction: column; align-items: flex-end; text-align: right;">
+          <div style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-size: 18.5px; font-weight: 600; letter-spacing: -.012em; line-height: 1.18; color: #1A1815; white-space: nowrap;">The context layer for the physical world.</div>
+          <div style="border-top: 1.5px solid #1E3A8A; width: 46px; margin: 15px 0; opacity: .9;"></div>
+          <div style="font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif; font-size: 17px; font-weight: 500; line-height: 1.55; color: #4E4B45; max-width: 42ch;">Janus powers <b style="color: #1A1815; font-weight: 600;">location intelligence</b><br>for teams that build in the real world.</div>
+          <div style="margin-top: 18px; font-family: 'Space Mono', ui-monospace, monospace; font-size: 12.5px; letter-spacing: .08em;"><span style="border-bottom: 1px solid currentColor; padding-bottom: 2px; color: #16181A;">See it live — the Atlas →</span></div>
+        </div>
+        <div data-callout="1" style="position: absolute; right: calc(5% - 34px); bottom: calc(8% - 6px);"></div>
+        <div data-callout="2" style="position: absolute; left: calc(5% + 320px); top: calc(4% + 4px);"></div>
+      </div>
+    </div>
+    <div style="width: 300px; flex: none; padding-top: 34px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 14px;">NOTES</div>
+      <div style="display: grid; gap: 14px;">
+        <div style="display: flex; gap: 10px;">
+          <span data-co="1" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">One CTA, set in the copy flow, not a button. The page makes an argument and offers evidence — <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">the Atlas is the proof</span>, so the link reads like a citation.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="2" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Nav stays quiet (mono, uppercase, muted). Nothing competes with the descent. The globe is the only moving thing on the page.</div>
+        </div>
+        <div style="border-top: 1px solid #E2E3E5; padding-top: 12px; font-size: 12.5px; line-height: 1.55; color: #7A7F85;">Emotional beat: <i>scale</i>. The whole planet, dotted in graphite — then the promise that it resolves to a street corner. The CTA lands exactly when the descent reaches the buildings.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ F2 ARRIVAL ============ -->
+  <div id="2f2" style="display: flex; gap: 28px; margin-bottom: 56px; align-items: flex-start;" data-screen-label="F2 Arrival">
+    <div style="flex: none;">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span id="2a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F2 · ARRIVAL — THE AUTHORED APPROACH</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">/atlas/ · first visit · live layer on · this frame is animating</span>
+      </div>
+      <div style="position: relative; width: 1180px; height: 700px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"city","cam":{"vu":[0.35,0.4],"z":11.85,"rot":0.21,"pitch":0.75},"opts":{"live":{"on":true,"t":12}}}' width="2360" height="1400" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+        <div style="position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 14px 18px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; letter-spacing: .28em; font-weight: 700; color: #16181A; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 8px 12px; border: 1px solid #E9EAEC; border-radius: 4px;">JANUS<span style="letter-spacing: .14em; color: #7A7F85; font-weight: 400; margin-left: 8px; font-size: 12px;">ATLAS · NEW YORK</span></span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; letter-spacing: .06em; color: #16181A; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 26px 8px 12px; position: relative;">Structure · none<svg width="8" height="6" viewBox="0 0 8 6" style="position: absolute; right: 10px; top: 50%; margin-top: -3px;"><path d="M0 0h8L4 6z" fill="#7A7F85"></path></svg></span>
+          <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 7px 10px; border: 1px solid #E9EAEC; border-radius: 4px;">res 9 · <span style="color: #D9480F;" data-live-count="">41 live</span></span>
+        </div>
+        <div style="position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .08em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 14px;">the grid splits as you dive — <b style="font-weight: 700;">scroll to go deeper</b><span style="color: #B9BCC1;"> · shown once, retires forever</span></div>
+        <div data-callout="1" style="position: absolute; left: calc(50% + 218px); bottom: 58px;"></div>
+        <div data-callout="2" style="position: absolute; right: 148px; top: 46px;"></div>
+        <div data-callout="3" style="position: absolute; left: 262px; top: 46px;"></div>
+      </div>
+    </div>
+    <div style="width: 300px; flex: none; padding-top: 34px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 14px;">NOTES</div>
+      <div style="display: grid; gap: 14px;">
+        <div style="display: flex; gap: 10px;">
+          <span data-co="1" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Arrival is authored: the camera descends the last ladder step itself (res 8 → 9 over 2.4 s), then this one-line caption appears. The split is <i>witnessed, then named</i> — never explained in a modal.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="2" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">The HUD is the only place the signal color appears at rest — <span style="color: #D9480F; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">41 live</span> counts vehicles currently gliding. Buses tween 18 s between GPS fixes; docks breathe by fill level.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="3" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Shade dropdown rests on <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">Structure · none</span> — the map opens as pure structure, and data is an explicit request. Nothing is colored that wasn't asked for.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ F3 THE DIVE ============ -->
+  <div id="2f3" style="display: flex; gap: 28px; margin-bottom: 56px; align-items: flex-start;" data-screen-label="F3 Dive">
+    <div style="flex: none;">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span id="3a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F3 · THE DIVE — SHADE ON, HOVER CONTRACT</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">z 12.6 · shade = population · tooltip follows cursor</span>
+      </div>
+      <div style="position: relative; width: 1180px; height: 700px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"city","cam":{"vu":[-0.18,-2.3],"z":12.6,"rot":0.21,"pitch":0.62},"opts":{"shade":"kontur_population"}}' width="2360" height="1400" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+        <div style="position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 14px 18px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; letter-spacing: .28em; font-weight: 700; color: #16181A; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 8px 12px; border: 1px solid #E9EAEC; border-radius: 4px;">JANUS<span style="letter-spacing: .14em; color: #7A7F85; font-weight: 400; margin-left: 8px;">ATLAS · NEW YORK</span></span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; letter-spacing: .06em; color: #16181A; background: rgba(252,252,251,.85); border: 1px solid #E9EAEC; border-radius: 4px; padding: 8px 26px 8px 12px; position: relative;">Population<svg width="8" height="6" viewBox="0 0 8 6" style="position: absolute; right: 10px; top: 50%; margin-top: -3px;"><path d="M0 0h8L4 6z" fill="#7A7F85"></path></svg></span>
+          <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); padding: 7px 10px; border: 1px solid #E9EAEC; border-radius: 4px;">res 9</span>
+        </div>
+        <div style="position: absolute; left: 618px; top: 342px; width: 15px; height: 15px;">
+          <svg width="15" height="15" viewBox="0 0 15 15"><path d="M1 1 L1 12 L4.4 8.9 L6.6 13.6 L8.9 12.6 L6.7 8 L11.4 8z" fill="#16181A" stroke="#FCFCFB" stroke-width="1.2"></path></svg>
+        </div>
+        <div style="position: absolute; left: 634px; top: 358px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; line-height: 1.45; color: #16181A; background: #FCFCFB; border: 1px solid #E9EAEC; border-radius: 4px; padding: 7px 10px; box-shadow: 0 2px 8px rgba(22,24,26,.07);"><b>1,284</b> residents · kontur 400 m<br>click to open</div>
+        <div data-callout="1" style="position: absolute; left: 806px; top: 356px;"></div>
+        <div data-callout="2" style="position: absolute; left: 500px; top: 132px;"></div>
+      </div>
+    </div>
+    <div style="width: 300px; flex: none; padding-top: 34px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 14px;">NOTES</div>
+      <div style="display: grid; gap: 14px;">
+        <div style="display: flex; gap: 10px;">
+          <span data-co="1" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">The hover contract: pointer cursor, brightened cell, and a tooltip that states the count, names the denominator, and always closes with <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">click to open</span>. Same four words at every res — a promise the click always keeps.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="2" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Data is ink density, never hue. Population shades white → graphite on a log ramp; the halftone gets finer as tiles split. A coarse-tile click flies exactly one ladder step down (950 ms) — zoom is never dumped on the user.</div>
+        </div>
+        <div style="border-top: 1px solid #E2E3E5; padding-top: 12px; font-size: 12.5px; line-height: 1.55; color: #7A7F85;">Emotional beat: <i>gravity</i>. The city pulls. Each split raises the stakes — the same gesture, finer truth.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ F4 THE CELL ============ -->
+  <div id="2f4" style="display: flex; gap: 28px; margin-bottom: 56px; align-items: flex-start;" data-screen-label="F4 Cell open">
+    <div style="flex: none;">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span id="4a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F4 · THE CELL — CARD OPEN</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">z 14.6 · res 9 · buildings up · ?h=892a1072cb3ffff written to the URL</span>
+      </div>
+      <div style="position: relative; width: 1180px; height: 700px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"city","cam":{"vu":[-0.28,-2.62],"z":14.55,"rot":0.3,"pitch":0.8},"opts":{"live":{"on":true,"t":31},"selectedVU":[-0.06,-2.56]}}' width="1500" height="1400" style="position: absolute; left: 0; top: 0; width: 750px; height: 700px;"></canvas>
+        <div style="position: absolute; top: 0; left: 0; right: 430px; display: flex; align-items: center; gap: 16px; padding: 14px 18px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; letter-spacing: .28em; font-weight: 700; color: #16181A; background: rgba(252,252,251,.85); backdrop-filter: blur(8px); padding: 8px 12px; border: 1px solid #E9EAEC; border-radius: 4px;">JANUS<span style="letter-spacing: .14em; color: #7A7F85; font-weight: 400; margin-left: 8px;">ATLAS · NEW YORK</span></span>
+          <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); padding: 7px 10px; border: 1px solid #E9EAEC; border-radius: 4px;">res 9 · buildings · <span style="color: #D9480F;">23 live</span></span>
+        </div>
+        <!-- card panel — verbatim jx system -->
+        <div style="position: absolute; top: 0; right: 0; bottom: 0; width: 430px; background: #FCFCFB; border-left: 1px solid #E9EAEC; box-shadow: -18px 0 44px rgba(22,24,26,.07); display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #F2F3F4; flex: none;">
+            <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #7A7F85;">R9 · A1072CB3FFFF</span>
+            <span style="margin-left: auto; border: 1px solid #E9EAEC; background: #FFFFFF; border-radius: 4px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; padding: 5px 10px; color: #4A4E54;">esc</span>
+          </div>
+          <div style="overflow: hidden; padding: 14px 16px; position: relative; flex: 1;">
+            <div style="border: 1px solid #E9EAEC; border-radius: 8px; background: #FFFFFF; padding: 18px 20px;">
+              <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.9px; letter-spacing: .1em; text-transform: uppercase; color: #7A7F85;">CELL 892A1072CB3FFFF · ~174 M ACROSS · CANAL &amp; LAFAYETTE</div>
+              <div style="font-size: 36.8px; font-weight: 700; line-height: 1; margin: 8px 0 2px; letter-spacing: -.02em;">3 <span style="font-size: 13.6px; color: #7A7F85; font-family: ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .04em; font-weight: 400;">fatal crashes · 2001–2023 · NHTSA FARS</span></div>
+              <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 14px 0 6px;">BY HOUR OF DAY</div>
+              <div data-hist="0,0,1,0,0,0,0,0,0,0,0,0,0,0,2,1,0,3,2,1,0,0,1,0" style="display: flex; align-items: flex-end; gap: 2px; height: 46px;"></div>
+              <div style="display: flex; justify-content: space-between; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.8px; color: #B9BCC1; margin-top: 3px;"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+              <div style="margin-top: 15px;">
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 0 0 6px;">EXPOSURE</div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Traffic, AADT</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; text-align: right;"><b style="color: #16181A; font-weight: 650;">24,300</b> veh/day · <span style="color: #7A7F85;">measured</span></span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Fatal rate</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; text-align: right;"><b style="color: #16181A; font-weight: 650;">0.34</b> / 100 M veh-mi</span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Work zones now</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px; text-align: right;"><b style="color: #D9480F; font-weight: 650;">1 active</b> · <span style="color: #7A7F85;">NYC DOT</span></span></div>
+              </div>
+              <div style="margin-top: 15px;">
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 0 0 6px;">HAZARD · FEMA NRI</div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Expected annual loss</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">$412 K</b> / yr</span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">— coastal flood share</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">$268 K</b> / yr</span></div>
+              </div>
+              <div style="margin-top: 15px;">
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 0 0 6px;">WHO IS HERE · CENSUS ACS + LODES</div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Median HH income</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">$96,400</b> · <span style="color: #7A7F85;">tract → cell</span></span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Work here / live here</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">4,120</b> / <b style="color: #16181A; font-weight: 650;">610</b></span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Median commute</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">8.9</b> km</span></div>
+              </div>
+              <div style="margin-top: 15px;">
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.3px; letter-spacing: .12em; text-transform: uppercase; color: #7A7F85; margin: 0 0 6px;">SIDEWALK PHYSICS</div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Walk vibration, RMS</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">2.1</b> m/s² · <span style="color: #7A7F85;">measured, 14 traces</span></span></div>
+                <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14.1px; padding: 5px 0; border-top: 1px solid #F2F3F4;"><span style="color: #4A4E54;">Effective sidewalk width</span><span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12.5px;"><b style="color: #16181A; font-weight: 650;">3.4</b> m · OSM</span></div>
+              </div>
+            </div>
+            <div style="position: absolute; left: 0; right: 0; bottom: 0; border-top: 1px solid #E9EAEC; background: #FCFCFB; padding: 8px 16px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">panel scrolls · 15 sections · every number names its source and vintage</div>
+          </div>
+        </div>
+        <div data-callout="1" style="position: absolute; right: 444px; top: 210px;"></div>
+        <div data-callout="2" style="position: absolute; right: 340px; top: 96px;"></div>
+        <div data-callout="3" style="position: absolute; right: 404px; bottom: 200px;"></div>
+      </div>
+    </div>
+    <div style="width: 300px; flex: none; padding-top: 34px;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 14px;">NOTES</div>
+      <div style="display: grid; gap: 14px;">
+        <div style="display: flex; gap: 10px;">
+          <span data-co="1" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">The ring is the second and last place the signal color exists at rest: <span style="color: #D9480F; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">#D9480F</span>, 2 px, around the selected cell. Everything else on the map stays ink.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="2" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Card discipline, verbatim from the product rule: counts, rates with named denominators, <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">measured</span> vs <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">tract → cell</span> flags on every row. No blended scores anywhere. The one warm number — <span style="color: #D9480F; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px;">1 active</span> — is a work zone that exists right now.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <span data-co="3" style="flex: none;"></span>
+          <div style="font-size: 13px; line-height: 1.55; color: #4A4E54;">Fifteen sections is a reading problem — the redesign (two directions) is in the <a href="Janus UI System.dc.html">UI system</a>: buyer lenses vs. a collapsed ledger.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ F5 SHARE + F6 RETURN (side by side) ============ -->
+  <div style="display: flex; gap: 28px; margin-bottom: 56px; align-items: flex-start;">
+    <div id="2f5" style="flex: none;" data-screen-label="F5 Share">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span id="5a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F5 · SHARE — THE CELL IS A URL</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">proposed: share chip in the panel head</span>
+      </div>
+      <div style="position: relative; width: 720px; height: 470px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"city","cam":{"vu":[-0.06,-2.52],"z":14.9,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.06,-2.56]}}' width="1440" height="940" style="position: absolute; inset: 0; width: 720px; height: 470px;"></canvas>
+        <div style="position: absolute; left: 50%; top: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 0; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11.5px; background: #FFFFFF; border: 1px solid #E9EAEC; border-radius: 5px; padding: 8px 12px; box-shadow: 0 2px 8px rgba(22,24,26,.07); white-space: nowrap;">
+          <span style="color: #B9BCC1;">janus.earth/atlas/</span><span style="color: #16181A; font-weight: 700;">?h=892a1072cb3ffff</span><span style="color: #B9BCC1;">&amp;shade=none</span>
+        </div>
+        <div style="position: absolute; right: 14px; top: 60px; display: flex; align-items: center; gap: 8px;">
+          <span style="border: 1px solid #E9EAEC; background: #FFFFFF; border-radius: 4px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; padding: 5px 10px; color: #16181A;">share</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #FCFCFB; background: #16181A; border-radius: 4px; padding: 5px 9px;">copied — opens on this cell, card open</span>
+        </div>
+        <div style="position: absolute; left: 16px; bottom: 14px; max-width: 320px; font-size: 12.5px; line-height: 1.55; color: #4A4E54; background: rgba(252,252,251,.94); border: 1px solid #E9EAEC; border-radius: 6px; padding: 12px 14px;">The URL is the citation. An underwriter pastes it into a memo; the recipient lands on the same cell, same camera, card already open. <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #7A7F85;">?h= ships today; &amp;shade=, &amp;lens=, &amp;plate= are specced in the UI system.</span></div>
+      </div>
+    </div>
+    <div id="2f6" style="flex: none;" data-screen-label="F6 Return">
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px;">
+        <span id="6a" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">F6 · RETURN — THE ATLAS REMEMBERS</span>
+        <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">camera restored · plates proposed (UI system)</span>
+      </div>
+      <div style="position: relative; width: 720px; height: 470px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+        <canvas data-scene='{"kind":"city","cam":{"vu":[-0.28,-2.62],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{"live":{"on":true,"t":52}}}' width="1440" height="940" style="position: absolute; inset: 0; width: 720px; height: 470px;"></canvas>
+        <div style="position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 12px 14px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 12px; letter-spacing: .28em; font-weight: 700; color: #16181A; background: rgba(252,252,251,.85); padding: 8px 12px; border: 1px solid #E9EAEC; border-radius: 4px;">JANUS<span style="letter-spacing: .14em; color: #7A7F85; font-weight: 400; margin-left: 8px;">ATLAS · NEW YORK</span></span>
+          <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); padding: 7px 10px; border: 1px solid #E9EAEC; border-radius: 4px;">resumed · res 9 · <span style="color: #D9480F;">19 live</span></span>
+        </div>
+        <div style="position: absolute; left: 14px; bottom: 14px; display: flex; gap: 6px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">Canal St, 8 a.m.</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">The dark blocks</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #16181A; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">Sidewalks that shake</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .04em; color: #7A7F85; background: rgba(252,252,251,.92); border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 10px;">⋯</span>
+        </div>
+        <div style="position: absolute; right: 14px; bottom: 14px; max-width: 300px; font-size: 12.5px; line-height: 1.55; color: #4A4E54; background: rgba(252,252,251,.94); border: 1px solid #E9EAEC; border-radius: 6px; padding: 12px 14px;">Session camera restores silently (<span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px;">sessionStorage</span>, shipped). The plate rail is the proposed return-visit anchor: authored views with a thesis, one keystroke apart — full spec in the <a href="Janus UI System.dc.html">UI system</a>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STATE STRIP ============ -->
+  <div style="margin-bottom: 64px; max-width: 2440px;" data-screen-label="State strip">
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;">
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">STATES · ONE VIEW, SIX CONDITIONS</span>
+      <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">same camera (Tribeca, z 13.9) throughout — fade between all of them, never pop</span>
+    </div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+      <sc-for list="{{ states }}" as="s" hint-placeholder-count="6">
+        <div style="width: 372px;">
+          <div style="position: relative; width: 372px; height: 234px; border: 1px solid #DADBDD; border-radius: 6px; overflow: hidden; background: #FCFCFB;">
+            <canvas data-scene="{{ s.scene }}" width="744" height="468" style="position: absolute; inset: 0; width: 372px; height: 234px;"></canvas>
+            <sc-if value="{{ s.loading }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; inset: 0; background: #FCFCFB;">
+                <div style="position: absolute; left: 12px; top: 12px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; border: 1px solid #E9EAEC; border-radius: 4px; padding: 6px 9px; background: rgba(252,252,251,.85);">reading the grid…</div>
+                <div style="position: absolute; left: 0; right: 0; top: 50%; text-align: center; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; color: #B9BCC1;">r5.json · 68 KB · one fetch</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ s.hudText }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; right: 10px; top: 10px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: #7A7F85; background: rgba(252,252,251,.85); padding: 5px 8px; border: 1px solid #E9EAEC; border-radius: 4px;"><span data-html="{{ s.hudText }}"></span></div>
+            </sc-if>
+            <sc-if value="{{ s.noCard }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; top: 0; right: 0; bottom: 0; width: 172px; background: #FCFCFB; border-left: 1px solid #E9EAEC; box-shadow: -18px 0 44px rgba(22,24,26,.07); padding: 10px;">
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: #7A7F85; border-bottom: 1px solid #F2F3F4; padding-bottom: 8px;">R9 · 8CBFFFF</div>
+                <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; color: #7A7F85; padding: 14px 2px; line-height: 1.6;">no card for this cell — outside the NYC grid</div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 8px; align-items: baseline;">
+            <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; font-weight: 700; color: #16181A;">{{ s.name }}</span>
+            <span style="font-size: 12px; line-height: 1.5; color: #7A7F85;">{{ s.note }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ============ PERSONA RAILS ============ -->
+  <div style="display: flex; gap: 28px; margin-bottom: 64px; align-items: flex-start;" data-screen-label="Persona rails">
+    <sc-for list="{{ personas }}" as="p" hint-placeholder-count="2">
+      <div style="width: 754px; border: 1px solid #E2E3E5; background: #FCFCFB; border-radius: 8px; padding: 24px 26px;">
+        <div style="display: flex; align-items: baseline; gap: 12px;">
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .1em; font-weight: 700;">{{ p.who }}</span>
+          <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;">{{ p.goal }}</span>
+        </div>
+        <div style="font-size: 13px; line-height: 1.55; color: #4A4E54; margin: 8px 0 16px; max-width: 72ch;">{{ p.thesis }}</div>
+        <div style="display: flex; gap: 12px;">
+          <sc-for list="{{ p.steps }}" as="st" hint-placeholder-count="4">
+            <div style="flex: 1; min-width: 0;">
+              <div style="position: relative; height: 104px; border: 1px solid #E5E6E8; border-radius: 5px; overflow: hidden; background: #FFFFFF;">
+                <canvas data-scene="{{ st.scene }}" width="332" height="208" style="position: absolute; inset: 0; width: 100%; height: 100%;"></canvas>
+              </div>
+              <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #16181A; margin-top: 7px;">{{ st.t }} <span style="color: #7A7F85;">{{ st.label }}</span></div>
+              <div style="font-size: 11.5px; line-height: 1.5; color: #4A4E54; margin-top: 3px;">{{ st.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="border-top: 1px solid #EDEEEF; margin-top: 16px; padding-top: 12px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .05em; color: #16181A;">{{ p.landing }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- ============ FOOT ============ -->
+  <div style="max-width: 1180px; border-top: 1px solid #DADBDD; padding-top: 18px; display: flex; gap: 40px;">
+    <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .12em; color: #7A7F85;">JANUS · DESK 01 / 05</div>
+    <div style="font-size: 13px; color: #4A4E54;">Next: <a href="Janus UI System.dc.html">Desk 02 — the UI system</a> (chrome, lenses, the card redesign, plates) · <a href="Janus Demo Film.dc.html">Desk 03 — the film</a> · <a href="Janus Guided Tour.dc.html">Desk 04 — guided tour</a> · <a href="Janus Demo Script.dc.html">Desk 05 — shot list</a></div>
+  </div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const mono = "ui-monospace, 'SF Mono', Menlo, monospace";
+    return {
+      flowNodes: [
+        { id: "01", name: "LANDING", scene: '{"kind":"globe","rot":-2.86,"tilt":0.55,"pulse":1}', beat: "The globe, graphite on paper. One claim, one CTA set as a citation.", teach: "teaches: nothing — it promises", arrow: true, hesit: "" },
+        { id: "02", name: "ARRIVAL", scene: '{"kind":"city","cam":{"vu":[0.35,0.4],"z":11.7,"rot":0.21,"pitch":0.75},"opts":{"live":{"on":true,"t":12}}}', beat: "Authored approach performs the last ladder step; a one-line caption names it.", teach: "teaches: zoom splits tiles", arrow: true, hesit: "hesitation: is this map interactive?" },
+        { id: "03", name: "DIVE", scene: '{"kind":"city","cam":{"vu":[-0.18,-2.3],"z":12.6,"rot":0.21,"pitch":0.62},"opts":{"shade":"kontur_population"}}', beat: "Shade on: data as ink density. Hover states a count and its denominator.", teach: "teaches: click flies one step", arrow: true, hesit: "" },
+        { id: "04", name: "CELL", scene: '{"kind":"city","cam":{"vu":[-0.06,-2.54],"z":14.6,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.06,-2.56]}}', beat: "Res-9 click: ring in signal, card slides in, URL gains ?h=.", teach: "teaches: the cell is the unit", arrow: true, hesit: "hesitation: what do I click at street level?" },
+        { id: "05", name: "SHARE", scene: '{"kind":"city","cam":{"vu":[-0.06,-2.52],"z":15.1,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.06,-2.56]}}', beat: "The URL is the citation — same cell, same camera, card open on arrival.", teach: "teaches: evidence travels", arrow: true, hesit: "" },
+        { id: "06", name: "RETURN", scene: '{"kind":"city","cam":{"vu":[-0.28,-2.62],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{"live":{"on":true,"t":52}}}', beat: "Camera restored; plates offer authored views with a thesis.", teach: "teaches: the Atlas remembers", arrow: false, hesit: "" }
+      ],
+      states: [
+        { name: "S1 · LOADING", note: "one 68 KB fetch; grid fades in as chunks land — never pops", scene: '{"kind":"blank"}', loading: true, hudText: "", noCard: false },
+        { name: "S2 · STRUCTURE", note: "shade = none; hairline lattice only, alpha 4/255 fill", scene: '{"kind":"city","cam":{"vu":[-0.3,-3.0],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{}}', loading: false, hudText: "res 9 · buildings", noCard: false },
+        { name: "S3 · SHADE ON", note: "population; log ramp, white → graphite; 350 ms fill fade", scene: '{"kind":"city","cam":{"vu":[-0.3,-3.0],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{"shade":"kontur_population"}}', loading: false, hudText: "res 9 · buildings", noCard: false },
+        { name: "S4 · LIVE ON", note: "buses tween 18 s; docks breathe; HUD counts in signal", scene: '{"kind":"city","cam":{"vu":[-0.3,-3.0],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{"live":{"on":true,"t":30}}}', loading: false, hudText: 'res 9 · buildings · <span style="color:#D9480F">23 live</span>', noCard: false },
+        { name: "S5 · CARD OPEN", note: "ring + panel; esc or ✕ closes; URL carries ?h=", scene: '{"kind":"city","cam":{"vu":[-0.32,-3.06],"z":13.9,"rot":0.24,"pitch":0.74},"opts":{"selectedVU":[-0.3,-3.02]}}', loading: false, hudText: "res 9 · buildings", noCard: false },
+        { name: "S6 · NO CARD", note: "clicked outside the NYC grid — honest empty state, no invention", scene: '{"kind":"city","cam":{"vu":[-2.4,-3.4],"z":13.2,"rot":0.24,"pitch":0.6},"opts":{}}', loading: false, hudText: "", noCard: true }
+      ],
+      personas: [
+        {
+          who: "PATH A · INSURANCE / TELEMATICS ANALYST", goal: "first number in 60 seconds",
+          thesis: "She doesn't browse — she audits. The shade menu speaks her language (rates, exposure), and the card leads with crashes over a named denominator.",
+          steps: [
+            { t: "0:00", label: "lands on arrival view", note: "recognizes a real basemap, not a scored heat blob", scene: '{"kind":"city","cam":{"vu":[0.35,0.4],"z":11.7,"rot":0.21,"pitch":0.75},"opts":{}}' },
+            { t: "0:12", label: "shade → Movement", note: "ink ramp; hover shows counts with denominators", scene: '{"kind":"city","cam":{"vu":[-0.1,-1.2],"z":12.4,"rot":0.21,"pitch":0.66},"opts":{"shade":"wt_visit_count"}}' },
+            { t: "0:31", label: "clicks Canal St cell", note: "one ladder step per click — she keeps orientation", scene: '{"kind":"city","cam":{"vu":[-0.06,-2.54],"z":14.4,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.06,-2.56]}}' },
+            { t: "0:48", label: "reads the crash section", note: "3 fatal · hour histogram · 0.34 / 100 M veh-mi · FARS 2001–23", scene: '{"kind":"card-a"}' }
+          ],
+          landing: "she leaves with: a rate, its denominator, its vintage — and a URL she can put in a memo."
+        },
+        {
+          who: "PATH B · ROBOTICS / AV PM", goal: "sidewalk physics in 60 seconds",
+          thesis: "He needs to know if the sidewalk shakes a delivery robot apart. The Atlas answers with measured vibration, effective width, and kerbs — flagged measured vs inferred.",
+          steps: [
+            { t: "0:00", label: "arrives via a shared ?h= link", note: "camera lands on the cell his teammate cited", scene: '{"kind":"city","cam":{"vu":[-0.06,-2.52],"z":14.9,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.06,-2.56]}}' },
+            { t: "0:09", label: "card is already open", note: "jumps to SIDEWALK PHYSICS — 2.1 m/s² RMS, measured, 14 traces", scene: '{"kind":"card-b"}' },
+            { t: "0:27", label: "checks the kerbs", note: "92% rollable kerbs · effective width 3.4 m · OSM attrs", scene: '{"kind":"card-c"}' },
+            { t: "0:44", label: "pans one block over", note: "ring moves, card swaps in place — comparison without page loads", scene: '{"kind":"city","cam":{"vu":[-0.12,-2.42],"z":15.0,"rot":0.3,"pitch":0.8},"opts":{"selectedVU":[-0.12,-2.44]}}' }
+          ],
+          landing: "he leaves with: a physics prior per cell, honest flags, and the habit of clicking neighbors."
+        }
+      ]
+    };
+  }
+
+  componentDidMount() {
+    this._raf = null;
+    this._liveCtx = null;
+    const boot = () => {
+      if (!window.JanusScene) { setTimeout(boot, 60); return; }
+      const sweep = (n) => {
+        this.renderScenes();
+        this.decorateCallouts();
+        if (this._liveCv && !this._rafStarted) { this._rafStarted = true; this.startLive(); }
+        const left = [...document.querySelectorAll("canvas[data-scene]")].filter((c) => !c.hasAttribute("data-mounted")).length;
+        if (left > 0 && n < 30) setTimeout(() => sweep(n + 1), 200);
+      };
+      sweep(0);
+    };
+    const s = document.createElement("script");
+    s.src = "atlas-scene.js";
+    s.onload = boot;
+    document.head.appendChild(s);
+    // histogram bars + injected hud html — sc-for rows mount async, so retry
+    const decorate = () => {
+      let done = 0;
+      document.querySelectorAll("[data-hist]").forEach((el) => {
+        const vals = el.getAttribute("data-hist").split(",").map(Number);
+        const mx = Math.max(...vals, 1);
+        el.innerHTML = vals.map((v) =>
+          '<div style="flex:1;background:#16181A;border-radius:1px 1px 0 0;opacity:.78;min-height:1px;height:' +
+          Math.max(2, (v / mx) * 100) + '%"></div>').join("");
+        el.removeAttribute("data-hist");
+        done++;
+      });
+      document.querySelectorAll("[data-html]").forEach((el) => {
+        const v = el.getAttribute("data-html");
+        if (v) { el.outerHTML = v; done++; }
+      });
+      return done;
+    };
+    let dTries = 0;
+    const dLoop = () => {
+      const n = decorate();
+      if (n === 0 && dTries++ < 60) setTimeout(dLoop, 120);
+      else if (n > 0) setTimeout(dLoop, 300);
+    };
+    dLoop();
+  }
+
+  sceneCam(conf, W, H) {
+    const J = window.JanusScene;
+    const c = conf.cam || {};
+    const [x, y] = c.vu ? J.m2w(c.vu[0], c.vu[1]) : [c.x || 0, c.y || 0];
+    return { x, y, z: c.z || 12, rot: c.rot || 0, pitch: c.pitch != null ? c.pitch : 0.75 };
+  }
+
+  drawScene(cv, conf, t) {
+    const J = window.JanusScene;
+    const ctx = cv.getContext("2d");
+    const W = cv.width / 2, H = cv.height / 2;
+    ctx.setTransform(2, 0, 0, 2, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (conf.kind === "blank") { ctx.fillStyle = "#FCFCFB"; ctx.fillRect(0, 0, W, H); return; }
+    if (conf.kind === "globe") {
+      ctx.fillStyle = "#FCFCFB"; ctx.fillRect(0, 0, W, H);
+      J.drawGlobe(ctx, W, H, { rot: conf.rot != null ? conf.rot : -2.86, tilt: conf.tilt != null ? conf.tilt : 0.55, R: Math.min(W, H) * 0.42, pulse: conf.pulse ? { lat: 40.7, lon: -74, amt: conf.pulse } : null });
+      return;
+    }
+    if (conf.kind === "hero") {
+      ctx.fillStyle = "#FCFCFB"; ctx.fillRect(0, 0, W, H);
+      J.drawGlobe(ctx, W, H, { cx: W * 0.66, cy: H * 0.52, R: Math.min(W, H) * 0.44, rot: -2.86 + (t || 0) * 0.02, tilt: 0.5, pulse: { lat: 40.7, lon: -74, amt: 0.65 } });
+      return;
+    }
+    if (conf.kind && conf.kind.indexOf("card-") === 0) { this.drawCardZoom(ctx, W, H, conf.kind); return; }
+    const opts = Object.assign({}, conf.opts || {});
+    if (opts.selectedVU) { const [sx, sy] = J.m2w(opts.selectedVU[0], opts.selectedVU[1]); opts.selected = { x: sx, y: sy }; delete opts.selectedVU; }
+    if (opts.live && t != null) opts.live = { on: true, t: (opts.live.t || 0) + t };
+    J.drawCity(ctx, W, H, this.sceneCam(conf, W, H), opts);
+  }
+
+  drawCardZoom(ctx, W, H, kind) {
+    // typographic close-ups used in persona rails
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "#E9EAEC"; ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
+    const mono = "ui-monospace, 'SF Mono', Menlo, monospace";
+    const rows = kind === "card-a"
+      ? [["BY HOUR OF DAY", ""], ["hist", ""], ["Fatal rate", "0.34 / 100 M veh-mi"], ["AADT", "24,300 veh/day · measured"]]
+      : kind === "card-b"
+        ? [["SIDEWALK PHYSICS", ""], ["Walk vibration, RMS", "2.1 m/s² · measured · 14 traces"], ["Terrain slope", "1.2% · SRTM"], ["Surface", "concrete, jointed · Mapillary"]]
+        : [["PEDESTRIAN ATTRIBUTES · OSM", ""], ["Effective sidewalk width", "3.4 m"], ["Rollable kerbs", "92% of 13 corners"], ["Marked crossings", "6 of 8 legs"]];
+    let y = 17;
+    for (const [k, v] of rows) {
+      if (k === "hist") {
+        const vals = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 3, 2, 1, 0, 0, 1, 0];
+        const bw = (W - 36) / 24;
+        for (let i = 0; i < 24; i++) {
+          const h = Math.max(2, (vals[i] / 3) * 22);
+          ctx.fillStyle = "rgba(22,24,26,.78)";
+          ctx.fillRect(18 + i * bw, y + 24 - h, bw - 1.5, h);
+        }
+        y += 32; continue;
+      }
+      if (!v) {
+        ctx.font = "700 7.5px " + mono; ctx.fillStyle = "#7A7F85";
+        ctx.fillText(k.toUpperCase(), 18, y); y += 13;
+      } else {
+        ctx.strokeStyle = "#F2F3F4"; ctx.beginPath(); ctx.moveTo(18, y - 8); ctx.lineTo(W - 18, y - 8); ctx.stroke();
+        ctx.font = "10px -apple-system, sans-serif"; ctx.fillStyle = "#4A4E54";
+        ctx.fillText(k, 18, y + 2);
+        ctx.font = "700 8.5px " + mono; ctx.fillStyle = "#16181A";
+        ctx.textAlign = "right"; ctx.fillText(v, W - 18, y + 2); ctx.textAlign = "left";
+        y += 18;
+      }
+    }
+  }
+
+  renderScenes() {
+    const all = document.querySelectorAll("canvas[data-scene]");
+    all.forEach((cv) => {
+      if (cv.hasAttribute("data-mounted")) return;
+      let conf;
+      try { conf = JSON.parse(cv.getAttribute("data-scene")); } catch (e) { return; }
+      const animated = conf.opts && conf.opts.live && conf.opts.live.on && cv.closest("[data-screen-label='F2 Arrival']");
+      this.drawScene(cv, conf, animated ? 0 : null);
+      if (animated) { cv.setAttribute("data-mounted", "1"); this._liveCv = cv; this._liveConf = conf; return; }
+      // swap static canvases to <img> — print-safe, capture-safe
+      try {
+        const img = new Image();
+        img.src = cv.toDataURL("image/png");
+        img.style.cssText = cv.style.cssText;
+        img.width = cv.width / 2; img.height = cv.height / 2;
+        cv.replaceWith(img);
+      } catch (e) { /* keep canvas */ }
+    });
+  }
+
+  startLive() {
+    if (!this._liveCv) return;
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { this.drawScene(this._liveCv, this._liveConf, 12); return; }
+    const t0 = performance.now();
+    const tick = () => {
+      if (!document.contains(this._liveCv)) return;
+      const t = (performance.now() - t0) / 1000;
+      this.drawScene(this._liveCv, this._liveConf, t);
+      const cnt = document.querySelector("[data-live-count]");
+      if (cnt) cnt.textContent = (41 + Math.round(2 * Math.sin(t * 0.21))) + " live";
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  decorateCallouts() {
+    document.querySelectorAll("[data-callout]").forEach((el) => {
+      const n = el.getAttribute("data-callout");
+      el.style.cssText += ";width:20px;height:20px;border:1px solid #16181A;border-radius:50%;background:#FCFCFB;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10.5px;font-weight:700;color:#16181A;box-shadow:0 0 0 3px rgba(252,252,251,.7)";
+      el.textContent = n;
+    });
+    document.querySelectorAll("[data-co]").forEach((el) => {
+      const n = el.getAttribute("data-co");
+      el.style.cssText += ";width:18px;height:18px;border:1px solid #16181A;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:10px;font-weight:700;color:#16181A;margin-top:1px";
+      el.textContent = n;
+    });
+  }
+
+  componentWillUnmount() { if (this._raf) cancelAnimationFrame(this._raf); }
+}
+</script>
+</body>
+</html>
