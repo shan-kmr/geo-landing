@@ -936,9 +936,9 @@ function MThumb({ letter, w }) {
       fontFamily: GROT, fontWeight: 700, fontSize: 40, color: "#C4C7CB" }}>{letter}</div>
   );
 }
-function MRow({ thumb, title, sub, r1, r2, warm }) {
+function MRow({ thumb, title, sub, r1, r2, warm, st }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "13px 0", borderBottom: "1.5px solid " + LINE }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 16, padding: "13px 0", borderBottom: "1.5px solid " + LINE, ...(st || {}) }}>
       {thumb != null && <MThumb letter={thumb} />}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 25, color: INK, lineHeight: 1.1 }}>{title}</div>
@@ -952,57 +952,60 @@ function MRow({ thumb, title, sub, r1, r2, warm }) {
   );
 }
 
-function ScreenStore() {
+function ScreenStore({ tt }) {
+  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   return (
     <div>
       <MStatus />
-      <MBrand name="FIELD" right="IN STORE" live />
+      <MBrand name="Aisle" right="In store" live />
       <div style={{ padding: "16px 34px 0" }}>
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".14em", color: FNT, marginBottom: 12 }}>STORE MODE · SOHO</div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+        <div style={{ ...R(0.0), fontFamily: MONO, fontSize: 14, letterSpacing: ".14em", color: FNT, marginBottom: 12 }}>SHOPPING APP · STORE MODE · SOHO</div>
+        <div style={{ ...R(0.14), display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
           background: INK, color: PAPER, borderRadius: 16, padding: "20px 0", marginBottom: 18 }}>
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={PAPER} strokeWidth="1.6"><path d="M4 5v14M8 5v14M11 5v14M14 5v14M18 5v14M21 5v14" /></svg>
           <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 24 }}>Scan a barcode</span>
         </div>
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, margin: "6px 0 2px" }}>In this store</div>
-        <MRow title="Trail runners, your size" sub="in stock here" r1="Aisle 7" />
-        <MRow title="20% off jackets" sub="today only" r1="→" r2="ends 6pm" warm />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 0" }}>
-          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 22, color: INK }}>FIELD+ rewards</span>
+        <div style={{ ...R(0.32), fontFamily: MONO, fontSize: 14, letterSpacing: ".12em", textTransform: "uppercase", color: MUT, margin: "6px 0 2px" }}>Here in this store</div>
+        <MRow st={R(0.44)} title="Trail runners, your size" sub="in stock on this floor" r1="Aisle 7" />
+        <MRow st={R(0.56)} title="20% off jackets" sub="this store, today only" r1="→" r2="ends 6pm" warm />
+        <div style={{ ...R(0.68), display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 0" }}>
+          <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 22, color: INK }}>Your rewards</span>
           <span style={{ fontFamily: MONO, fontSize: 18, color: INK }}>2,140 pts</span>
         </div>
       </div>
     </div>
   );
 }
-function ScreenDelivery() {
+function ScreenDelivery({ tt }) {
+  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   return (
     <div>
       <MStatus />
-      <MBrand name="munch" right="Home · 12 min" />
+      <MBrand name="Munch" right="Delivery" />
       <div style={{ padding: "16px 34px 0" }}>
-        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>Fastest near you</div>
-        <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>delivering to Home · West Village</div>
-        <MRow thumb="R" title="Rowdy Rooster" sub="Indian · ★ 4.8" r1="11 min" r2="$0 fee" warm />
-        <MRow thumb="S" title="Sena Sushi" sub="Japanese · ★ 4.7" r1="14 min" r2="$1.99" />
-        <MRow thumb="N" title="Nonna's" sub="Italian · ★ 4.6" r1="18 min" r2="$0 fee" warm />
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ Top 10 in the West Village</div>
+        <div style={{ ...R(0.0), fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>Delivering to you now</div>
+        <div style={{ ...R(0.06), fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>fastest to Home · West Village</div>
+        <MRow st={R(0.2)} thumb="R" title="Rowdy Rooster" sub="Indian · ★ 4.8" r1="11 min" r2="$0 fee" warm />
+        <MRow st={R(0.34)} thumb="S" title="Sena Sushi" sub="Japanese · ★ 4.7" r1="14 min" r2="$1.99" />
+        <MRow st={R(0.48)} thumb="N" title="Nonna's" sub="Italian · ★ 4.6" r1="18 min" r2="$0 fee" warm />
+        <div style={{ ...R(0.6), fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ 40 more that deliver here</div>
       </div>
     </div>
   );
 }
-function ScreenDiscovery() {
+function ScreenDiscovery({ tt }) {
+  const R = (d) => { const k = eO(f01(tt, d, d + 0.5)); return { opacity: k, transform: `translateY(${(1 - k) * 16}px)` }; };
   return (
     <div>
       <MStatus />
-      <MBrand name="roam" right="SoHo" live />
+      <MBrand name="Roam" right="Nearby" live />
       <div style={{ padding: "16px 34px 0" }}>
-        <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>What's good, right here</div>
-        <div style={{ fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>trending near you now</div>
-        <MRow thumb="M" title="Maman" sub="Café · ★ 4.7 · 2 min" r1="Open" r2="busy now" warm />
-        <MRow thumb="O" title="The Otheroom" sub="Wine bar · ★ 4.6 · 4 min" r1="Open" r2="til late" />
-        <MRow thumb="R" title="Rappaport" sub="Gallery · 5 min" r1="Open" r2="quiet" />
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ 40 more places around you</div>
+        <div style={{ ...R(0.0), fontFamily: GROT, fontWeight: 600, fontSize: 27, color: INK, marginBottom: 4 }}>Open around you now</div>
+        <div style={{ ...R(0.06), fontFamily: MONO, fontSize: 14, color: MUT, marginBottom: 12 }}>on this block · SoHo</div>
+        <MRow st={R(0.2)} thumb="M" title="Maman" sub="Café · ★ 4.7 · 2 min walk" r1="Open" r2="busy now" warm />
+        <MRow st={R(0.34)} thumb="O" title="The Otheroom" sub="Wine bar · ★ 4.6 · 4 min" r1="Open" r2="til late" />
+        <MRow st={R(0.48)} thumb="D" title="Dashwood" sub="Books · ★ 4.8 · 5 min" r1="Open" r2="quiet" />
+        <div style={{ ...R(0.6), fontFamily: MONO, fontSize: 14, letterSpacing: ".1em", color: FNT, padding: "14px 0 0" }}>▾ 40 more around you</div>
       </div>
     </div>
   );
@@ -1013,80 +1016,73 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   const J = window.JanusScene;
   const P = React.useMemo(() => {
     if (!J) return null;
-    return { A: J.m2w(-0.05, -2.55), B: J.m2w(0.04, -2.42), C: J.m2w(-0.11, -2.60) };
+    return { A: J.m2w(-0.05, -2.52), B: J.m2w(0.03, -2.42), C: J.m2w(-0.10, -2.60) };
   }, [J]);
   if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
 
-  // timeline
-  const S1 = 2.2, T1 = 6.2, S2 = 7.6, T2 = 11.6, S3 = 13.0, CLOSE = 17.0, END = 18.4;
+  // choreography: fly → footprint → phone up → content lands → recede → fly again
+  const END = 18.4;
+  const moves = [
+    { t0: 1.8, cell: P.A, screen: "store" },
+    { t0: 7.6, cell: P.B, screen: "deliv" },
+    { t0: 13.4, cell: P.C, screen: "disco" },
+  ];
+  const RECEDE = 4.0, GONE = 4.8;   // offsets from a move's t0
 
   const camFn = (tt) => {
-    let a = P.A, b = P.A, seg = 0;
-    if (tt < T1) { a = P.A; b = P.A; }
-    else if (tt < S2) { a = P.A; b = P.B; seg = f01(tt, T1, S2); }
-    else if (tt < T2) { a = P.B; b = P.B; }
-    else if (tt < S3) { a = P.B; b = P.C; seg = f01(tt, T2, S3); }
-    else { a = P.C; b = P.C; }
-    const e = eIO(seg);
-    const gliding = (tt > T1 && tt < S2) || (tt > T2 && tt < S3);
-    return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: gliding ? 14.6 : 15.9, rot: 0.28, pitch: 0.9 };
+    const A = P.A, B = P.B, C = P.C;
+    let x, y, z = 16.2, rot = 0.28, pitch = 0.9;
+    if (tt < 1.8) { const p = eIO(f01(tt, 0, 1.8)); x = A[0]; y = lerp(A[1] - 0.02, A[1], p); z = lerp(15.2, 16.2, p); }
+    else if (tt < 6.6) { x = A[0]; y = A[1]; z = 16.2 - 0.35 * f01(tt, 1.8, 6.6); }
+    else if (tt < 7.6) { const p = eIO(f01(tt, 6.6, 7.6)); x = lerp(A[0], B[0], p); y = lerp(A[1], B[1], p); z = 14.8; }
+    else if (tt < 12.4) { x = B[0]; y = B[1]; z = 16.2 - 0.35 * f01(tt, 7.6, 12.4); }
+    else if (tt < 13.4) { const p = eIO(f01(tt, 12.4, 13.4)); x = lerp(B[0], C[0], p); y = lerp(B[1], C[1], p); z = 14.8; }
+    else { x = C[0]; y = C[1]; z = 16.2 - 0.35 * f01(tt, 13.4, 18.2); }
+    return { x, y, z, rot, pitch };
   };
-  const optsFn = () => ({ hexOpacity: 0, spot: null, live: null, labels: true });
+  const optsFn = (tt) => {
+    let cell = null, ph = 0;
+    for (const m of moves) {
+      const rs = m.t0 + RECEDE, re = m.t0 + GONE;
+      if (tt >= m.t0 - 0.3 && tt < re) { cell = m.cell; ph = eO(f01(tt, m.t0, m.t0 + 0.7)) * (1 - f01(tt, rs, re)); break; }
+    }
+    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true } : null, spotPhase: ph, live: null, labels: true };
+  };
 
-  // phone transform
-  let sc = 1, dy = 0;
-  if (t < S1) sc = lerp(0.25, 1, eO(f01(t, 0.6, S1)));
-  else if (t > T1 && t < S2) { sc = 1 - 0.42 * Math.sin(f01(t, T1, S2) * Math.PI); dy = 120 * Math.sin(f01(t, T1, S2) * Math.PI); }
-  else if (t > T2 && t < S3) { sc = 1 - 0.42 * Math.sin(f01(t, T2, S3) * Math.PI); dy = 120 * Math.sin(f01(t, T2, S3) * Math.PI); }
-  const phoneK = eO(f01(t, 0.5, 1.2)) * (1 - f01(t, 16.6, 17.1));
-
-  // swap the app content in a fast 0.15s cut at each transit midpoint — the
-  // phone is smallest and the map is rushing there, so the cut is masked
-  // (never blank, never a muddy double-exposure)
-  const kStore = 1 - f01(t, 6.75, 6.9);
-  const kDeliv = f01(t, 6.75, 6.9) * (1 - f01(t, 12.15, 12.3));
-  const kDisco = f01(t, 12.15, 12.3);
-
-  // "heading to" pill, only while travelling
-  const inT1 = t > T1 && t < S2, inT2 = t > T2 && t < S3;
-  const dest = inT1 ? "getting home" : inT2 ? "heading out · SoHo" : null;
-
-  const PB = { w: 640, h: 806, left: 220, top: 356 };
+  // active phone + screen
+  let phoneTop = 1920, phoneK = 0, screen = null, cTime = 0;
+  for (const m of moves) {
+    const rise0 = m.t0 + 0.6, rise1 = m.t0 + 1.3, rs = m.t0 + RECEDE, re = m.t0 + GONE;
+    if (t >= rise0 - 0.01 && t < re) {
+      const riseP = eO(f01(t, rise0, rise1)), recP = eIO(f01(t, rs, re));
+      phoneTop = 616 + (1 - riseP) * 1320 + recP * 1320;
+      phoneK = eO(f01(t, rise0, rise0 + 0.4)) * (1 - f01(t, re - 0.35, re));
+      screen = m.screen; cTime = t - rise1;
+      break;
+    }
+  }
+  const PB = { w: 640, h: 792, left: 220 };
 
   return (
     <div data-screen-label={"ad-mirrors t=" + Math.floor(t) + "s"} style={{ position: "absolute", inset: 0, background: PAPER, overflow: "hidden" }}>
       <MapShot t={t} on={true} camFn={camFn} optsFn={optsFn} fadeIn={f01(t, 0, 0.5)} />
 
-      {dest && (
-        <div style={{ position: "absolute", left: 0, right: 0, top: 210, textAlign: "center", opacity: 0.9,
-          fontFamily: MONO, fontSize: 22, letterSpacing: ".14em", textTransform: "uppercase", color: MUT }}>→ {dest}</div>
-      )}
-
-      {phoneK > 0.01 && (
-        <div style={{ position: "absolute", left: PB.left, top: PB.top, width: PB.w, height: PB.h,
-          transform: `translateY(${dy}px) scale(${sc})`, transformOrigin: "center center", opacity: phoneK }}>
-          <div style={{ position: "absolute", inset: 0, background: "#FFFFFF", borderRadius: 58,
+      {screen && phoneK > 0.01 && (
+        <div style={{ position: "absolute", left: PB.left, top: phoneTop, width: PB.w, height: PB.h, opacity: phoneK }}>
+          <div style={{ position: "absolute", inset: 0, background: "#FFFFFF", borderRadius: 56,
             border: "3px solid rgba(22,24,26,.8)", boxShadow: "0 34px 100px rgba(22,24,26,.20)", overflow: "hidden" }}>
-            <div style={{ position: "absolute", inset: 0, opacity: kStore }}><ScreenStore /></div>
-            <div style={{ position: "absolute", inset: 0, opacity: kDeliv }}><ScreenDelivery /></div>
-            <div style={{ position: "absolute", inset: 0, opacity: kDisco }}><ScreenDiscovery /></div>
+            {screen === "store" && <ScreenStore tt={cTime} />}
+            {screen === "deliv" && <ScreenDelivery tt={cTime} />}
+            {screen === "disco" && <ScreenDiscovery tt={cTime} />}
           </div>
         </div>
       )}
 
-      <CaptionTop t={t} y={132} beats={[
-        { t0: 2.5, t1: 5.9, text: "Walk in. It becomes the store.", size: 44 },
-        { t0: 8.0, t1: 11.3, text: "Get home. A new storefront.", size: 44 },
-        { t0: 13.3, t1: 16.6, text: "Head out. What's good, here.", size: 44 },
+      <CaptionTop t={t} y={128} beats={[
+        { t0: 2.4, t1: 6.2, text: "Your shopping app — the second you walk in.", size: 40 },
+        { t0: 8.2, t1: 12.0, text: "Your delivery app — the second you're home.", size: 40 },
+        { t0: 14.0, t1: 17.8, text: "Your going-out app — the second you're outside.", size: 40 },
       ]} />
-
-      {(() => {
-        const k = f01(t, CLOSE, CLOSE + 0.5) - f01(t, END - 0.3, END);
-        if (k <= 0) return null;
-        return <div style={{ position: "absolute", left: 60, right: 60, top: 820, textAlign: "center",
-          fontFamily: GROT, fontWeight: 600, fontSize: 62, letterSpacing: "-.015em", color: INK,
-          opacity: k, transform: `translateY(${(1 - eO(k)) * 14}px)` }}>Three apps.<br />One layer.</div>;
-      })()}
 
       <EndCard t={t} t0={END} globe={true} tagline={endTagline || "Every app is a local app."}
         sub={endSub || "Geospatial infrastructure and intelligence."} />
