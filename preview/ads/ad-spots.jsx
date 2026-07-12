@@ -370,6 +370,7 @@ function PhoneShot({ t }) {
           {ctxRow(8.4, "At the door", "just now", true)}
           {ctxRow(8.7, "12th visit this month", "regular")}
           {ctxRow(9.0, "Counter pickup", "2 ahead, 3 min")}
+          {ctxRow(10.8, "Visit 12 logged", "reward unlocked · no scan", true)}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 38px 20px", borderTop: "1.5px solid " + LINE }}>
           <div style={{ opacity: 0.4 + 0.6 * xf }}>
@@ -452,9 +453,9 @@ function AdPlacesRoot({ endTagline, endSub }) {
         { t0: 0.6, t1: 4.6, text: "Intent arrives first.", size: 62 },
         { t0: 8.2, t1: 10.1, text: "The usual in one tap.", size: 54 }
       ]} />
-      {closeLine(11.8, 13.4, "Location intelligence for restaurants.")}
+      {closeLine(11.8, 13.4, "Ready when they arrive.")}
       <EndCard t={t} t0={14.6} globe={true} tagline={endTagline || "Regulars aren't luck."}
-        sub={endSub || "Location intelligence for apps in the real world."} />
+        sub={endSub || "Geospatial infrastructure and intelligence."} />
     </div>
   );
 }
@@ -534,7 +535,8 @@ function AdZipRoot() {
         { t0: 9.4, t1: 11.6, text: "Rates with named denominators, every 174 m.", size: 52 }
       ]} />
       <ZipLedger t={t} />
-      <EndCard t={t} t0={12.1} tagline="Price the street, not the ZIP." />
+      <EndCard t={t} t0={12.1} tagline="Price the street, not the ZIP."
+        sub="Geospatial infrastructure and intelligence." />
     </div>
   );
 }
@@ -594,7 +596,8 @@ function AdMovesRoot() {
         { t0: 7.6, t1: 9.5, text: "People cross." },
         { t0: 10.3, t1: 12.1, text: "One grid holds it all. Measured, or flagged.", size: 54 }
       ]} />
-      <EndCard t={t} t0={12.5} tagline="For everything that moves through the world." />
+      <EndCard t={t} t0={12.5} tagline="For everything that moves through the world."
+        sub="Geospatial infrastructure and intelligence." />
     </div>
   );
 }
