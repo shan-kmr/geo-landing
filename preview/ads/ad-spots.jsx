@@ -1038,16 +1038,17 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   if (t < S1) sc = lerp(0.25, 1, eO(f01(t, 0.6, S1)));
   else if (t > T1 && t < S2) { sc = 1 - 0.42 * Math.sin(f01(t, T1, S2) * Math.PI); dy = 120 * Math.sin(f01(t, T1, S2) * Math.PI); }
   else if (t > T2 && t < S3) { sc = 1 - 0.42 * Math.sin(f01(t, T2, S3) * Math.PI); dy = 120 * Math.sin(f01(t, T2, S3) * Math.PI); }
-  const phoneK = eO(f01(t, 0.5, 1.2)) * (1 - f01(t, CLOSE + 0.2, END - 0.1));
+  const phoneK = eO(f01(t, 0.5, 1.2)) * (1 - f01(t, 16.6, 17.1));
 
-  const winK = (a, b) => Math.max(0, eO(f01(t, a, a + 0.45)) - f01(t, b - 0.35, b));
-  const kStore = winK(1.9, T1 + 0.2), kDeliv = winK(S2 - 0.2, T2 + 0.2), kDisco = winK(S3 - 0.2, CLOSE + 0.2);
+  // screens overlap through each transit so the phone is never blank mid-travel
+  const winK = (a, b) => Math.max(0, eO(f01(t, a, a + 0.45)) - f01(t, b - 0.4, b));
+  const kStore = winK(1.9, 7.5), kDeliv = winK(6.9, 12.9), kDisco = winK(12.3, 17.1);
 
   // "heading to" pill, only while travelling
   const inT1 = t > T1 && t < S2, inT2 = t > T2 && t < S3;
   const dest = inT1 ? "getting home" : inT2 ? "heading out · SoHo" : null;
 
-  const PB = { w: 640, h: 1210, left: 220, top: 300 };
+  const PB = { w: 640, h: 806, left: 220, top: 356 };
 
   return (
     <div data-screen-label={"ad-mirrors t=" + Math.floor(t) + "s"} style={{ position: "absolute", inset: 0, background: PAPER, overflow: "hidden" }}>
