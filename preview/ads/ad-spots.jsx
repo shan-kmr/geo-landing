@@ -617,11 +617,11 @@ const FG2 = "#4A4E54";
 function FeedMorph({ t, stops }) {
   const up = eO(f01(t, 1.0, 1.8));
   if (t < 1.0) return null;
-  const ty = lerp(1560, 430, up);           // rises once, never drops
+  const ty = lerp(1560, 792, up);           // rises once, never drops; sits lower so the lit city breathes above
   return (
     <div style={{ position: "absolute", left: 210, width: 660, top: 0, transform: `translateY(${ty}px)` }}>
-      <div style={{ background: "#FFFFFF", borderRadius: 60, border: "3px solid rgba(22,24,26,.75)",
-        boxShadow: "0 34px 90px rgba(22,24,26,.16)", overflow: "hidden", position: "relative", height: 900 }}>
+      <div style={{ background: "#FFFFFF", borderRadius: 56, border: "3px solid rgba(22,24,26,.75)",
+        boxShadow: "0 34px 90px rgba(22,24,26,.16)", overflow: "hidden", position: "relative", height: 566 }}>
         {/* status bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
           padding: "18px 34px 4px", fontFamily: MONO, fontSize: 20, color: INK }}>
