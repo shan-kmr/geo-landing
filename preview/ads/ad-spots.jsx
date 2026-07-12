@@ -1146,7 +1146,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
   // ONE zoom-in on the first neighborhood, then STAY at that zoom and pan
   // straight across town (never lift) — the single pull-back comes only at the
   // very end, handing off to the globe.
-  const ZD = 17.3, ZI = 13.0, ZW = 14.0;   // stay-zoom (arrival) · intro establishing · gentle end reveal
+  const ZD = 18.0, ZI = 13.0, ZW = 14.0;   // stay-zoom (arrival, a little tighter) · intro establishing · gentle end reveal
   const ZO0 = 20.3, ZO1 = 22.0;            // end pull-back — keeps drifting THROUGH the hero crossfade (no pause), a touch faster
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
@@ -1173,7 +1173,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         break;
       }
     }
-    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.06, bldg: true, litR: 900 } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
+    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.06, bldg: true, litR: 900 } : null, spotPhase: Math.min(1, ph), spotBlink: 0.6, live: null, labels: true };
   };
 
   let phoneTop = 1920, phoneK = 0, screen = null, gK = 0, pK = 0, gTime = 0, pTime = 0;
