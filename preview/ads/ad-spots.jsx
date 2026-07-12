@@ -1140,14 +1140,14 @@ function AdMirrorsRoot({ endTagline, endSub }) {
     { t0: 8.4, cell: P.B, screen: "deliv" },
     { t0: 15.0, cell: P.C, screen: "news" },
   ];
-  const END = 22.1;   // pushed back so the final pull-back can breathe before the globe
+  const END = 21.5;   // hero begins fading in WHILE the map is still zooming out — crossfade, not a cut
   const FLIP0 = 2.0, FLIP1 = 2.5, RECEDE = 4.6, GONE = 5.4;   // offsets from t0
 
   // ONE zoom-in on the first neighborhood, then STAY at that zoom and pan
   // straight across town (never lift) — the single pull-back comes only at the
   // very end, handing off to the globe.
-  const ZD = 17.3, ZI = 13.0, ZW = 14.4;   // stay-zoom (arrival) · intro establishing · gentle end reveal
-  const ZO0 = 20.4, ZO1 = 22.1;            // end pull-back window (only after the last card is done)
+  const ZD = 17.3, ZI = 13.0, ZW = 14.0;   // stay-zoom (arrival) · intro establishing · gentle end reveal
+  const ZO0 = 20.4, ZO1 = 22.6;            // end pull-back — keeps drifting THROUGH the hero crossfade (no pause)
   const camFn = (tt) => {
     const rot = 0.28, pitch = 0.9;
     const A = P.A, B = P.B, C = P.C, m0 = moves[0].t0, m1 = moves[1].t0, m2 = moves[2].t0;
@@ -1159,8 +1159,8 @@ function AdMirrorsRoot({ endTagline, endSub }) {
     if (tt < rec1) return { x: B[0], y: B[1], z: ZD, rot, pitch };
     if (tt < m2)   return pan(B, C, rec1, m2);
     if (tt < ZO0)  return { x: C[0], y: C[1], z: ZD, rot, pitch };
-    const e = eIO(f01(tt, ZO0, ZO1));    // everything's done → the one and only pull-back
-    return { x: C[0], y: lerp(C[1], C[1] + 0.12, e), z: lerp(ZD, ZW, e), rot, pitch };
+    const e = eO(f01(tt, ZO0, ZO1));    // ease-out: reveal fast, then keep drifting as the hero fades in over it
+    return { x: C[0], y: lerp(C[1], C[1] + 0.14, e), z: lerp(ZD, ZW, e), rot, pitch };
   };
   const optsFn = (tt) => {
     let cell = null, ph = 0;
@@ -1173,7 +1173,7 @@ function AdMirrorsRoot({ endTagline, endSub }) {
         break;
       }
     }
-    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true } : null, spotPhase: Math.min(1, ph), live: null, labels: true };
+    return { hexOpacity: 0, spot: (cell && ph > 0.02) ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true } : null, spotPhase: Math.min(1, ph), spotBlink: 0.5 + 0.5 * Math.sin(tt * 7.5), live: null, labels: true };
   };
 
   let phoneTop = 1920, phoneK = 0, screen = null, gK = 0, pK = 0, gTime = 0, pTime = 0;
