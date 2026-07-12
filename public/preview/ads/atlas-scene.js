@@ -581,7 +581,7 @@
     // spot.bldg mode: remember the building at (or nearest) the spot point
     if (X.__litPt) {
       const [qx, qy] = X.__litPt;
-      let best = null, bestD = 110 * 110;
+      let best = null, bestD = (X.__litR || 110) * (X.__litR || 110);
       for (const b of proj) {
         const cx = b.pc.reduce((t, p) => t + p[0], 0) / 4, cy = b.pc.reduce((t, p) => t + p[1], 0) / 4;
         let inside = false;
@@ -861,6 +861,7 @@
     const X = makeXform(W, H, cam);
     X.__lit = null;
     X.__litPt = (opts.spot && opts.spot.bldg) ? X.px(opts.spot.x, opts.spot.y) : null;
+    X.__litR = (opts.spot && opts.spot.litR) || 110;   // fallback search radius (ads snap to nearest building)
     drawGround(ctx, W, H, X);
     drawFabric(ctx, X, W, H, cam.z);
     drawHexes(ctx, X, W, H, cam, opts);
