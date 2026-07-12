@@ -305,7 +305,7 @@ function MapShot({ t, on, camFn, optsFn, fadeIn }) {
     const cam = camFn(t), opts = optsFn(t);
     const key = JSON.stringify([cam.x.toFixed(4), cam.y.toFixed(4), cam.z.toFixed(3), cam.rot.toFixed(3),
       opts.shadeMix != null ? opts.shadeMix.toFixed(2) : 1, opts.selectedPhase, opts.__f,
-      opts.live ? t.toFixed(3) : 0]);
+      (opts.live || opts.spot) ? t.toFixed(3) : 0]);   // a live spot must re-render each frame (it pulses) even when the camera is still
     if (key !== memo.current) {
       memo.current = key;
       window.JanusScene.drawCity(bufRef.current.getContext("2d"), 1080, 1920, cam, opts);
