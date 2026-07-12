@@ -605,3 +605,135 @@ function JanusAdMoves() {
   return <Stage width={1080} height={1920} duration={15} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdMovesRoot /></Stage>;
 }
 window.JanusAdMoves = JanusAdMoves;
+
+/* ============================================================
+   AD 04 — LOCAL ("Every app is a local app.")
+   One ordinary shopping app; its homepage re-ranks as the user
+   moves through the day and through places. The feed is the hero:
+   same shell, the top card + its action change with where you are.
+   ============================================================ */
+const FG2 = "#4A4E54";
+
+function FeedMorph({ t, stops }) {
+  const up = eO(f01(t, 1.0, 1.8));
+  if (t < 1.0) return null;
+  const ty = lerp(1560, 430, up);           // rises once, never drops
+  return (
+    <div style={{ position: "absolute", left: 210, width: 660, top: 0, transform: `translateY(${ty}px)` }}>
+      <div style={{ background: "#FFFFFF", borderRadius: 60, border: "3px solid rgba(22,24,26,.75)",
+        boxShadow: "0 34px 90px rgba(22,24,26,.16)", overflow: "hidden", position: "relative", height: 900 }}>
+        {/* status bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "18px 34px 4px", fontFamily: MONO, fontSize: 20, color: INK }}>
+          <span>9:41</span><span style={{ letterSpacing: ".1em", color: MUT }}>▪ ▪ ▪</span>
+        </div>
+        {/* app identity — deliberately generic */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 34px 14px", borderBottom: "1.5px solid " + LINE }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: INK }} />
+          <span style={{ fontFamily: GROT, fontWeight: 700, fontSize: 26, color: INK }}>Shop</span>
+          <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 15, letterSpacing: ".06em", color: MUT }}>for you</span>
+        </div>
+        {/* stop bodies, crossfaded */}
+        {stops.map((s, i) => {
+          const next = stops[i + 1];
+          const kin = eO(f01(t, s.t0, s.t0 + 0.55));
+          const kout = next ? f01(t, next.t0 - 0.1, next.t0 + 0.45) : 0;
+          const k = Math.max(0, kin - kout);
+          if (k <= 0.001) return null;
+          const heroY = (1 - eO(f01(t, s.t0, s.t0 + 0.7))) * 24;
+          return (
+            <div key={i} style={{ position: "absolute", left: 0, right: 0, top: 116, padding: "0 30px", opacity: k }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
+                <span style={{ width: 10, height: 10, borderRadius: 5, background: SIG, display: "inline-block" }} />
+                <span style={{ fontFamily: GROT, fontWeight: 600, fontSize: 24, color: INK }}>{s.place}</span>
+                <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 15, color: MUT }}>{s.time}</span>
+              </div>
+              <div style={{ fontFamily: MONO, fontSize: 13.5, letterSpacing: ".14em", color: FNT, marginBottom: 16 }}>PLACED · {s.ribbon}</div>
+              <div style={{ border: "1.5px solid " + LINE, borderRadius: 20, padding: "20px 22px", transform: `translateY(${heroY}px)`, background: "#FFF" }}>
+                <div style={{ fontFamily: MONO, fontSize: 13.5, letterSpacing: ".12em", textTransform: "uppercase", color: MUT }}>{s.hero.cat}</div>
+                <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 31, color: INK, lineHeight: 1.16, marginTop: 6 }}>{s.hero.title}</div>
+                <div style={{ display: "flex", alignItems: "center", marginTop: 16 }}>
+                  <span style={{ fontFamily: MONO, fontSize: 17, color: MUT }}>{s.hero.sub}</span>
+                  <span style={{ marginLeft: "auto", fontFamily: GROT, fontWeight: 600, fontSize: 21, color: PAPER,
+                    background: INK, borderRadius: 12, padding: "12px 24px" }}>{s.hero.cta}</span>
+                </div>
+              </div>
+              {s.rows.map((r, j) => (
+                <div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                  padding: "15px 4px", borderBottom: "1.5px solid " + LINE }}>
+                  <span style={{ fontFamily: GROT, fontSize: 21, color: FG2 }}>{r.k}</span>
+                  <span style={{ fontFamily: MONO, fontSize: 15, color: MUT }}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AdLocalRoot({ endTagline, endSub }) {
+  const t = useTime();
+  const J = window.JanusScene;
+  const P = React.useMemo(() => {
+    if (!J) return null;
+    const d = J.m2w(0, 1);
+    return { rot0: Math.atan2(d[0], d[1]),
+      A: J.m2w(-0.02, -2.45), B: J.m2w(-0.095, -2.585), C: J.m2w(-0.02, -2.45) };
+  }, [J]);
+  if (!P) return <div style={{ position: "absolute", inset: 0, background: PAPER }} />;
+
+  const camFn = (tt) => {
+    let a = P.A, b = P.A, seg = 0;
+    if (tt < 6.8) { a = P.A; b = P.A; }
+    else if (tt < 8.2) { a = P.A; b = P.B; seg = f01(tt, 6.8, 8.2); }
+    else if (tt < 12.6) { a = P.B; b = P.B; }
+    else if (tt < 14.0) { a = P.B; b = P.C; seg = f01(tt, 12.6, 14.0); }
+    else { a = P.C; b = P.C; }
+    const e = eIO(seg);
+    const gliding = (tt > 6.8 && tt < 8.2) || (tt > 12.6 && tt < 14.0);
+    return { x: lerp(a[0], b[0], e), y: lerp(a[1], b[1], e), z: gliding ? 15.5 : 16.4, rot: 0.28, pitch: 0.85 };
+  };
+  const optsFn = (tt) => {
+    let cell = null, ph = 0;
+    if (tt >= 2.6 && tt < 7.0) { cell = P.A; ph = eO(f01(tt, 2.8, 3.5)) * (1 - f01(tt, 6.6, 7.0)); }
+    else if (tt >= 8.2 && tt < 12.6) { cell = P.B; ph = eO(f01(tt, 8.4, 9.1)) * (1 - f01(tt, 12.2, 12.6)); }
+    else if (tt >= 14.0 && tt < 16.7) { cell = P.C; ph = eO(f01(tt, 14.2, 14.9)) * (1 - f01(tt, 16.3, 16.7)); }
+    return { hexOpacity: 0, spot: ph > 0.02 ? { x: cell[0], y: cell[1], rKm: 0.05, bldg: true } : null,
+      spotPhase: ph, live: null, labels: true };
+  };
+
+  const stops = [
+    { t0: 2.4, place: "Home", time: "8:12a", ribbon: "morning · at home",
+      hero: { cat: "Reorder", title: "Blue Bottle beans, your usual", sub: "$18 · by tomorrow", cta: "Reorder" },
+      rows: [{ k: "Oat milk ×2", v: "in cart" }, { k: "Rain today", v: "umbrellas →" }] },
+    { t0: 8.2, place: "SoHo", time: "1:30p", ribbon: "near you · 2 blocks",
+      hero: { cat: "In stock nearby", title: "The jacket you saved", sub: "$128 · pick up by 3pm", cta: "Pick up today" },
+      rows: [{ k: "SoHo store", v: "0.2 mi" }, { k: "3 saved items", v: "nearby →" }] },
+    { t0: 14.0, place: "Home", time: "7:40p", ribbon: "evening · at home",
+      hero: { cat: "Dinner in 30", title: "Your usual grocery run", sub: "12 items · $54", cta: "Add to cart" },
+      rows: [{ k: "Reorder essentials", v: "oat milk, eggs" }, { k: "Tonight only", v: "15% off produce" }] },
+  ];
+
+  return (
+    <div data-screen-label={"ad-local t=" + Math.floor(t) + "s"} style={{ position: "absolute", inset: 0, background: PAPER, overflow: "hidden" }}>
+      <MapShot t={t} on={true} camFn={camFn} optsFn={optsFn} fadeIn={f01(t, 0, 0.5)} />
+      <FeedMorph t={t} stops={stops} />
+      <CaptionTop t={t} beats={[{ t0: 0.6, t1: 4.4, text: "One app. All day.", size: 60 }]} />
+      {(() => {
+        const k = f01(t, 15.0, 15.5) - f01(t, 16.5, 16.9);
+        if (k <= 0) return null;
+        return <div style={{ position: "absolute", left: 60, right: 60, bottom: 150, textAlign: "center",
+          fontFamily: GROT, fontWeight: 600, fontSize: 40, letterSpacing: "-.012em", color: INK,
+          opacity: k, transform: `translateY(${(1 - eO(k)) * 12}px)` }}>Re-ranked by where you are.</div>;
+      })()}
+      <EndCard t={t} t0={16.9} globe={true} tagline={endTagline || "Every app is a local app."}
+        sub={endSub || "Geospatial infrastructure and intelligence."} />
+    </div>
+  );
+}
+function JanusAdLocal(props) {
+  return <Stage width={1080} height={1920} duration={22} fps={30} background="#FCFCFB" autoplay={true} loop={true}><AdLocalRoot endTagline={props && props.endTagline} endSub={props && props.endSub} /></Stage>;
+}
+window.JanusAdLocal = JanusAdLocal;
