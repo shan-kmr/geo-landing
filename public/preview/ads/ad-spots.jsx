@@ -81,37 +81,33 @@ function EndCard({ t, t0, tagline, taglineFlip, flipAt, sub, subline, globe }) {
   const k = f01(t, t0, t0 + 0.4);
   if (k <= 0) return null;
 
-  // TWO-BEAT storyline (Mirrors): beat 1 (observation) holds ~30%, flips upward,
-  // beat 2 (CTA + brand) rises into place and dwells ~70%.
+  // TWO-BEAT storyline (Mirrors): the whole card fades in ONCE and dwells;
+  // only the hero line swaps IN PLACE — beat 1 flips away, beat 2 flips in.
   if (taglineFlip) {
     const fa = flipAt != null ? flipAt : t0 + 1.8;
-    const FL = 0.6;
-    const b1in = f01(t, t0 + 0.15, t0 + 0.7);
-    const b1out = eIO(f01(t, fa, fa + FL));
-    const b1op = b1in * (1 - b1out);
-    const b1t = "translateY(" + (-92 * b1out).toFixed(1) + "px) perspective(900px) rotateX(" + (36 * b1out).toFixed(1) + "deg)";
-    const b2p = eIO(f01(t, fa + FL * 0.35, fa + FL + 0.4));
-    const b2op = f01(t, fa + FL * 0.35, fa + FL + 0.2);
-    const b2t = "translateY(" + (84 * (1 - b2p)).toFixed(1) + "px)";
+    const HALF = 0.32;                                   // each half of the flip
+    const cardIn = f01(t, t0 + 0.1, t0 + 0.7);
+    const l1out = eIO(f01(t, fa, fa + HALF));             // beat 1 flips away
+    const l1op = cardIn * (1 - l1out), l1rot = 90 * l1out;
+    const l2in = eIO(f01(t, fa + HALF, fa + 2 * HALF));   // beat 2 flips in
+    const l2op = f01(t, fa + HALF, fa + 2 * HALF), l2rot = -90 * (1 - l2in);
+    const heroLine = { fontFamily: GROT, fontWeight: 600, fontSize: 60, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, whiteSpace: "nowrap" };
+    const heroCell = { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", backfaceVisibility: "hidden" };
     return (
-      <div style={{ position: "absolute", inset: 0, background: PAPER, opacity: k, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "0 90px" }}>
+      <div style={{ position: "absolute", inset: 0, background: PAPER, opacity: k, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <img ref={imgRef} width={1080} height={1920} alt="" style={{ position: "absolute", inset: 0, opacity: f01(t, t0 + 0.1, t0 + 0.6) }} />
-        {b1op > 0.01 && (
-          <div style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 90px", opacity: b1op, transform: b1t, transformOrigin: "center 42%" }}>
-            <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 74, letterSpacing: "-.015em", lineHeight: 1.12, color: INK, textWrap: "balance" }}>{tagline}</div>
+        <div style={{ position: "relative", zIndex: 1, width: 960, display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", opacity: cardIn }}>
+          <div style={{ position: "relative", width: "100%", height: 78, perspective: "1000px" }}>
+            <div style={{ ...heroCell, opacity: l1op, transform: "rotateX(" + l1rot.toFixed(1) + "deg)" }}><span style={heroLine}>{tagline}</span></div>
+            <div style={{ ...heroCell, opacity: l2op, transform: "rotateX(" + l2rot.toFixed(1) + "deg)" }}><span style={heroLine}>{taglineFlip}</span></div>
           </div>
-        )}
-        {b2op > 0.01 && (
-          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", opacity: b2op, transform: b2t }}>
-            <div style={{ fontFamily: GROT, fontWeight: 600, fontSize: 74, letterSpacing: "-.015em", lineHeight: 1.1, color: INK, textWrap: "balance" }}>{taglineFlip}</div>
-            <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "42px 0" }}></div>
-            <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK }}>JANUS</div>
-            <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20 }}>{sub || "The context layer for the physical world."}</div>
-            <div style={{ fontFamily: MONO, fontSize: 25, color: INK, marginTop: 46 }}>
-              <span style={{ borderBottom: "2px solid " + INK, paddingBottom: 4 }}>janus.earth →</span>
-            </div>
+          <div style={{ width: 60, borderTop: "2px solid " + INK, margin: "40px 0" }}></div>
+          <div style={{ fontFamily: MONO, fontSize: 25, letterSpacing: ".28em", fontWeight: 700, color: INK }}>JANUS</div>
+          <div style={{ fontFamily: GROT, fontWeight: 500, fontSize: 31, color: "#4A4E54", marginTop: 20 }}>{sub || "The context layer for the physical world."}</div>
+          <div style={{ fontFamily: MONO, fontSize: 25, color: INK, marginTop: 46 }}>
+            <span style={{ borderBottom: "2px solid " + INK, paddingBottom: 4 }}>janus.earth →</span>
           </div>
-        )}
+        </div>
       </div>
     );
   }
