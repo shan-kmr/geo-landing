@@ -51,6 +51,11 @@
   .drv .halo{position:absolute;inset:0;border-radius:50%;opacity:.22}
   .drv .dot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35)}
   .drv .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;font-weight:700;color:var(--ink);background:rgba(251,251,249,.92);border-radius:5px;padding:1px 6px;margin-top:1px;display:inline-block}
+  /* flagged: pulse in place + a reason badge — never move the dot to the fake spot */
+  @keyframes drvpulse{0%{transform:scale(1);opacity:.32}70%{transform:scale(2);opacity:0}100%{opacity:0}}
+  .drv.flagged .halo{animation:drvpulse 1.3s ease-out infinite}
+  .drv .flag{display:none;margin-top:3px;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;color:#fff;background:var(--flag);border-radius:5px;padding:2px 6px;white-space:nowrap;box-shadow:0 1px 4px rgba(204,43,29,.4)}
+  .drv.flagged .flag{display:inline-block}
 </style>
 </head>
 <body>
@@ -85,6 +90,10 @@
 const DEFAULT_API = "https://museums-glossary-when-management.trycloudflare.com/courier";
 const HF = "https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/courier_endpoint.json";
 const C = { VERIFIED:"#2F7D5B", OK:"#2F7D5B", FLAGGED:"#CC2B1D", PENDING:"#B0771A" };
+const CODE = { simulated:"SIMULATED GPS", mock_provider:"MOCK PROVIDER", device_integrity:"ROOTED DEVICE",
+  network_mismatch:"VPN / NETWORK", impossible_travel:"IMPOSSIBLE TRAVEL", sensor_mismatch:"SENSOR MISMATCH",
+  not_at_dropoff:"NOT AT DROPOFF" };
+const shortReason = (code) => CODE[code] || "SPOOFED";
 let API = localStorage.getItem("courier_api") || "";
 let selDriver = null;
 const _qp = new URLSearchParams(location.search);
@@ -98,6 +107,7 @@ const map = new maplibregl.Map({
 
 let deliveryMarker = null;
 const driverMarkers = {};
+const lastTrusted = {};   // driver_id -> [lng,lat] of last TRUSTED fix; the dot freezes here on a spoof
 
 map.on("load", () => {
   map.addSource("ring", { type:"geojson", data:fc([]) });
@@ -129,7 +139,7 @@ function deliveryEl(label){
 }
 function driverEl(){
   const e=document.createElement("div"); e.className="drv";
-  e.innerHTML='<div class="pin"><div class="halo"></div><div class="dot"></div></div><div class="lbl">YOU</div>';
+  e.innerHTML='<div class="pin"><div class="halo"></div><div class="dot"></div></div><div class="lbl">YOU</div><div class="flag"></div>';
   return e;
 }
 
@@ -161,15 +171,23 @@ function render(couriers){
     else { deliveryMarker.setLngLat(ll); deliveryMarker.getElement().querySelector(".lbl").textContent = d.label || "Dropoff"; }
     map.getSource("ring").setData(fc([ringPoly(ll[0], ll[1], 80)]));
   }
-  // drivers — current position only (no trail)
+  // drivers — one dot each, current position only (no trail)
   const seen=new Set();
   couriers.forEach(c => {
     if (!c.pos) return; seen.add(c.driver_id);
-    const color = C[c.verdict] || "#B0771A", ll=[c.pos[1], c.pos[0]];
+    const flagged = c.verdict === "FLAGGED";
+    const posLL = [c.pos[1], c.pos[0]];
+    if (!flagged) lastTrusted[c.driver_id] = posLL;         // trusted → dot follows the real driver
+    // spoof → keep the dot where it really was; never fling it to the fake spot (no remnant).
+    // fall back to the reported pos only if we've never seen a trusted fix (e.g. sim's first ping).
+    const ll = flagged ? (lastTrusted[c.driver_id] || posLL) : posLL;
+    const color = C[c.verdict] || "#B0771A";
     if (!driverMarkers[c.driver_id]) driverMarkers[c.driver_id] = new maplibregl.Marker({element:driverEl(), anchor:"bottom"}).setLngLat(ll).addTo(map);
     const el = driverMarkers[c.driver_id].setLngLat(ll).getElement();
     el.querySelector(".dot").style.background = color;
     el.querySelector(".halo").style.background = color;
+    el.classList.toggle("flagged", flagged);
+    el.querySelector(".flag").textContent = flagged ? shortReason(c.code) : "";
   });
   Object.keys(driverMarkers).forEach(id => { if(!seen.has(id)){ driverMarkers[id].remove(); delete driverMarkers[id]; } });
   updateHUD(d);
