@@ -111,6 +111,7 @@ let deliveryMarker = null;
 const driverMarkers = {};
 const lastTrusted = {};   // driver_id -> [lng,lat] of last TRUSTED fix; the green you-dot lives here
 const lastFlagKey = {};   // driver_id -> last flagged "code@lat,lng" we already dropped a red dot for
+const lastDropAt = {};    // driver_id -> performance.now() of the last spoof dot (re-drop while a flag persists)
 
 map.on("load", () => {
   map.addSource("ring", { type:"geojson", data:fc([]) });
@@ -193,9 +194,13 @@ function render(couriers){
       lastTrusted[c.driver_id] = posLL;                 // real fix → the you-dot follows
       lastFlagKey[c.driver_id] = null;                  // reset: the next spoof drops a fresh dot
     } else {
-      // new attempt (spot or reason changed) → drop one fading red dot at the claim
+      // drop a fading red dot at the claimed spot. New attempt (spot/reason changed) → new dot;
+      // a persisting flag (e.g. VPN held on) → re-drop every ~2.5s so it reads as an ongoing spoof.
       const key = c.code + "@" + c.pos[0].toFixed(5) + "," + c.pos[1].toFixed(5);
-      if (lastFlagKey[c.driver_id] !== key){ lastFlagKey[c.driver_id] = key; dropSpoofDot(posLL, c.code); }
+      const now = performance.now();
+      if (lastFlagKey[c.driver_id] !== key || now - (lastDropAt[c.driver_id]||0) > 2500){
+        lastFlagKey[c.driver_id] = key; lastDropAt[c.driver_id] = now; dropSpoofDot(posLL, c.code);
+      }
     }
     // the you-dot always sits at the last trusted spot (green); clicking it sets the dropoff there
     const homeLL = lastTrusted[c.driver_id] || posLL;
