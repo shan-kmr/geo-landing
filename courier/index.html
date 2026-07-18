@@ -41,21 +41,23 @@
   .cfg .hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4}
   .empty{color:var(--muted)}
   /* map markers */
-  .dlv{text-align:center;pointer-events:none}
-  .dlv .tgt{width:24px;height:24px;border:3px solid var(--cobalt);border-radius:50%;margin:0 auto;position:relative;background:rgba(30,58,138,.10)}
+  /* center-anchored: the .tgt sits exactly on the coord; labels float below (out of flow) */
+  .dlv{position:relative;width:24px;height:24px;pointer-events:none}
+  .dlv .tgt{width:24px;height:24px;border:3px solid var(--cobalt);border-radius:50%;position:relative;background:rgba(30,58,138,.10)}
   .dlv .tgt::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--cobalt)}
-  .dlv .ey{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--cobalt);margin-top:3px;font-weight:700}
-  .dlv .lbl{font-size:11px;font-weight:600;color:var(--ink);background:rgba(251,251,249,.92);border-radius:5px;padding:1px 6px;margin-top:2px;white-space:nowrap;display:inline-block}
-  .drv{text-align:center;pointer-events:none}
-  .drv .pin{position:relative;width:34px;height:34px;margin:0 auto}
+  .dlv .ey{position:absolute;top:28px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;color:var(--cobalt);font-weight:700;white-space:nowrap}
+  .dlv .lbl{position:absolute;top:40px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:var(--ink);background:rgba(251,251,249,.92);border-radius:5px;padding:1px 6px;white-space:nowrap}
+  /* center-anchored green "you" dot: the .pin sits exactly on the coord (so clicking it sets the dropoff there) */
+  .drv{position:relative;width:34px;height:34px;pointer-events:none}
+  .drv .pin{position:relative;width:34px;height:34px}
   .drv .halo{position:absolute;inset:0;border-radius:50%;opacity:.22}
   .drv .dot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.35)}
-  .drv .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;font-weight:700;color:var(--ink);background:rgba(251,251,249,.92);border-radius:5px;padding:1px 6px;margin-top:1px;display:inline-block}
-  /* flagged: pulse in place + a reason badge — never move the dot to the fake spot */
-  @keyframes drvpulse{0%{transform:scale(1);opacity:.32}70%{transform:scale(2);opacity:0}100%{opacity:0}}
-  .drv.flagged .halo{animation:drvpulse 1.3s ease-out infinite}
-  .drv .flag{display:none;margin-top:3px;font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;color:#fff;background:var(--flag);border-radius:5px;padding:2px 6px;white-space:nowrap;box-shadow:0 1px 4px rgba(204,43,29,.4)}
-  .drv.flagged .flag{display:inline-block}
+  .drv .lbl{position:absolute;top:34px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;letter-spacing:.1em;font-weight:700;color:var(--ink);background:rgba(251,251,249,.92);border-radius:5px;padding:1px 6px;white-space:nowrap}
+  /* each spoof attempt = its own red dot at the claimed spot, then it fades away (no lines, no remnant) */
+  .spoofdot{position:relative;width:16px;height:16px;pointer-events:none;opacity:1;transition:opacity 3.6s ease-out}
+  .spoofdot.fade{opacity:0}
+  .spoofdot .sd-dot{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:var(--flag);border:3px solid #fff;box-shadow:0 0 0 6px rgba(204,43,29,.16),0 1px 5px rgba(0,0,0,.3)}
+  .spoofdot .sd-lbl{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.05em;color:#fff;background:var(--flag);border-radius:5px;padding:1px 6px;white-space:nowrap;box-shadow:0 1px 4px rgba(204,43,29,.4)}
 </style>
 </head>
 <body>
@@ -107,7 +109,8 @@ const map = new maplibregl.Map({
 
 let deliveryMarker = null;
 const driverMarkers = {};
-const lastTrusted = {};   // driver_id -> [lng,lat] of last TRUSTED fix; the dot freezes here on a spoof
+const lastTrusted = {};   // driver_id -> [lng,lat] of last TRUSTED fix; the green you-dot lives here
+const lastFlagKey = {};   // driver_id -> last flagged "code@lat,lng" we already dropped a red dot for
 
 map.on("load", () => {
   map.addSource("ring", { type:"geojson", data:fc([]) });
@@ -139,8 +142,16 @@ function deliveryEl(label){
 }
 function driverEl(){
   const e=document.createElement("div"); e.className="drv";
-  e.innerHTML='<div class="pin"><div class="halo"></div><div class="dot"></div></div><div class="lbl">YOU</div><div class="flag"></div>';
+  e.innerHTML='<div class="pin"><div class="halo"></div><div class="dot"></div></div><div class="lbl">YOU</div>';
   return e;
+}
+// each spoof attempt drops its own red dot at the CLAIMED spot, which fades out — no lines, no remnant
+function dropSpoofDot(lngLat, code){
+  const el=document.createElement("div"); el.className="spoofdot";
+  el.innerHTML='<div class="sd-dot"></div><div class="sd-lbl">'+shortReason(code)+'</div>';
+  const mk=new maplibregl.Marker({element:el}).setLngLat(lngLat).addTo(map);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("fade")));   // paint, then start the fade
+  setTimeout(()=>mk.remove(), 4000);
 }
 
 async function resolveAPI(){
@@ -167,27 +178,31 @@ function render(couriers){
   // delivery (shared dropoff in the single-driver demo)
   if (d && d.dropoff){
     const ll=[d.dropoff[1], d.dropoff[0]];
-    if (!deliveryMarker){ deliveryMarker = new maplibregl.Marker({element:deliveryEl(d.label), anchor:"bottom"}).setLngLat(ll).addTo(map); }
+    if (!deliveryMarker){ deliveryMarker = new maplibregl.Marker({element:deliveryEl(d.label)}).setLngLat(ll).addTo(map); }
     else { deliveryMarker.setLngLat(ll); deliveryMarker.getElement().querySelector(".lbl").textContent = d.label || "Dropoff"; }
     map.getSource("ring").setData(fc([ringPoly(ll[0], ll[1], 80)]));
   }
-  // drivers — one dot each, current position only (no trail)
+  // a persistent GREEN "you" dot at the real (trusted) spot; each spoof attempt
+  // drops its OWN red dot at the claimed spot, which fades out (no lines, no remnant)
   const seen=new Set();
   couriers.forEach(c => {
     if (!c.pos) return; seen.add(c.driver_id);
     const flagged = c.verdict === "FLAGGED";
     const posLL = [c.pos[1], c.pos[0]];
-    if (!flagged) lastTrusted[c.driver_id] = posLL;         // trusted → dot follows the real driver
-    // spoof → keep the dot where it really was; never fling it to the fake spot (no remnant).
-    // fall back to the reported pos only if we've never seen a trusted fix (e.g. sim's first ping).
-    const ll = flagged ? (lastTrusted[c.driver_id] || posLL) : posLL;
-    const color = C[c.verdict] || "#B0771A";
-    if (!driverMarkers[c.driver_id]) driverMarkers[c.driver_id] = new maplibregl.Marker({element:driverEl(), anchor:"bottom"}).setLngLat(ll).addTo(map);
-    const el = driverMarkers[c.driver_id].setLngLat(ll).getElement();
-    el.querySelector(".dot").style.background = color;
-    el.querySelector(".halo").style.background = color;
-    el.classList.toggle("flagged", flagged);
-    el.querySelector(".flag").textContent = flagged ? shortReason(c.code) : "";
+    if (!flagged){
+      lastTrusted[c.driver_id] = posLL;                 // real fix → the you-dot follows
+      lastFlagKey[c.driver_id] = null;                  // reset: the next spoof drops a fresh dot
+    } else {
+      // new attempt (spot or reason changed) → drop one fading red dot at the claim
+      const key = c.code + "@" + c.pos[0].toFixed(5) + "," + c.pos[1].toFixed(5);
+      if (lastFlagKey[c.driver_id] !== key){ lastFlagKey[c.driver_id] = key; dropSpoofDot(posLL, c.code); }
+    }
+    // the you-dot always sits at the last trusted spot (green); clicking it sets the dropoff there
+    const homeLL = lastTrusted[c.driver_id] || posLL;
+    if (!driverMarkers[c.driver_id]) driverMarkers[c.driver_id] = new maplibregl.Marker({element:driverEl()}).setLngLat(homeLL).addTo(map);
+    const el = driverMarkers[c.driver_id].setLngLat(homeLL).getElement();
+    el.querySelector(".dot").style.background = C.OK;
+    el.querySelector(".halo").style.background = C.OK;
   });
   Object.keys(driverMarkers).forEach(id => { if(!seen.has(id)){ driverMarkers[id].remove(); delete driverMarkers[id]; } });
   updateHUD(d);
