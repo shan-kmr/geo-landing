@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Janus — Dispatch · Location Truth</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  :root{ --paper:#F4F4F2; --ink:#16181A; --muted:#5A5F66; --line:#E2E2DE; --cobalt:#1E3A8A;
+    --ok:#2F7D5B; --flag:#CC2B1D; --wait:#B0771A;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace; --sans:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif; }
+  *{box-sizing:border-box} html,body{margin:0;height:100%;font-family:var(--sans);color:var(--ink);background:var(--paper)}
+  #map{position:absolute;inset:0}
+  .panel{position:absolute;z-index:5;background:rgba(251,251,249,.94);border:1px solid var(--line);
+    border-radius:14px;backdrop-filter:blur(6px);box-shadow:0 10px 34px rgba(22,24,26,.10)}
+  .head{top:16px;left:16px;padding:14px 16px;max-width:340px}
+  .brand{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .brand b{color:var(--ink)} .brand .d{color:var(--flag)}
+  .head h1{font-size:19px;font-weight:650;letter-spacing:-.01em;margin:8px 0 3px}
+  .head p{font-size:13px;color:var(--muted);margin:0;line-height:1.45}
+  .hud{bottom:22px;left:16px;padding:0;overflow:hidden;width:340px}
+  .hud .who{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+  .dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 4px rgba(0,0,0,.04)}
+  .who .nm{font-weight:650;font-size:15px} .who .st{margin-left:auto;font-family:var(--mono);font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+  .hud .body{padding:13px 16px;font-size:13.5px;line-height:1.5;color:var(--muted);min-height:44px}
+  .hud .body b{color:var(--ink)}
+  .hud .meta{display:flex;gap:16px;padding:0 16px 13px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .hud .meta b{color:var(--ink)}
+  .cfg{top:16px;right:16px;padding:11px 13px;width:290px}
+  .cfg .r{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .cfg input{flex:1;min-width:0;font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+    border-radius:7px;padding:5px 7px;background:#fff;color:var(--ink)}
+  .cfg .conn{width:8px;height:8px;border-radius:50%;background:var(--wait)}
+  .cfg .hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.4}
+  .empty{color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="panel head">
+  <div class="brand"><span class="d">●</span> <b>JANUS</b> · DISPATCH · LOCATION TRUTH</div>
+  <h1>Click the map to drop a delivery.</h1>
+  <p>It appears on the driver's phone. As they move (or spoof), the marker turns <b style="color:var(--ok)">green</b> when the location is real and <b style="color:var(--flag)">red</b> when it isn't.</p>
+</div>
+
+<div class="panel cfg">
+  <div class="r"><span class="conn" id="conn"></span><span id="connlabel">connecting…</span></div>
+  <div class="r" style="margin-top:8px"><span>API</span><input id="apiurl" placeholder="https://…trycloudflare.com/courier" /></div>
+  <div class="hint">Auto-discovered from the live relay. Paste a tunnel URL to override; blank = auto.</div>
+</div>
+
+<div class="panel hud">
+  <div class="who"><span class="dot" id="hdot" style="background:var(--wait)"></span>
+    <span class="nm" id="hname">No driver yet</span>
+    <span class="st" id="hst" style="background:#EEE;color:var(--muted)">—</span></div>
+  <div class="body" id="hbody"><span class="empty">Install the courier tab on your phone and register — the driver shows up here.</span></div>
+  <div class="meta"><span>dist <b id="mdist">—</b></span><span>speed <b id="mspd">—</b></span><span>score <b id="mscore">—</b></span></div>
+</div>
+
+<script>
+const HF_DISCOVERY = "https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/courier_endpoint.json";
+const C = { VERIFIED:"#2F7D5B", OK:"#2F7D5B", FLAGGED:"#CC2B1D", PENDING:"#B0771A", "—":"#B0771A" };
+let API = localStorage.getItem("courier_api") || "";
+let selDriver = null;
+const _qp = new URLSearchParams(location.search);
+if (_qp.get("api")) { API = _qp.get("api").replace(/\/$/,""); localStorage.setItem("courier_api", API); }
+
+const map = new maplibregl.Map({
+  container:"map", style:{ version:8,
+    sources:{ carto:{ type:"raster", tiles:["https://a.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"], tileSize:256, attribution:"© OpenStreetMap © CARTO" } },
+    layers:[{ id:"carto", type:"raster", source:"carto" }] },
+  center:[-73.997,40.7237], zoom:14.2, attributionControl:false });
+
+map.on("load", () => {
+  map.addSource("job",   { type:"geojson", data:fc([]) });
+  map.addSource("ring",  { type:"geojson", data:fc([]) });
+  map.addSource("trail", { type:"geojson", data:fc([]) });
+  map.addSource("driver",{ type:"geojson", data:fc([]) });
+  map.addLayer({ id:"ring", type:"fill", source:"ring", paint:{ "fill-color":"#1E3A8A", "fill-opacity":0.07 }});
+  map.addLayer({ id:"ringline", type:"line", source:"ring", paint:{ "line-color":"#1E3A8A", "line-opacity":0.35, "line-dasharray":[2,2] }});
+  map.addLayer({ id:"job", type:"circle", source:"job", paint:{ "circle-radius":7, "circle-color":"#1E3A8A", "circle-stroke-width":3, "circle-stroke-color":"#fff" }});
+  map.addLayer({ id:"trail", type:"line", source:"trail", paint:{ "line-width":3, "line-color":["case",["get","ok"],"#2F7D5B","#CC2B1D"], "line-opacity":0.7 }});
+  map.addLayer({ id:"driver", type:"circle", source:"driver", paint:{ "circle-radius":9, "circle-color":["get","color"], "circle-stroke-width":3, "circle-stroke-color":"#fff" }});
+  poll();
+});
+
+map.on("click", async (e) => {
+  if (!API) return flashHint();
+  try {
+    await fetch(API + "/job", { method:"POST", headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ dropoff:[+e.lngLat.lat.toFixed(6), +e.lngLat.lng.toFixed(6)],
+        driver_id: selDriver || undefined, label:"Deliver here" }) });
+    poll();
+  } catch(_) {}
+});
+
+function fc(features){ return { type:"FeatureCollection", features }; }
+function pt(lng,lat,props={}){ return { type:"Feature", properties:props, geometry:{ type:"Point", coordinates:[lng,lat] } }; }
+function ringPoly(lng,lat,rm){ const pts=[],dLat=rm/111320,dLng=rm/(111320*Math.cos(lat*Math.PI/180));
+  for(let i=0;i<=48;i++){ const a=i/48*2*Math.PI; pts.push([lng+dLng*Math.cos(a),lat+dLat*Math.sin(a)]); }
+  return { type:"Feature", properties:{}, geometry:{ type:"Polygon", coordinates:[pts] } }; }
+
+async function resolveAPI(){
+  const manual = document.getElementById("apiurl").value.trim();
+  if (manual){ API = manual.replace(/\/$/,""); localStorage.setItem("courier_api",API); return; }
+  if (API) return;
+  try { const d = await (await fetch(HF_DISCOVERY,{cache:"no-store"})).json();
+    if (d.base){ API = d.base.replace(/\/$/,""); } } catch(_){}
+}
+
+async function poll(){
+  await resolveAPI();
+  const conn = document.getElementById("conn"), cl = document.getElementById("connlabel");
+  if (!API){ conn.style.background="var(--wait)"; cl.textContent="waiting for relay…"; return schedule(); }
+  try {
+    const s = await (await fetch(API + "/state",{cache:"no-store"})).json();
+    conn.style.background="var(--ok)"; cl.textContent="live · " + (s.couriers.length) + " driver(s)";
+    render(s.couriers);
+  } catch(_){ conn.style.background="var(--flag)"; cl.textContent="offline"; }
+  schedule();
+}
+function schedule(){ setTimeout(poll, 1500); }
+
+function render(couriers){
+  const jobF=[], ringF=[], trailF=[], drvF=[];
+  const d = couriers[0]; selDriver = d ? d.driver_id : null;
+  couriers.forEach(c => {
+    if (c.dropoff){ jobF.push(pt(c.dropoff[1],c.dropoff[0])); ringF.push(ringPoly(c.dropoff[1],c.dropoff[0],80)); }
+    if (c.trail && c.trail.length>1) trailF.push({ type:"Feature", properties:{ ok:c.verdict!=="FLAGGED" },
+      geometry:{ type:"LineString", coordinates:c.trail.map(t=>[t[0],t[1]]) } });
+    if (c.pos) drvF.push(pt(c.pos[1],c.pos[0],{ color:C[c.verdict]||"#B0771A" }));
+  });
+  map.getSource("job").setData(fc(jobF));
+  map.getSource("ring").setData(fc(ringF));
+  map.getSource("trail").setData(fc(trailF));
+  map.getSource("driver").setData(fc(drvF));
+  updateHUD(d);
+}
+
+function updateHUD(d){
+  const st = document.getElementById("hst");
+  if (!d){ document.getElementById("hname").textContent="No driver yet";
+    st.textContent="—"; st.style.background="#EEE"; st.style.color="var(--muted)";
+    document.getElementById("hdot").style.background="var(--wait)"; return; }
+  const col = C[d.verdict]||"#B0771A";
+  document.getElementById("hname").textContent = d.name || d.driver_id;
+  document.getElementById("hdot").style.background = col;
+  st.textContent = d.verdict; st.style.background = col; st.style.color = "#fff";
+  document.getElementById("hbody").innerHTML = d.reason ? "<b>"+d.verdict+"</b> — "+d.reason : "Awaiting first location.";
+  document.getElementById("mscore").textContent = d.score==null ? "—" : d.score.toFixed(2);
+}
+document.getElementById("apiurl").value = API;
+document.getElementById("apiurl").addEventListener("change", ()=>{ API=""; poll(); });
+function flashHint(){ const c=document.getElementById("connlabel"); const o=c.textContent; c.textContent="↑ set the API url first"; setTimeout(()=>c.textContent=o,1500); }
+</script>
+</body>
+</html>
