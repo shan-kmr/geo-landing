@@ -89,17 +89,17 @@
 
 <script>
 // Baked-in current tunnel (redeploy updates it); discovery order: ?api= > saved > HF > baked.
-const DEFAULT_API = "https://museums-glossary-when-management.trycloudflare.com/courier";
+const DEFAULT_API = "https://janus-courier.fly.dev/courier";   // stable Fly host — no more tunnel churn
 const HF = "https://huggingface.co/datasets/skay97/curbai-tiles/resolve/main/courier_endpoint.json";
 const C = { VERIFIED:"#2F7D5B", OK:"#2F7D5B", FLAGGED:"#CC2B1D", PENDING:"#B0771A" };
 const CODE = { simulated:"SIMULATED GPS", mock_provider:"MOCK PROVIDER", device_integrity:"ROOTED DEVICE",
   network_mismatch:"VPN / NETWORK", impossible_travel:"IMPOSSIBLE TRAVEL", sensor_mismatch:"SENSOR MISMATCH",
   not_at_dropoff:"NOT AT DROPOFF" };
 const shortReason = (code) => CODE[code] || "SPOOFED";
-let API = localStorage.getItem("courier_api") || "";
+let API = "";                              // canonical URL is the baked Fly default; ignore any stale saved tunnel
 let selDriver = null;
 const _qp = new URLSearchParams(location.search);
-if (_qp.get("api")) { API = _qp.get("api").replace(/\/$/,""); localStorage.setItem("courier_api", API); }
+if (_qp.get("api")) { API = _qp.get("api").replace(/\/$/,""); }   // explicit ?api= still overrides
 
 const map = new maplibregl.Map({
   container:"map", style:{ version:8,
@@ -157,10 +157,9 @@ function dropSpoofDot(lngLat, code){
 
 async function resolveAPI(){
   const manual = document.getElementById("apiurl").value.trim();
-  if (manual){ API = manual.replace(/\/$/,""); localStorage.setItem("courier_api", API); return; }
-  if (API) return;
-  try { const d = await (await fetch(HF,{cache:"no-store"})).json(); if (d.base){ API = d.base.replace(/\/$/,""); return; } } catch(_){}
-  API = DEFAULT_API.replace(/\/$/,"");   // reliable fallback — no paste needed
+  if (manual){ API = manual.replace(/\/$/,""); return; }   // manual field overrides
+  if (API) return;                                          // ?api= override
+  API = DEFAULT_API.replace(/\/$/,"");                       // stable Fly host — no paste, no churn
 }
 
 async function poll(){
