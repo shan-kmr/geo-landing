@@ -305,10 +305,15 @@ function render(o){
   }
 }
 $("rVerify").addEventListener("click",async function(){
-  if(!window._rcpt) return; var b=$("rVerify"); b.textContent="checking…";
-  try{ var r=await fetch(API.replace(/\/courier$/,"")+"/mcp",{method:"POST",headers:{"content-type":"application/json","accept":"application/json, text/event-stream"},
-    body:JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/call",params:{name:"verify_receipt",arguments:{receipt:window._rcpt}}})});
-    var t=await r.text(); b.textContent = /"valid":\s*true/.test(t)?"valid ✓ — signature matches":"invalid ✗";
+  if(!window._rcpt) return; var b=$("rVerify"); b.textContent="checking…"; b.style.color="var(--accent)";
+  try{
+    var r=await fetch(API.replace(/\/courier$/,"")+"/mcp",{method:"POST",headers:{"content-type":"application/json","accept":"application/json, text/event-stream"},
+      body:JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/call",params:{name:"verify_receipt",arguments:{receipt:window._rcpt}}})});
+    var j=await r.json();                          // the tool result is an escaped JSON string in result.content[0].text
+    var txt=((((j||{}).result||{}).content||[])[0]||{}).text||"";
+    var valid=false; try{ valid=JSON.parse(txt).valid===true; }catch(_){ valid=/\\?"valid\\?":\s*true/.test(txt); }
+    b.textContent=valid?"valid ✓ — signature matches":"invalid ✗ — receipt altered";
+    b.style.color=valid?"var(--ok)":"var(--flag)";
   }catch(e){ b.textContent="check unavailable"; }
 });
 
