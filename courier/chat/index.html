@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>janus — chat delivery</title>
+<!-- chat: a chat-driven food-delivery agent. Intent is classified by a broad
+     keyword tree, progressively enhanced by a small open-source model
+     (transformers.js · all-MiniLM-L6-v2). Every action is LIVE against the
+     courier server: real order, real courier sim, real verdict + receipt, real
+     dispute/escalation. Janus is the location-truth layer under the agent. -->
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+:root{
+  --paper:#F6F4EF;--ink:#1A1815;--ink2:#4E4B45;--muted:#8C887E;--faint:#B4B0A4;--hair:#E0DDD4;
+  --surface:#FFFFFF;--surface2:#F0EDE6;--accent:#1E3A8A;--accent-soft:rgba(30,58,138,.08);
+  --ok:#1A7D4A;--ok-soft:rgba(26,125,74,.10);--flag:#CC2B1D;--flag-soft:rgba(204,43,29,.07);--wait:#B0771A;
+  --map-bg:#EFECE3;--mono:ui-monospace,"SF Mono",Menlo,monospace;--sans:-apple-system,system-ui,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#141210;--ink:#F2EFE8;--ink2:#C4BFB4;--muted:#8E897E;--faint:#5E5A51;--hair:#2C2921;
+  --surface:#1C1A16;--surface2:#211E19;--accent:#7E9EDC;--accent-soft:rgba(126,158,220,.12);
+  --ok:#5FB98A;--ok-soft:rgba(95,185,138,.13);--flag:#E2685A;--flag-soft:rgba(226,104,90,.10);--wait:#D2A24C;--map-bg:#211D16;
+}}
+:root[data-theme="dark"]{--paper:#141210;--ink:#F2EFE8;--ink2:#C4BFB4;--muted:#8E897E;--faint:#5E5A51;--hair:#2C2921;--surface:#1C1A16;--surface2:#211E19;--accent:#7E9EDC;--accent-soft:rgba(126,158,220,.12);--ok:#5FB98A;--ok-soft:rgba(95,185,138,.13);--flag:#E2685A;--flag-soft:rgba(226,104,90,.10);--wait:#D2A24C;--map-bg:#211D16;}
+:root[data-theme="light"]{--paper:#F6F4EF;--ink:#1A1815;--ink2:#4E4B45;--muted:#8C887E;--faint:#B4B0A4;--hair:#E0DDD4;--surface:#FFFFFF;--surface2:#F0EDE6;--accent:#1E3A8A;--accent-soft:rgba(30,58,138,.08);--ok:#1A7D4A;--ok-soft:rgba(26,125,74,.10);--flag:#CC2B1D;--flag-soft:rgba(204,43,29,.07);--wait:#B0771A;--map-bg:#EFECE3;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+@keyframes riseIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.app{display:grid;grid-template-columns:1fr 420px;height:100vh}
+@media (max-width:860px){.app{grid-template-columns:1fr;grid-template-rows:1fr 300px}}
+/* chat side */
+.chat{display:flex;flex-direction:column;min-height:0;position:relative}
+.top{display:flex;align-items:center;gap:10px;padding:13px 20px;border-bottom:1px solid var(--hair);background:var(--surface2)}
+.top .brand{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.top .brand b{color:var(--ink)}
+.top .model{margin-left:auto;font:500 10.5px/1 var(--mono);color:var(--muted);display:flex;align-items:center;gap:6px}
+.top .model .d{width:6px;height:6px;border-radius:50%;background:var(--wait)}
+.top .model .d.on{background:var(--ok)}
+.scn{font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--hair);border-radius:99px;padding:5px 10px;cursor:pointer;color:var(--muted);background:var(--surface)}
+.scn.fraud{border-color:var(--flag);color:var(--flag)}
+.stream{flex:1;overflow-y:auto;padding:22px 20px 8px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:11px;max-width:78%;animation:riseIn .4s ease both}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.av{width:26px;height:26px;border-radius:7px;flex:none;font:600 11px/26px var(--mono);text-align:center;color:#fff;background:var(--accent)}
+.msg.me .av{background:var(--ink2)}
+.bub{font:14.5px/1.5 var(--sans);color:var(--ink);background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:10px 13px}
+.msg.me .bub{background:var(--accent);color:#fff;border-color:transparent}
+.bub .tag{display:inline-block;font:600 9px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.bub .cta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.chip{font:600 12px/1 var(--sans);border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+.chip:hover{background:var(--accent-soft)} .chip.solid{background:var(--accent);color:#fff}
+.chip.warn{border-color:var(--flag);color:var(--flag)} .chip.warn.solid{background:var(--flag);color:#fff}
+.notif{border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;padding:9px 12px;font:13.5px/1.45 var(--sans)}
+.notif b{font-weight:600}
+.evi{margin-top:9px;border:1px solid var(--hair);border-radius:9px;overflow:hidden;background:var(--surface2)}
+.evi .r{display:flex;justify-content:space-between;gap:10px;padding:7px 11px;font:500 11.5px/1.5 var(--mono);border-bottom:1px solid var(--hair)}
+.evi .r:last-child{border-bottom:none} .evi .r b{color:var(--ink);font-weight:600}
+.evi .r .bad{color:var(--flag)} .evi .r .good{color:var(--ok)}
+.typing{display:inline-flex;gap:3px;padding:4px 0}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--faint);animation:tp 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tp{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.compose{border-top:1px solid var(--hair);padding:12px 18px 16px;background:var(--surface2)}
+.cbox{display:flex;gap:9px;align-items:flex-end;background:var(--surface);border:1px solid var(--hair);border-radius:12px;padding:6px 6px 6px 14px}
+.cbox:focus-within{border-color:var(--accent)}
+.cbox textarea{flex:1;border:none;background:none;resize:none;font:14.5px/1.4 var(--sans);color:var(--ink);max-height:120px;padding:7px 0;outline:none}
+.send{width:36px;height:36px;border-radius:9px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:15px;flex:none}
+.send:disabled{opacity:.4;cursor:default}
+.hints{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 9px}
+.hint{font:500 11.5px/1 var(--sans);color:var(--muted);border:1px solid var(--hair);border-radius:99px;padding:6px 11px;cursor:pointer;background:var(--surface)}
+.hint:hover{border-color:var(--accent);color:var(--accent)}
+/* canvas side */
+.canvas{border-left:1px solid var(--hair);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+.cv-h{padding:12px 15px;border-bottom:1px solid var(--hair);font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.cv-h .dot{width:7px;height:7px;border-radius:50%;background:var(--faint)} .cv-h .dot.live{background:var(--ok)}
+#map{height:230px;flex:none;background:var(--map-bg)}
+.cv-body{flex:1;overflow-y:auto;padding:14px 15px}
+.ord{font:13px/1.5 var(--sans)} .ord .empty{color:var(--muted);text-align:center;padding:26px 8px}
+.hero{font:600 20px/1.1 var(--sans);letter-spacing:-.01em;margin:0 0 3px;font-variant-numeric:tabular-nums}
+.heroSub{font:12.5px/1.4 var(--sans);color:var(--muted);margin:0 0 14px}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:grid;grid-template-columns:16px 1fr;gap:9px;animation:riseIn .4s ease both;padding-bottom:11px;position:relative}
+.steps .rail{display:flex;flex-direction:column;align-items:center}
+.steps .k{width:9px;height:9px;border-radius:50%;background:var(--faint);margin-top:3px}
+.steps li.on .k{background:var(--accent)} .steps li.ok .k{background:var(--ok)} .steps li.bad .k{background:var(--flag)}
+.steps .ln{width:2px;flex:1;background:var(--hair);margin:2px 0 -2px}.steps li:last-child .ln{display:none}
+.steps .t{font:600 13px/1.3 var(--sans)} .steps .s{font:12px/1.4 var(--sans);color:var(--muted)}
+.vbadge{display:inline-block;font:600 9px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;border-radius:4px;padding:4px 7px;margin-top:5px;border:1px solid var(--ok);color:var(--ok)}
+.vbadge.bad{border-color:var(--flag);color:var(--flag)}
+.rcpt{border:1px solid var(--hair);background:var(--surface2);border-radius:8px;padding:10px 12px;margin-top:12px;font:500 11px/1.7 var(--mono);color:var(--ink2)}
+.rcpt .r{display:flex;justify-content:space-between;gap:10px}.rcpt b{color:var(--ink);font-weight:600}
+/* agent console slide-over */
+.scrim{position:fixed;inset:0;background:rgba(20,22,20,.34);opacity:0;pointer-events:none;transition:.3s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.console{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:var(--paper);border-left:1px solid var(--hair);
+  box-shadow:-20px 0 50px rgba(0,0,0,.18);transform:translateX(100%);transition:transform .34s cubic-bezier(.2,.7,.2,1);z-index:21;display:flex;flex-direction:column}
+.console.on{transform:none}
+.console .ch{padding:15px 18px;border-bottom:1px solid var(--hair);background:var(--surface2)}
+.console .ch .eb{font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--flag)}
+.console .ch h2{font:600 17px/1.3 var(--sans);margin:6px 0 2px}.console .ch p{font:12.5px/1.4 var(--sans);color:var(--muted);margin:0}
+.console .cb{flex:1;overflow-y:auto;padding:16px 18px}
+#cmap{height:220px;border:1px solid var(--hair);border-radius:9px;background:var(--map-bg);margin-bottom:14px}
+.ev{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font:500 12px/1.5 var(--sans);border-bottom:1px solid var(--hair);padding:8px 0}
+.ev .l{color:var(--ink2)} .ev .v{font-family:var(--mono);font-weight:600;text-align:right} .ev .v.bad{color:var(--flag)} .ev .v.good{color:var(--ok)}
+.console .cf{padding:14px 18px;border-top:1px solid var(--hair);background:var(--surface2);display:flex;gap:10px}
+.abtn{flex:1;font:600 13.5px/1 var(--sans);border-radius:9px;padding:13px 0;cursor:pointer;border:1px solid var(--hair)}
+.abtn.refund{background:var(--flag);color:#fff;border-color:var(--flag)} .abtn.deny{background:var(--surface);color:var(--ink2)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="chat">
+    <div class="top">
+      <span class="brand"><b>janus</b> · chat delivery</span>
+      <span class="scn" id="scn">scenario · honest</span>
+      <span class="model" id="model"><span class="d" id="mdot"></span><span id="mtxt">intent: keywords</span></span>
+    </div>
+    <div class="stream" id="stream"></div>
+    <div class="compose">
+      <div class="hints" id="hints"></div>
+      <div class="cbox">
+        <textarea id="input" rows="1" placeholder="Message the delivery agent…"></textarea>
+        <button class="send" id="send">↑</button>
+      </div>
+    </div>
+  </div>
+  <div class="canvas">
+    <div class="cv-h"><span class="dot" id="cvdot"></span>live order · location truth</div>
+    <div id="map"></div>
+    <div class="cv-body"><div class="ord" id="ord"><div class="empty">No active order.<br>Ask the agent to order something.</div></div></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="console" id="console">
+  <div class="ch"><span class="eb">◆ agent escalation console</span><h2 id="cTitle">Delivery dispute</h2><p id="cSub">Review the location evidence and rule on the claim.</p></div>
+  <div class="cb"><div id="cmap"></div><div id="cEvidence"></div></div>
+  <div class="cf"><button class="abtn deny" id="cDeny">Uphold delivery</button><button class="abtn refund" id="cRefund">Confirm not delivered · refund</button></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var Q=new URLSearchParams(location.search);
+var API=(Q.get("api")||"https://janus-courier.fly.dev/courier").replace(/\/$/,"");
+var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function hav(a,b,c,d){var R=6371000,p=Math.PI/180,x=Math.sin((c-a)*p/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin((d-b)*p/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+
+/* ---------------- intent tree (broad) ---------------- */
+var INTENTS={
+  order:   {ex:["i want to order food","i'm hungry order something","get me lunch","order dinner","can you order food","i want to eat"]},
+  location:{ex:["deliver to 166 crosby street","my address is 5th avenue","use my current location","here is my address","send it here"]},
+  track:   {ex:["where is my order","how long until it arrives","track my delivery","is the driver close","whats the status"]},
+  notify:  {ex:["turn on notifications","text me updates","email me when it arrives","notify me","keep me posted"]},
+  dispute: {ex:["i didn't get my order","my food never arrived","the delivery is missing","the driver never came","i never received it"]},
+  escalate:{ex:["escalate this","i want a refund","report the driver","get me a human agent","raise a dispute"]},
+  affirm:  {ex:["yes","yeah go ahead","confirm","sounds good","do it please","ok"]},
+  deny:    {ex:["no","cancel that","never mind","stop","not now"]},
+  greet:   {ex:["hi","hello there","hey"]}
+};
+var KW={
+  order:["order","hungry","eat","food","lunch","dinner","breakfast","meal","pizza","burrito","deliver me","get me"],
+  location:["address","my location","current location","deliver to","street","avenue","ave "," st","road","zip","here is","send it here","use my"],
+  track:["where","status","how long","eta","track","coming","close","near","arriv"],
+  notify:["notif","notify","text me","email me","updates","alert","keep me posted","remind"],
+  dispute:["didn't get","didnt get","not receive","never arriv","never came","missing","didn't arriv","didnt arriv","didn't come","no delivery","where's my food","wheres my food"],
+  escalate:["escalate","dispute","refund","report","human","agent","complain","chargeback"],
+  affirm:["yes","yeah","yep","sure","ok","okay","confirm","go ahead","do it","please","sounds good"],
+  deny:["no","nope","cancel","nevermind","never mind","stop"],
+  greet:["hi","hello","hey","yo ","good morning","good evening"]
+};
+function kwScore(text){
+  var t=" "+text.toLowerCase()+" ",best="none",bs=0;
+  for(var k in KW){var s=0;KW[k].forEach(function(w){if(t.indexOf(w)>=0)s+=1+w.length/20;});if(s>bs){bs=s;best=k;}}
+  return {intent:best,conf:Math.min(.99,bs?0.5+bs*0.12:0),via:"keywords"};
+}
+/* progressive enhancement: small open-source model (transformers.js · MiniLM) */
+var EMB=null, PROTO={};
+async function loadModel(){
+  try{
+    var mod=await import("https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2");
+    mod.env.allowLocalModels=false;
+    var pipe=await mod.pipeline("feature-extraction","Xenova/all-MiniLM-L6-v2",{quantized:true});
+    EMB=async function(txt){var o=await pipe(txt,{pooling:"mean",normalize:true});return Array.from(o.data);};
+    for(var k in INTENTS){ PROTO[k]=[]; for(var i=0;i<INTENTS[k].ex.length;i++){ PROTO[k].push(await EMB(INTENTS[k].ex[i])); } }
+    $("mdot").classList.add("on"); $("mtxt").textContent="intent: MiniLM-L6 · ready";
+  }catch(e){ $("mtxt").textContent="intent: keywords (model offline)"; }
+}
+function cos(a,b){var s=0;for(var i=0;i<a.length;i++)s+=a[i]*b[i];return s;}
+async function classify(text){
+  var kw=kwScore(text);
+  if(!EMB) return kw;
+  try{
+    var v=await EMB(text),best="none",bs=-1;
+    for(var k in PROTO){var m=Math.max.apply(null,PROTO[k].map(function(p){return cos(v,p)}));if(m>bs){bs=m;best=k;}}
+    // blend: trust the model, but let a strong keyword hit win ties
+    if(kw.conf>0.85 && kw.intent!==best && bs<0.55) return kw;
+    return {intent:best,conf:Math.round(bs*100)/100,via:"MiniLM"};
+  }catch(e){ return kw; }
+}
+
+/* ---------------- chat UI ---------------- */
+var stream=$("stream");
+function scrollDown(){stream.scrollTop=stream.scrollHeight;}
+function bubble(who,html){
+  var m=document.createElement("div");m.className="msg "+(who==="me"?"me":"");
+  m.innerHTML='<div class="av">'+(who==="me"?"you":"◆")+'</div><div class="bub">'+html+'</div>';
+  stream.appendChild(m);scrollDown();return m.querySelector(".bub");
+}
+async function say(html,opts){                       // assistant, with a typing beat
+  opts=opts||{};
+  var m=document.createElement("div");m.className="msg";
+  m.innerHTML='<div class="av">◆</div><div class="bub"><span class="typing"><i></i><i></i><i></i></span></div>';
+  stream.appendChild(m);scrollDown();
+  await sleep(reduce?60:opts.fast?280:520);
+  m.querySelector(".bub").innerHTML=html;scrollDown();
+  return m.querySelector(".bub");
+}
+function ctaRow(bub,btns){
+  var row=document.createElement("div");row.className="cta";
+  btns.forEach(function(b){var el=document.createElement("button");el.className="chip "+(b.cls||"");el.textContent=b.label;el.onclick=function(){row.remove();b.on();};row.appendChild(el);});
+  bub.appendChild(row);scrollDown();
+}
+
+/* ---------------- map / canvas ---------------- */
+var map=new maplibregl.Map({container:"map",attributionControl:false,interactive:false,
+  style:{version:8,sources:{c:{type:"raster",tiles:["https://a.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"],tileSize:256}},layers:[{id:"c",type:"raster",source:"c"}]},
+  center:[-73.996,40.7246],zoom:13});
+var drvMk=null,tgtMk=null;
+function marker(color,size){var e=document.createElement("div");e.style.cssText="width:"+size+"px;height:"+size+"px;border-radius:50%;background:"+color+";border:3px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.35)";return e;}
+function ringEl(){var e=document.createElement("div");e.style.cssText="width:24px;height:24px;border:3px solid var(--accent);border-radius:50%;background:var(--accent-soft);box-sizing:border-box";return e;}
+function setTarget(lat,lng){if(!tgtMk)tgtMk=new maplibregl.Marker({element:ringEl(),anchor:"center"});tgtMk.setLngLat([lng,lat]).addTo(map);map.easeTo({center:[lng,lat],zoom:15,duration:600});}
+function setDriver(lat,lng,flagged){if(!drvMk)drvMk=new maplibregl.Marker({element:marker(flagged?"var(--flag)":"var(--ok)",16),anchor:"center"});drvMk.getElement().style.background=flagged?"var(--flag)":"var(--ok)";drvMk.setLngLat([lng,lat]).addTo(map);}
+
+var STAGE_LABEL={awaiting_driver:["Finding a courier","matching you with a driver"],assigned:["Courier assigned","heading to the restaurant"],en_route:["On the way","driver is en route"],at_dropoff:["At your door","driver reached the dropoff"],arrived:["Arrived","driver reported arrival"],delivered:["Delivered","order complete"]};
+function renderOrder(o){
+  var el=$("ord");
+  if(!o){el.innerHTML='<div class="empty">No active order.<br>Ask the agent to order something.</div>';return;}
+  var dist=o.dist_m!=null?o.dist_m:null;
+  var heroBig=(o.stage==="en_route"||o.stage==="at_dropoff")&&dist!=null?dist+" m":(STAGE_LABEL[o.stage]||[o.stage])[0];
+  var heroSub=(o.stage==="en_route"||o.stage==="at_dropoff")&&dist!=null?"driver's distance to your door":(STAGE_LABEL[o.stage]||["",""])[1];
+  var order=["awaiting_driver","assigned","en_route","at_dropoff","delivered"];
+  var cur=Math.max(order.indexOf(o.stage),o.stage==="arrived"?3:0);
+  var html='<div class="hero">'+heroBig+'</div><div class="heroSub">'+heroSub+'</div><ul class="steps">';
+  order.forEach(function(s,i){
+    var cls=i<cur?"ok":i===cur?"on":"";
+    if(o.stage==="delivered"&&i===4)cls=o.verified?"ok":"bad";
+    var extra=(i===4&&o.stage==="delivered")?'<span class="vbadge'+(o.verified?'':' bad')+'">'+(o.verified?'verified · at your door':'unverified')+'</span>':"";
+    html+='<li class="'+cls+'"><span class="rail"><span class="k"></span><span class="ln"></span></span><span><span class="t">'+STAGE_LABEL[s][0]+'</span><br><span class="s">'+STAGE_LABEL[s][1]+'</span>'+extra+'</span></li>';
+  });
+  html+='</ul>';
+  if(o.receipt) html+='<div class="rcpt"><div class="r"><span>receipt</span><b>'+o.receipt.id+'</b></div><div class="r"><span>verdict</span><b>'+(o.verified?"verified":"unverified")+' · '+(o.receipt.score!=null?o.receipt.score:"—")+'</b></div></div>';
+  el.innerHTML=html;
+}
+
+/* ---------------- backend + the courier sim ---------------- */
+var order=null, driverId=null, dropoff=null, pollT=null, lastPos=null, frozen=false;
+async function jget(p){return (await fetch(API+p,{cache:"no-store"})).json();}
+async function jpost(p,b){return (await fetch(API+p,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)})).json();}
+
+async function createOrder(fix,drv){
+  var d=await jpost("/order",{lat:fix.lat,lng:fix.lng,address:fix.display,driver_id:drv}); // ONE order, bound to the sim courier
+  order=d; dropoff={lat:d.dropoff[0],lng:d.dropoff[1]};
+  setTarget(dropoff.lat,dropoff.lng); renderOrder(d); $("cvdot").classList.add("live");
+  return d;
+}
+// headless courier simulator — real pings to the server, so the verdict is real.
+// The driver is already registered + bound to the order before this runs.
+async function dispatchCourier(fraud){
+  // spawn ~420 m out
+  var dLat=420/111320, dLng=420/(111320*Math.cos(dropoff.lat*Math.PI/180));
+  var pos={lat:dropoff.lat-dLat*0.8,lng:dropoff.lng-dLng*0.7};
+  var stopShort=fraud?170:0;                          // fraud: stop ~170 m short and mark delivered anyway
+  for(var step=0;step<40;step++){
+    var d=hav(pos.lat,pos.lng,dropoff.lat,dropoff.lng);
+    if(d<=Math.max(4,stopShort)) break;
+    var f=Math.min(1,(38)/d);                          // ~38 m per tick
+    pos.lat+= (dropoff.lat-pos.lat)*f; pos.lng+=(dropoff.lng-pos.lng)*f;
+    lastPos={lat:pos.lat,lng:pos.lng};
+    await jpost("/verify",{driver_id:driverId,lat:pos.lat,lng:pos.lng,action:"ping"});
+    setDriver(pos.lat,pos.lng,false);
+    await sleep(320);
+  }
+  // the claim: honest = at the door; fraud = from where they actually stopped
+  var claim=fraud?lastPos:{lat:dropoff.lat,lng:dropoff.lng};
+  var res=await jpost("/verify",{driver_id:driverId,lat:claim.lat,lng:claim.lng,action:"deliver"});
+  setDriver(claim.lat,claim.lng,res.verdict==="FLAGGED");
+  return res;
+}
+function startPolling(onStage){
+  var last=null;
+  clearInterval(pollT);
+  pollT=setInterval(async function(){
+    if(!order||frozen) return;                          // the final delivered render wins over a late poll
+    var o=await jget("/order/"+order.order_id); if(frozen) return; order=o; renderOrder(o);
+    if(o.stage!==last){ last=o.stage; onStage&&onStage(o); }
+  },1200);
+}
+
+/* ---------------- dialog state machine ---------------- */
+var state="idle", notifs=false, fraud=false, lastVerdict=null;
+$("scn").onclick=function(){fraud=!fraud;this.textContent="scenario · "+(fraud?"fraud":"honest");this.classList.toggle("fraud",fraud);};
+
+function notif(html){var b=bubble("bot","");b.parentElement.querySelector(".bub").className="bub";b.innerHTML='<div class="notif">🔔 '+html+'</div>';scrollDown();}
+async function milestone(text){ if(notifs){ notif(text); } else { await say(text,{fast:true}); } }
+
+async function beginOrder(){
+  state="await_location";
+  var b=await say("On it. Where should it go? Share your address, or use your current location.");
+  ctaRow(b,[{label:"📍 Use my location",cls:"solid",on:useLocation},{label:"Type an address",on:function(){$("input").focus();}}]);
+}
+function useLocation(){
+  if(!navigator.geolocation){ say("Geolocation is off — just type your address."); return; }
+  say("Getting your location…",{fast:true}).then(function(){
+    navigator.geolocation.getCurrentPosition(function(p){
+      resolveFix({lat:p.coords.latitude,lng:p.coords.longitude,display:"your current location"});
+    },function(){ say("Couldn't read your location — type the address instead."); });
+  });
+}
+async function resolveFix(fix){
+  if(fix.address&&!fix.lat){                          // geocode a typed address (strip the natural-language wrapper first)
+    var addr=fix.address
+      .replace(/^\s*(please\s+)?(deliver|send|bring|drop)(\s+it)?\s+(to|at|off\s+at)\s+/i,"")
+      .replace(/^\s*(my\s+address\s+is|address\s*:?|here'?s|it'?s|to)\s+/i,"").trim();
+    var g=await jpost("/geocode",{address:addr||fix.address});
+    if(g.error||g.throttled){ await say("I couldn't find that address — try a more specific one?"); return; }
+    fix={lat:g.lat,lng:g.lng,display:g.display_name};
+  }
+  window._fix=fix; setTarget(fix.lat,fix.lng);
+  state="await_confirm";
+  var b=await say("Deliver to <b>"+fix.display+"</b>?");
+  ctaRow(b,[{label:"Confirm order",cls:"solid",on:confirmOrder},{label:"Change",on:function(){beginOrder();}}]);
+}
+async function confirmOrder(){
+  state="delivering";
+  driverId="chat-"+Math.random().toString(36).slice(2,6);   // register the courier first, then bind ONE order to it
+  await jpost("/register",{driver_id:driverId,name:driverId});
+  await createOrder(window._fix,driverId);
+  var b=await say("Order placed. Finding you a courier now — I'll keep this panel live.");
+  ctaRow(b,[{label:"🔔 Turn on notifications",cls:"solid",on:enableNotifs}]);
+  frozen=false;
+  startPolling(async function(o){
+    if(o.stage==="en_route") await milestone("Your courier is on the way.");
+    if(o.stage==="at_dropoff") await milestone("Your courier is <b>at your door</b>.");
+  });
+  // run the real courier sim, then narrate the outcome
+  var res=await dispatchCourier(fraud); lastVerdict=res;
+  frozen=true; clearInterval(pollT); order=await jget("/order/"+order.order_id); renderOrder(order);
+  await sleep(400);
+  if(order.verified){
+    await milestone("<b>Delivered</b> — verified at your door. A signed receipt is on your order.");
+    state="delivered";
+  } else {
+    await milestone("The courier <b>marked your order delivered</b>.");
+    state="delivered";
+  }
+}
+function enableNotifs(){notifs=true;say("🔔 Notifications on — I'll ping you at every step (demo: shown here in chat).",{fast:true});}
+
+async function handleDispute(){
+  state="disputing";
+  await say("Let me pull the delivery evidence…",{fast:true});
+  var o=await jget("/order/"+order.order_id); order=o;
+  var dist=o.timeline&&o.timeline.length?null:null;
+  // read the real verdict
+  var far=lastVerdict?Math.round(lastVerdict.dist_dropoff_m):0;
+  if(o.verified){
+    var b=await say("The delivery was <b>verified at your door</b> — GPS, network and timing all checked out, and it's on a signed receipt. Do you still want to open a dispute?");
+    ctaRow(b,[{label:"Escalate anyway",cls:"warn",on:openConsole},{label:"No, it's fine",on:function(){say("Great — glad it arrived. 🙂");}}]);
+  } else {
+    var b2=await say("I checked. The courier marked it delivered, but Janus places them <b>"+far+" m from your door</b> — the location trail never reached it ("+(lastVerdict?lastVerdict.code:"not_at_dropoff")+"). This looks like a false 'delivered'.");
+    b2.insertAdjacentHTML("beforeend",'<div class="evi"><div class="r"><span>claim</span><b>delivered</b></div><div class="r"><span>verdict</span><b class="bad">'+(lastVerdict?lastVerdict.code:"not_at_dropoff")+'</b></div><div class="r"><span>distance to door</span><b class="bad">'+far+' m</b></div><div class="r"><span>score</span><b class="bad">'+(lastVerdict?lastVerdict.score:"0.15")+'</b></div></div>');
+    ctaRow(b2,[{label:"Escalate to an agent",cls:"warn solid",on:openConsole},{label:"Not now",on:function(){say("Okay — it'll stay on your order if you change your mind.");}}]);
+  }
+}
+
+/* ---------------- agent escalation console ---------------- */
+var cmap=null;
+async function openConsole(){
+  state="escalated";
+  await say("Escalating with the evidence pack to a human agent…",{fast:true});
+  $("scrim").classList.add("on"); $("console").classList.add("on");
+  var far=lastVerdict?Math.round(lastVerdict.dist_dropoff_m):0, flagged=!order.verified;
+  $("cTitle").textContent = flagged?"Disputed delivery · "+order.order_id:"Delivery review · "+order.order_id;
+  $("cSub").textContent = flagged?"The courier's claim conflicts with the location trail.":"The customer disputes a verified delivery.";
+  $("cEvidence").innerHTML=
+    '<div class="ev"><span class="l">courier claim</span><span class="v">delivered</span></div>'+
+    '<div class="ev"><span class="l">janus verdict</span><span class="v '+(flagged?"bad":"good")+'">'+(lastVerdict?lastVerdict.code:"—")+'</span></div>'+
+    '<div class="ev"><span class="l">distance to door</span><span class="v '+(flagged?"bad":"good")+'">'+far+' m</span></div>'+
+    '<div class="ev"><span class="l">device checks</span><span class="v '+(flagged?"bad":"good")+'">'+(lastVerdict&&lastVerdict.checks?Object.keys(lastVerdict.checks).map(function(k){return k[0]+":"+(lastVerdict.checks[k]==="fail"?"✗":"✓")}).join(" "):"—")+'</span></div>'+
+    '<div class="ev"><span class="l">signed receipt</span><span class="v">'+(order.receipt?order.receipt.id:"—")+'</span></div>';
+  // console map: door + the courier's actual last position
+  if(!cmap){ cmap=new maplibregl.Map({container:"cmap",attributionControl:false,style:map.getStyle(),center:[dropoff.lng,dropoff.lat],zoom:15}); }
+  setTimeout(function(){ cmap.resize();
+    new maplibregl.Marker({element:ringEl(),anchor:"center"}).setLngLat([dropoff.lng,dropoff.lat]).addTo(cmap);
+    if(lastPos) new maplibregl.Marker({element:marker(flagged?"var(--flag)":"var(--ok)",16),anchor:"center"}).setLngLat([lastPos.lng,lastPos.lat]).addTo(cmap);
+    var b=[[Math.min(lastPos?lastPos.lng:dropoff.lng,dropoff.lng),Math.min(lastPos?lastPos.lat:dropoff.lat,dropoff.lat)],[Math.max(lastPos?lastPos.lng:dropoff.lng,dropoff.lng),Math.max(lastPos?lastPos.lat:dropoff.lat,dropoff.lat)]];
+    cmap.fitBounds(b,{padding:70,maxZoom:16,duration:0});
+  },340);
+}
+function closeConsole(){$("scrim").classList.remove("on");$("console").classList.remove("on");}
+$("scrim").onclick=closeConsole;
+$("cDeny").onclick=async function(){closeConsole();state="resolved";await say("The agent upheld the delivery — the evidence supported the courier. No refund issued.",{fast:true});};
+$("cRefund").onclick=async function(){closeConsole();state="resolved";
+  await say("<b>Reviewed.</b> The trail confirms the courier stopped "+(lastVerdict?Math.round(lastVerdict.dist_dropoff_m):0)+" m short and never reached your door. Your order is refunded, and the courier is flagged. Signed evidence is attached to the case.",{fast:true});
+};
+
+/* ---------------- router ---------------- */
+async function route(text){
+  var r=await classify(text);
+  $("mtxt").textContent="intent: "+r.intent+" · "+r.via+(r.conf?" "+r.conf:"");
+  var it=r.intent;
+  // state-aware overrides
+  if(state==="await_confirm"&&it==="affirm") return confirmOrder();
+  if(state==="await_location"){ if(/\d|\bst\b|street|ave|road|location/i.test(text)&&it!=="order") return resolveFix({address:text}); if(it==="location") return resolveFix({address:text}); }
+  if(state==="delivered"&&(it==="dispute"||it==="escalate")) return handleDispute();
+  if((state==="disputing")&&it==="escalate") return openConsole();
+
+  switch(it){
+    case "greet": return say("Hey — I'm your delivery agent. Hungry? Tell me what and where.");
+    case "order": return beginOrder();
+    case "location": return resolveFix({address:text});
+    case "track":
+      if(!order) return say("You don't have an active order yet — want to start one?").then(function(b){ctaRow(b,[{label:"Order food",cls:"solid",on:beginOrder}]);});
+      var o=await jget("/order/"+order.order_id); order=o; renderOrder(o);
+      return say("Your order is <b>"+(STAGE_LABEL[o.stage]||[o.stage])[0].toLowerCase()+"</b>"+(o.dist_m!=null?", about "+o.dist_m+" m from your door":"")+". It's live on the right.");
+    case "notify": return enableNotifs();
+    case "dispute": if(order) return handleDispute(); return say("I don't see an order to dispute yet.");
+    case "escalate": if(order) return handleDispute(); return say("Nothing to escalate right now.");
+    case "affirm": return say("Got it.");
+    case "deny": return say("No problem.");
+    default: return say("I can order food, track a delivery, or help if something didn't arrive. What do you need?");
+  }
+}
+
+/* ---------------- input wiring ---------------- */
+var input=$("input");
+function autor(){input.style.height="auto";input.style.height=Math.min(120,input.scrollHeight)+"px";}
+input.addEventListener("input",autor);
+async function submit(){
+  var t=input.value.trim(); if(!t) return;
+  input.value="";autor(); bubble("me",t.replace(/</g,"&lt;"));
+  try{ await route(t); }catch(e){ say("Something glitched — try again."); }
+}
+$("send").onclick=submit;
+input.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();} });
+var HINTS=["I want to order lunch","Where's my order?","I didn't get my order"];
+HINTS.forEach(function(h){var el=document.createElement("button");el.className="hint";el.textContent=h;el.onclick=function(){input.value=h;submit();};$("hints").appendChild(el);});
+
+/* opening line + model load */
+say("Hi — I'm your delivery agent. I can order food, track it in real time, and if something goes wrong I'll check what actually happened. What are you hungry for?");
+loadModel();
+})();
+</script>
+</body>
+</html>
