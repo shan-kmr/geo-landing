@@ -174,6 +174,19 @@ async function post(action){
 }
 var claimHold=0;
 function ping(){ post("ping").then(function(res){ if(res) applyVerdict(res,true); }); }
+// the server is the source of truth for the dropoff: a late-binding order or a
+// dispatcher move can change it after we registered, so poll it (like the phone app)
+async function pollJob(){
+  try{
+    var j=await (await fetch(API+"/driver/"+id,{cache:"no-store"})).json();
+    if(j&&j.dropoff&&(!dropoff||Math.abs(j.dropoff[0]-dropoff.lat)>1e-6||Math.abs(j.dropoff[1]-dropoff.lng)>1e-6)){
+      dropoff={lat:j.dropoff[0],lng:j.dropoff[1]}; RADIUS=j.radius_m||RADIUS;
+      if(tgtMk) tgtMk.setLngLat([dropoff.lng,dropoff.lat]);
+      if(map.getSource(lineSrc)) map.getSource(lineSrc).setData(navGeo());
+      $("status").innerHTML="Dropoff set — <b>"+Math.round(dist())+" m</b> away. Press <b>Start driving</b>.";
+    }
+  }catch(e){}
+}
 function applyVerdict(res,quiet){
   if(quiet && performance.now()<claimHold) return;   // a fresh claim verdict holds; pings don't stomp it
   lastVerdict=res;
@@ -196,8 +209,8 @@ $("deliver").addEventListener("click",function(){ claimHold=performance.now()+50
   $("status").innerHTML=(r.verdict==="VERIFIED")?"<b>Delivered · verified.</b> A signed receipt was minted.":"Marked <b>delivered</b> — recorded as unverified ("+Math.round(r.dist_dropoff_m)+" m).";
   map.easeTo({center:[dropoff.lng,dropoff.lat],zoom:16,duration:600}); } }); });
 
-// stream real pings to the server every 2s while the sim runs
-setInterval(function(){ if(sim&&!dragging) ping(); },2000);
+// stream real pings + keep the dropoff in sync with the server every 2s
+setInterval(function(){ pollJob(); if(sim&&!dragging) ping(); },2000);
 boot();
 })();
 </script>
