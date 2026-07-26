@@ -263,30 +263,27 @@ var order=null, driverId=null, dropoff=null, pollT=null, lastPos=null, frozen=fa
 async function jget(p){return (await fetch(API+p,{cache:"no-store"})).json();}
 async function jpost(p,b){return (await fetch(API+p,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(b)})).json();}
 
-async function createOrder(fix,drv){
-  var d=await jpost("/order",{lat:fix.lat,lng:fix.lng,address:fix.display,driver_id:drv}); // ONE order, bound to the sim courier
+async function createOrder(fix){
+  var d=await jpost("/order",{lat:fix.lat,lng:fix.lng,address:fix.display}); // awaiting_driver; a courier binds via register (driver tab or auto-sim)
   order=d; dropoff={lat:d.dropoff[0],lng:d.dropoff[1]};
   setTarget(dropoff.lat,dropoff.lng); renderOrder(d); $("cvdot").classList.add("live");
   return d;
 }
-// headless courier simulator — real pings to the server, so the verdict is real.
-// The driver is already registered + bound to the order before this runs.
+// headless courier sim — real pings at a realistic pace (~12 m/s), so the verdict
+// is real AND it's watchable in the control/driver tabs (no false impossible_travel).
 async function dispatchCourier(fraud){
-  // spawn ~420 m out
-  var dLat=420/111320, dLng=420/(111320*Math.cos(dropoff.lat*Math.PI/180));
-  var pos={lat:dropoff.lat-dLat*0.8,lng:dropoff.lng-dLng*0.7};
-  var stopShort=fraud?170:0;                          // fraud: stop ~170 m short and mark delivered anyway
-  for(var step=0;step<40;step++){
+  var dLat=450/111320, dLng=450/(111320*Math.cos(dropoff.lat*Math.PI/180));
+  var pos={lat:dropoff.lat-dLat*0.85,lng:dropoff.lng-dLng*0.6};
+  var stopShort=fraud?150:0;                          // fraud: stop ~150 m short and mark delivered anyway
+  for(var step=0;step<200;step++){
+    if(frozen) return null;
     var d=hav(pos.lat,pos.lng,dropoff.lat,dropoff.lng);
-    if(d<=Math.max(4,stopShort)) break;
-    var f=Math.min(1,(38)/d);                          // ~38 m per tick
-    pos.lat+= (dropoff.lat-pos.lat)*f; pos.lng+=(dropoff.lng-pos.lng)*f;
-    lastPos={lat:pos.lat,lng:pos.lng};
+    if(d<=Math.max(5,stopShort)) break;
+    var f=Math.min(1,24/d);                            // ~24 m per 2s tick ≈ 12 m/s
+    pos.lat+=(dropoff.lat-pos.lat)*f; pos.lng+=(dropoff.lng-pos.lng)*f; lastPos={lat:pos.lat,lng:pos.lng};
     await jpost("/verify",{driver_id:driverId,lat:pos.lat,lng:pos.lng,action:"ping"});
-    setDriver(pos.lat,pos.lng,false);
-    await sleep(320);
+    setDriver(pos.lat,pos.lng,false); await sleep(2000);
   }
-  // the claim: honest = at the door; fraud = from where they actually stopped
   var claim=fraud?lastPos:{lat:dropoff.lat,lng:dropoff.lng};
   var res=await jpost("/verify",{driver_id:driverId,lat:claim.lat,lng:claim.lng,action:"deliver"});
   setDriver(claim.lat,claim.lng,res.verdict==="FLAGGED");
@@ -316,67 +313,83 @@ async function beginOrder(){
 }
 function useLocation(){
   if(!navigator.geolocation){ say("Geolocation is off — just type your address."); return; }
-  say("Getting your location…",{fast:true}).then(function(){
-    navigator.geolocation.getCurrentPosition(function(p){
-      resolveFix({lat:p.coords.latitude,lng:p.coords.longitude,display:"your current location"});
+  say("📍 Getting your location…",{fast:true}).then(function(){
+    navigator.geolocation.getCurrentPosition(async function(p){
+      var g=await jpost("/revgeo",{lat:p.coords.latitude,lng:p.coords.longitude});   // GPS -> a street address to confirm
+      showAddressStage(p.coords.latitude,p.coords.longitude,(g&&g.address)||"your current location");
     },function(){ say("Couldn't read your location — type the address instead."); });
   });
 }
-async function resolveFix(fix){
-  if(fix.address&&!fix.lat){                          // geocode a typed address (strip the natural-language wrapper first)
-    var addr=fix.address
-      .replace(/^\s*(please\s+)?(deliver|send|bring|drop)(\s+it)?\s+(to|at|off\s+at)\s+/i,"")
-      .replace(/^\s*(my\s+address\s+is|address\s*:?|here'?s|it'?s|to)\s+/i,"").trim();
-    var g=await jpost("/geocode",{address:addr||fix.address});
-    if(g.error||g.throttled){ await say("I couldn't find that address — try a more specific one?"); return; }
-    fix={lat:g.lat,lng:g.lng,display:g.display_name};
-  }
-  window._fix=fix; setTarget(fix.lat,fix.lng);
-  state="await_confirm";
-  var b=await say("Deliver to <b>"+fix.display+"</b>?");
-  ctaRow(b,[{label:"Confirm order",cls:"solid",on:confirmOrder},{label:"Change",on:function(){beginOrder();}}]);
+async function resolveFix(fix){                        // a typed address (strip the natural-language wrapper first)
+  var addr=(fix.address||"")
+    .replace(/^\s*(please\s+)?(deliver|send|bring|drop)(\s+it)?\s+(to|at|off\s+at)\s+/i,"")
+    .replace(/^\s*(my\s+address\s+is|address\s*:?|here'?s|it'?s|to)\s+/i,"").trim();
+  var g=await jpost("/geocode",{address:addr||fix.address});
+  if(g.error||g.throttled){ await say("I couldn't find that address — try a more specific one?"); return; }
+  showAddressStage(g.lat,g.lng,g.display_name);
 }
+async function showAddressStage(lat,lng,addr){
+  window._fix={lat:lat,lng:lng,display:addr,base:addr};
+  setTarget(lat,lng); state="await_apt";
+  var b=await say("📍 Delivering to <b>"+addr+"</b>.<br>Add an apartment or floor — just type it — or confirm as-is.");
+  ctaRow(b,[{label:"Confirm order",cls:"solid",on:confirmOrder},{label:"Different address",on:beginOrder}]);
+}
+var said={};
 async function confirmOrder(){
-  state="delivering";
-  driverId="chat-"+Math.random().toString(36).slice(2,6);   // register the courier first, then bind ONE order to it
-  await jpost("/register",{driver_id:driverId,name:driverId});
-  await createOrder(window._fix,driverId);
-  var b=await say("Order placed. Finding you a courier now — I'll keep this panel live.");
+  state="delivering"; said={};
+  await createOrder(window._fix);                       // awaiting_driver
+  var b=await say("Order placed. Finding you a courier — you can watch it move in the <b>control</b> and <b>driver</b> tabs.");
   ctaRow(b,[{label:"🔔 Turn on notifications",cls:"solid",on:enableNotifs}]);
-  frozen=false;
-  startPolling(async function(o){
-    if(o.stage==="en_route") await milestone("Your courier is on the way.");
-    if(o.stage==="at_dropoff") await milestone("Your courier is <b>at your door</b>.");
-  });
-  // run the real courier sim, then narrate the outcome
-  var res=await dispatchCourier(fraud); lastVerdict=res;
+  frozen=false; startPolling(narrateStage);
+  // BOTH mode: give a real courier (driver tab) ~8s to accept; else auto-dispatch the slow sim
+  var manual=false;
+  for(var i=0;i<8;i++){ var o=await jget("/order/"+order.order_id); if(o.driver_id){manual=true;driverId=o.driver_id;break;} await sleep(1000); }
+  await milestone("A courier accepted your order"+(manual?" — they're driving it live":"")+".");
+  if(!manual){ driverId="chat-"+Math.random().toString(36).slice(2,6); await jpost("/register",{driver_id:driverId,name:driverId}); await dispatchCourier(fraud); }
+  else { await waitForDelivered(); }                    // human-driven in the driver tab
   frozen=true; clearInterval(pollT); order=await jget("/order/"+order.order_id); renderOrder(order);
-  await sleep(400);
-  if(order.verified){
-    await milestone("<b>Delivered</b> — verified at your door. A signed receipt is on your order.");
-    state="delivered";
-  } else {
-    await milestone("The courier <b>marked your order delivered</b>.");
-    state="delivered";
-  }
+  await sleep(300);
+  if(order.verified) await milestone("<b>Delivered</b> — verified at your door. A signed receipt is on your order.");
+  else await milestone("The courier <b>marked your order delivered</b>.");
+  state="delivered";
+}
+async function waitForDelivered(){
+  for(var i=0;i<200&&!frozen;i++){ var o=await jget("/order/"+order.order_id); if(o.stage==="delivered") return; await sleep(2000); }
+}
+async function narrateStage(o){
+  if(o.stage==="en_route"&&!said.en){said.en=1; await milestone("Your courier is on the way.");}
+  if(o.dist_m!=null&&o.dist_m<200&&o.stage!=="delivered"&&!said.near){said.near=1; await milestone("Your courier is <b>nearby</b> — about "+Math.round(o.dist_m)+" m away.");}
+  if(o.stage==="at_dropoff"&&!said.door){said.door=1; await milestone("Your courier is <b>at your door</b>.");}
 }
 function enableNotifs(){notifs=true;say("🔔 Notifications on — I'll ping you at every step (demo: shown here in chat).",{fast:true});}
 
+var disputeId=null;
 async function handleDispute(){
   state="disputing";
   await say("Let me pull the delivery evidence…",{fast:true});
-  var o=await jget("/order/"+order.order_id); order=o;
-  var dist=o.timeline&&o.timeline.length?null:null;
-  // read the real verdict
-  var far=lastVerdict?Math.round(lastVerdict.dist_dropoff_m):0;
-  if(o.verified){
-    var b=await say("The delivery was <b>verified at your door</b> — GPS, network and timing all checked out, and it's on a signed receipt. Do you still want to open a dispute?");
-    ctaRow(b,[{label:"Escalate anyway",cls:"warn",on:openConsole},{label:"No, it's fine",on:function(){say("Great — glad it arrived. 🙂");}}]);
+  var d=await jpost("/dispute",{order_id:order.order_id,reason:"customer says not received"}); // opens a server dispute the control tab will list
+  if(d.error){ await say("I couldn't find that order to check."); return; }
+  disputeId=d.dispute_id; order=await jget("/order/"+order.order_id); renderOrder(order);
+  var far=Math.round(d.dist_m||0);
+  if(d.verified){
+    var b=await say("The delivery was <b>verified at your door</b> — GPS, network and timing all checked out, on a signed receipt. Still want a human agent to review it?");
+    ctaRow(b,[{label:"Escalate anyway",cls:"warn",on:escalate},{label:"No, it's fine",on:function(){say("Great — glad it arrived. 🙂");}}]);
   } else {
-    var b2=await say("I checked. The courier marked it delivered, but Janus places them <b>"+far+" m from your door</b> — the location trail never reached it ("+(lastVerdict?lastVerdict.code:"not_at_dropoff")+"). This looks like a false 'delivered'.");
-    b2.insertAdjacentHTML("beforeend",'<div class="evi"><div class="r"><span>claim</span><b>delivered</b></div><div class="r"><span>verdict</span><b class="bad">'+(lastVerdict?lastVerdict.code:"not_at_dropoff")+'</b></div><div class="r"><span>distance to door</span><b class="bad">'+far+' m</b></div><div class="r"><span>score</span><b class="bad">'+(lastVerdict?lastVerdict.score:"0.15")+'</b></div></div>');
-    ctaRow(b2,[{label:"Escalate to an agent",cls:"warn solid",on:openConsole},{label:"Not now",on:function(){say("Okay — it'll stay on your order if you change your mind.");}}]);
+    var b2=await say("I checked. The courier marked it delivered, but Janus places them <b>"+far+" m from your door</b> — the location trail never reached it ("+(d.code||"not_at_dropoff")+"). This looks like a false 'delivered'.");
+    b2.insertAdjacentHTML("beforeend",'<div class="evi"><div class="r"><span>claim</span><b>delivered</b></div><div class="r"><span>verdict</span><b class="bad">'+(d.code||"not_at_dropoff")+'</b></div><div class="r"><span>distance to door</span><b class="bad">'+far+' m</b></div><div class="r"><span>score</span><b class="bad">'+(d.score!=null?d.score:"0.15")+'</b></div></div>');
+    ctaRow(b2,[{label:"Escalate to an agent",cls:"warn solid",on:escalate},{label:"Not now",on:function(){say("Okay — it'll stay on your order if you change your mind.");}}]);
   }
+}
+async function escalate(){
+  state="escalated";
+  await say("Escalated to a human agent — I've pushed the evidence pack to the <b>control panel</b>. I'll update you the moment they rule.",{fast:true});
+  var t=setInterval(async function(){
+    var d=await jget("/dispute/"+disputeId);
+    if(d&&d.status&&d.status!=="open"){ clearInterval(t); state="resolved";
+      if(d.status==="refunded") say("<b>Reviewed.</b> The agent confirmed the courier never reached your door"+(d.dist_m?" ("+Math.round(d.dist_m)+" m short)":"")+". Your order is refunded and the courier is flagged. Signed evidence is on the case.");
+      else say("The agent reviewed it and <b>upheld the delivery</b> — the evidence supported the courier. No refund.");
+    }
+  },1500);
 }
 
 /* ---------------- agent escalation console ---------------- */
@@ -416,10 +429,11 @@ async function route(text){
   $("mtxt").textContent="intent: "+r.intent+" · "+r.via+(r.conf?" "+r.conf:"");
   var it=r.intent;
   // state-aware overrides
+  if(state==="await_apt"){ if(it==="deny"||it==="order") return beginOrder(); if(it!=="affirm"){ window._fix.display=window._fix.base+" · "+text; } return confirmOrder(); }
   if(state==="await_confirm"&&it==="affirm") return confirmOrder();
   if(state==="await_location"){ if(/\d|\bst\b|street|ave|road|location/i.test(text)&&it!=="order") return resolveFix({address:text}); if(it==="location") return resolveFix({address:text}); }
   if(state==="delivered"&&(it==="dispute"||it==="escalate")) return handleDispute();
-  if((state==="disputing")&&it==="escalate") return openConsole();
+  if(state==="disputing"&&(it==="escalate"||it==="affirm")) return escalate();
 
   switch(it){
     case "greet": return say("Hey — I'm your delivery agent. Hungry? Tell me what and where.");

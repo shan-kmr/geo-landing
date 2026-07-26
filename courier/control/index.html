@@ -48,6 +48,18 @@ html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-fam
 .ev.bad{border-left-color:var(--flag);background:var(--accent-soft)} .ev.bad .tag{color:var(--flag);border-color:var(--flag)} .ev.bad .m{color:var(--ink)}
 .ev.act{border-left-color:var(--accent)} .ev.act .tag{color:var(--accent);border-color:var(--accent)}
 .empty{padding:24px 16px;font:13px/1.5 var(--sans);color:var(--muted);text-align:center}
+/* escalated disputes (from the chat) — the agent rules here */
+#disputes:empty{display:none}
+.dcard{margin:10px 12px;border:1.5px solid var(--flag);border-radius:10px;background:var(--surface2);overflow:hidden;animation:riseIn .4s ease both}
+.dcard .dh{font:600 10px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--flag);padding:11px 13px 0}
+.dcard .da{font:600 13.5px/1.3 var(--sans);padding:5px 13px 2px}
+.dcard .dm{font:12px/1.5 var(--sans);color:var(--ink2);padding:2px 13px 9px} .dcard .dm b{color:var(--ink)}
+.dcard .de{display:grid;grid-template-columns:1fr auto;gap:3px 8px;font:500 11.5px/1.6 var(--mono);padding:0 13px 11px}
+.dcard .de .bad{color:var(--flag)} .dcard .de .good{color:var(--ok)}
+.dcard .dacts{display:flex;gap:8px;padding:0 13px 12px}
+.dcard .db{flex:1;font:600 12px/1 var(--sans);border-radius:8px;padding:11px 0;cursor:pointer;border:1px solid var(--hair)}
+.dcard .db.refund{background:var(--flag);color:#fff;border-color:var(--flag)} .dcard .db.uphold{background:var(--surface);color:var(--ink2)}
+.dcard .done{padding:2px 13px 13px;font:600 12px/1.4 var(--sans);color:var(--ok)} .dcard .done.up{color:var(--muted)}
 /* markers */
 .drv{width:34px;height:34px;position:relative;pointer-events:none}
 .drv .halo{position:absolute;inset:0;border-radius:50%;background:var(--ok);opacity:.16}
@@ -69,6 +81,7 @@ html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-fam
   </div>
   <div class="ledger">
     <div class="lh"><span class="live" id="live"></span><b>ledger</b><span class="cnt" id="cnt">—</span></div>
+    <div id="disputes"></div>
     <div class="log" id="log"><div class="empty" id="empty">Waiting for activity… open the order and driver pages.</div></div>
   </div>
 </div>
@@ -147,10 +160,40 @@ function pushEvents(evs){
   if(atBottom||reduce) log.scrollTop=log.scrollHeight;
 }
 
+/* ---- escalated disputes: the chat opens them, the agent rules here ---- */
+var resolvedIds={};
+function renderDisputes(list){
+  var box=$("disputes"), open=(list||[]).filter(function(d){return d.status==="open";});
+  var ids=open.map(function(d){return d.dispute_id});
+  [].slice.call(box.children).forEach(function(c){ if(ids.indexOf(c.dataset.id)<0 && !resolvedIds[c.dataset.id]) c.remove(); });
+  open.forEach(function(d){
+    if(box.querySelector('[data-id="'+d.dispute_id+'"]')) return;
+    var flagged=!d.verified;
+    var checks=d.checks?Object.keys(d.checks).map(function(k){return '<span class="'+(d.checks[k]==="fail"?"bad":"good")+'">'+k[0]+':'+(d.checks[k]==="fail"?"✗":"✓")+'</span>'}).join(" "):"—";
+    var c=document.createElement("div"); c.className="dcard"; c.dataset.id=d.dispute_id;
+    c.innerHTML='<div class="dh">⚠ delivery dispute · '+d.dispute_id+'</div>'
+      +'<div class="da">'+(d.address||("order "+d.order_id))+'</div>'
+      +'<div class="dm">Courier claims <b>delivered</b>. Janus verdict: <b style="color:var(--flag)">'+(d.code||"—")+'</b> — the trail conflicts with the claim.</div>'
+      +'<div class="de"><span>distance to door</span><span class="'+(flagged?"bad":"good")+'">'+Math.round(d.dist_m||0)+' m</span>'
+      +'<span>device checks</span><span>'+checks+'</span>'
+      +'<span>score</span><span class="'+(flagged?"bad":"good")+'">'+(d.score!=null?d.score:"—")+'</span></div>'
+      +'<div class="dacts"><button class="db uphold">Uphold delivery</button><button class="db refund">Confirm not delivered · refund</button></div>';
+    c.querySelector(".uphold").onclick=function(){resolveDispute(d.dispute_id,"uphold",c)};
+    c.querySelector(".refund").onclick=function(){resolveDispute(d.dispute_id,"refund",c)};
+    box.appendChild(c);
+  });
+}
+async function resolveDispute(id,decision,card){
+  resolvedIds[id]=1;
+  card.querySelector(".dacts").outerHTML='<div class="done'+(decision==="uphold"?" up":"")+'">'+(decision==="refund"?"✓ Refunded · courier flagged — sent back to the customer":"Delivery upheld — no refund")+'</div>';
+  try{ await fetch(API+"/dispute/"+id+"/resolve",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({decision:decision})}); }catch(e){}
+  setTimeout(function(){card.remove()},4500);
+}
 async function poll(){
   try{
     var s=await (await fetch(API+"/state",{cache:"no-store"})).json(); renderState(s.couriers);
     var ev=await (await fetch(API+"/events?since="+cursor,{cache:"no-store"})).json(); pushEvents(ev.events);
+    var dz=await (await fetch(API+"/disputes",{cache:"no-store"})).json(); renderDisputes(dz.disputes);
     $("live").style.background="var(--ok)";
   }catch(e){ $("live").style.background="var(--flag)"; }
   setTimeout(poll,1500);
