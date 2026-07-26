@@ -341,12 +341,17 @@ async function confirmOrder(){
   var b=await say("Order placed. Finding you a courier — you can watch it move in the <b>control</b> and <b>driver</b> tabs.");
   ctaRow(b,[{label:"🔔 Turn on notifications",cls:"solid",on:enableNotifs}]);
   frozen=false; startPolling(narrateStage);
-  // BOTH mode: give a real courier (driver tab) ~8s to accept; else auto-dispatch the slow sim
+  // BOTH mode: give a real courier (driver tab) ~8s to ACTIVELY start driving (order reaches
+  // en_route). Mere binding to a stale/idle driver doesn't count — else the app takes over.
   var manual=false;
-  for(var i=0;i<8;i++){ var o=await jget("/order/"+order.order_id); if(o.driver_id){manual=true;driverId=o.driver_id;break;} await sleep(1000); }
+  for(var i=0;i<8;i++){ var o=await jget("/order/"+order.order_id); driverId=o.driver_id;
+    if(["en_route","at_dropoff","delivered"].indexOf(o.stage)>=0){manual=true;break;} await sleep(1000); }
   await milestone("A courier accepted your order"+(manual?" — they're driving it live":"")+".");
-  if(!manual){ driverId="chat-"+Math.random().toString(36).slice(2,6); await jpost("/register",{driver_id:driverId,name:driverId}); await dispatchCourier(fraud); }
-  else { await waitForDelivered(); }                    // human-driven in the driver tab
+  if(manual){ await waitForDelivered(); }               // human-driven in the driver tab
+  else {                                                // nobody's actively driving it -> the app dispatches its own courier
+    if(!driverId){ driverId="chat-"+Math.random().toString(36).slice(2,6); await jpost("/register",{driver_id:driverId,name:driverId}); driverId=(await jget("/order/"+order.order_id)).driver_id||driverId; }
+    await dispatchCourier(fraud);
+  }
   frozen=true; clearInterval(pollT); order=await jget("/order/"+order.order_id); renderOrder(order);
   await sleep(300);
   if(order.verified) await milestone("<b>Delivered</b> — verified at your door. A signed receipt is on your order.");
