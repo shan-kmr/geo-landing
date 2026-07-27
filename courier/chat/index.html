@@ -29,7 +29,7 @@
 html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 @keyframes riseIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
-.app{display:grid;grid-template-columns:1fr 420px;height:100vh}
+.app{display:grid;grid-template-columns:1fr 420px;height:calc(100vh - 34px);margin-top:34px}
 @media (max-width:860px){.app{grid-template-columns:1fr;grid-template-rows:1fr 300px}}
 /* chat side */
 .chat{display:flex;flex-direction:column;min-height:0;position:relative}
@@ -476,5 +476,18 @@ say("Hi — I'm your delivery agent. I can order food, track it in real time, an
 loadModel();
 })();
 </script>
+<script>/* demo surface switcher — the other three surfaces each open in a new tab */(function(){
+var here=(location.pathname.match(/\/(chat|control|drive|order)\//)||[])[1]||"chat";
+var s=document.createElement("style");
+s.textContent='.demobar{position:fixed;top:0;left:0;right:0;height:34px;z-index:9000;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--surface2);border-bottom:1px solid var(--hair);font-family:var(--mono)}'
++'.demobar a{text-decoration:none}.demobar .b{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}'
++'.demobar nav{margin-left:auto;display:flex;gap:6px}.demobar nav a{font:600 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border:1px solid var(--hair);border-radius:99px;padding:5px 10px;background:var(--surface)}'
++'.demobar nav a:hover{border-color:var(--accent);color:var(--accent)}.demobar nav a.on{background:var(--accent);color:#fff;border-color:var(--accent)}';
+document.head.appendChild(s);
+var b=document.createElement("div");b.className="demobar";
+var L=[["chat","customer"],["control","dispatch"],["drive","driver"],["order","buyer"]];
+b.innerHTML='<a class="b" href="../chat/'+location.search+'">◆ janus · delivery demo</a><nav>'+L.map(function(x){return '<a href="../'+x[0]+'/'+location.search+'"'+(x[0]===here?' class="on"':' target="_blank"')+'>'+x[1]+'</a>'}).join('')+'</nav>';
+document.body.insertBefore(b,document.body.firstChild);
+})();</script>
 </body>
 </html>
