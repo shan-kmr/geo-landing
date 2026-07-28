@@ -272,8 +272,9 @@ async function createOrder(fix){
 // headless courier sim — real pings at a realistic pace (~12 m/s), so the verdict
 // is real AND it's watchable in the control/driver tabs (no false impossible_travel).
 async function dispatchCourier(fraud){
-  var dLat=450/111320, dLng=450/(111320*Math.cos(dropoff.lat*Math.PI/180));
-  var pos={lat:dropoff.lat-dLat*0.85,lng:dropoff.lng-dLng*0.6};
+  var SPAWN_M=200;                                   // courier starts ~200 m from the door
+  var dLat=SPAWN_M/111320, dLng=SPAWN_M/(111320*Math.cos(dropoff.lat*Math.PI/180));
+  var pos={lat:dropoff.lat-dLat*0.82,lng:dropoff.lng-dLng*0.57}; // unit-ish vector → true ~200 m offset
   var stopShort=fraud?150:0;                          // fraud: stop ~150 m short and mark delivered anyway
   for(var step=0;step<200;step++){
     if(frozen) return null;
