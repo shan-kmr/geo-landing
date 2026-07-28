@@ -91,8 +91,10 @@ var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 var $=function(id){return document.getElementById(id)};
 var Q=new URLSearchParams(location.search);
 var API=(Q.get("api")||"https://janus-courier.fly.dev/courier").replace(/\/$/,"");
-var RADIUS=80, id="ws-"+Math.random().toString(36).slice(2,6);
-var SPEED=14, SPAWN_M=300;                 // ~50 km/h drive; spawn ~300 m out (arrives in ~20s)
+// stable id across tab re-opens (?fresh forces a new one) — stops the ledger piling up ws-XXXX dots
+var RADIUS=80, id=(!Q.has("fresh")&&localStorage.getItem("janus-drv"))||("ws-"+Math.random().toString(36).slice(2,6));
+try{localStorage.setItem("janus-drv",id);}catch(e){}
+var SPEED=14, SPAWN_M=200;                 // ~50 km/h drive; spawn ~200 m out (arrives in ~15s)
 $("who").textContent=id;
 
 function hav(a,b,c,d){var R=6371000,p=Math.PI/180,dphi=(c-a)*p,dl=(d-b)*p,x=Math.sin(dphi/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(x)));}
@@ -168,7 +170,7 @@ async function post(action){
   if(!sim) return null;
   try{
     var r=await fetch(API+"/verify",{method:"POST",headers:{"content-type":"application/json"},
-      body:JSON.stringify({driver_id:id,lat:sim.lat,lng:sim.lng,action:action})});
+      body:JSON.stringify({driver_id:id,lat:sim.lat,lng:sim.lng,action:action,demo:true})});
     return await r.json();
   }catch(e){ return null; }
 }

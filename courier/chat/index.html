@@ -282,11 +282,11 @@ async function dispatchCourier(fraud){
     if(d<=Math.max(5,stopShort)) break;
     var f=Math.min(1,24/d);                            // ~24 m per 2s tick ≈ 12 m/s
     pos.lat+=(dropoff.lat-pos.lat)*f; pos.lng+=(dropoff.lng-pos.lng)*f; lastPos={lat:pos.lat,lng:pos.lng};
-    await jpost("/verify",{driver_id:driverId,lat:pos.lat,lng:pos.lng,action:"ping"});
+    await jpost("/verify",{driver_id:driverId,lat:pos.lat,lng:pos.lng,action:"ping",demo:true});
     setDriver(pos.lat,pos.lng,false); await sleep(2000);
   }
   var claim=fraud?lastPos:{lat:dropoff.lat,lng:dropoff.lng};
-  var res=await jpost("/verify",{driver_id:driverId,lat:claim.lat,lng:claim.lng,action:"deliver"});
+  var res=await jpost("/verify",{driver_id:driverId,lat:claim.lat,lng:claim.lng,action:"deliver",demo:true});
   setDriver(claim.lat,claim.lng,res.verdict==="FLAGGED");
   return res;
 }
