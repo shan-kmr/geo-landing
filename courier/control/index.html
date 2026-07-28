@@ -192,7 +192,12 @@ async function resolveDispute(id,decision,card){
 async function poll(){
   try{
     var s=await (await fetch(API+"/state",{cache:"no-store"})).json(); renderState(s.couriers);
-    var ev=await (await fetch(API+"/events?since="+cursor,{cache:"no-store"})).json(); pushEvents(ev.events);
+    var ev=await (await fetch(API+"/events?since="+cursor,{cache:"no-store"})).json();
+    if(ev.seq<cursor){                       // server restarted (seq reset) → re-sync the ledger
+      log.innerHTML=""; cursor=0; count=0; $("cnt").textContent="0 events";
+      ev=await (await fetch(API+"/events?since=0",{cache:"no-store"})).json();
+    }
+    pushEvents(ev.events);
     var dz=await (await fetch(API+"/disputes",{cache:"no-store"})).json(); renderDisputes(dz.disputes);
     $("live").style.background="var(--ok)";
   }catch(e){ $("live").style.background="var(--flag)"; }
