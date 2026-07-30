@@ -219,6 +219,10 @@ var L=[["chat","customer"],["control","dispatch"],["drive","driver"],["order","b
 b.innerHTML='<a class="b" href="../chat/'+location.search+'">◆ janus · delivery demo</a><nav>'+L.map(function(x){return '<a href="../'+x[0]+'/'+location.search+'"'+(x[0]===here?' class="on"':' target="_blank"')+'>'+x[1]+'</a>'}).join('')+'</nav>';
 document.body.insertBefore(b,document.body.firstChild);
 var api=(new URLSearchParams(location.search).get("api")||"https://janus-courier.fly.dev/courier").replace(/\/$/,"");
+var rb=document.createElement("a");rb.textContent="⟲ clear";rb.href="#";  // wipe every screen
+rb.style.cssText="margin-left:8px;font:600 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#CC2B1D;border:1px solid #CC2B1D;border-radius:99px;padding:5px 10px;cursor:pointer;text-decoration:none";
+rb.onclick=function(e){e.preventDefault();rb.textContent="clearing…";try{localStorage.removeItem("janus-drv");localStorage.removeItem("janus_order");}catch(_){}fetch(api+"/reset",{method:"POST"}).catch(function(){}).finally(function(){location.reload();});};
+b.querySelector("nav").appendChild(rb);
 try{fetch(api+"/px?p="+here,{mode:"no-cors",cache:"no-store"});}catch(e){}  // pageview beacon
 })();</script>
 </body>
