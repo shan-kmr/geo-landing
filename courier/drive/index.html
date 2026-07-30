@@ -228,6 +228,8 @@ var b=document.createElement("div");b.className="demobar";
 var L=[["chat","customer"],["control","dispatch"],["drive","driver"],["order","buyer"]];
 b.innerHTML='<a class="b" href="../chat/'+location.search+'">◆ janus · delivery demo</a><nav>'+L.map(function(x){return '<a href="../'+x[0]+'/'+location.search+'"'+(x[0]===here?' class="on"':' target="_blank"')+'>'+x[1]+'</a>'}).join('')+'</nav>';
 document.body.insertBefore(b,document.body.firstChild);
+var api=(new URLSearchParams(location.search).get("api")||"https://janus-courier.fly.dev/courier").replace(/\/$/,"");
+try{fetch(api+"/px?p="+here,{mode:"no-cors",cache:"no-store"});}catch(e){}  // pageview beacon
 })();</script>
 </body>
 </html>
