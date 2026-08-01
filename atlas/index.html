@@ -436,6 +436,6 @@ function goPlace(e){
 })();
 </script>
 <a href="../courier/chat/" target="_blank" rel="noopener" style="position:fixed;right:16px;bottom:16px;z-index:9000;font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:#1E3A8A;background:#fff;border:1px solid #d8d5cc;border-radius:99px;padding:9px 13px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.12)">&#9654; live delivery agent</a>
-<script>try{fetch("https://janus-courier.fly.dev/courier/px?p=atlas",{mode:"no-cors",cache:"no-store"});}catch(e){}</script>
+<script>(function(){var A="https://janus-courier.fly.dev/courier",t0=Date.now(),vid=null;fetch(A+"/px?p=atlas",{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){vid=d&&d.vid;}).catch(function(){});function dw(){if(vid==null)return;try{navigator.sendBeacon(A+"/dwell",new Blob([JSON.stringify({vid:vid,s:(Date.now()-t0)/1000})],{type:"application/json"}));}catch(e){}}addEventListener("pagehide",dw);addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")dw();});})();</script>
 </body>
 </html>
