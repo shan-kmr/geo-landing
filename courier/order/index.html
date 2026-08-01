@@ -349,7 +349,10 @@ var rb=document.createElement("a");rb.textContent="⟲ clear";rb.href="#";  // w
 rb.style.cssText="margin-left:8px;font:600 10px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#CC2B1D;border:1px solid #CC2B1D;border-radius:99px;padding:5px 10px;cursor:pointer;text-decoration:none";
 rb.onclick=function(e){e.preventDefault();rb.textContent="clearing…";try{localStorage.removeItem("janus-drv");localStorage.removeItem("janus_order");}catch(_){}fetch(api+"/reset",{method:"POST"}).catch(function(){}).finally(function(){location.reload();});};
 b.querySelector("nav").appendChild(rb);
-try{fetch(api+"/px?p="+here,{mode:"no-cors",cache:"no-store"});}catch(e){}  // pageview beacon
+var _t0=Date.now(),_vid=null;  // pageview + dwell beacon (time-on-page reported on exit)
+fetch(api+"/px?p="+here,{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){_vid=d&&d.vid;}).catch(function(){});
+function _dwell(){if(_vid==null)return;try{navigator.sendBeacon(api+"/dwell",new Blob([JSON.stringify({vid:_vid,s:(Date.now()-_t0)/1000})],{type:"application/json"}));}catch(e){}}
+addEventListener("pagehide",_dwell);addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")_dwell();});
 })();</script>
 </body>
 </html>
