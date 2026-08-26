@@ -39,3 +39,5 @@ returns, scorer). After a re-run or a template edit there:
 
 The authored master for section copy is `janus-fivestage/results/template.html`;
 `index.html` here is generated from it plus the recorded data.
+
+<!-- watcher e2e test 04:06:03 -->
