@@ -1,0 +1,440 @@
+{
+ "E1": {
+  "llm_sonnet": {
+   "n": 100,
+   "hit50": 2,
+   "hit100": 12,
+   "over1km": 39,
+   "median_m": 747.1,
+   "calib_in_radius": 0.06,
+   "conf_wrong": 1
+  },
+  "llm_slices": {
+   "hyphenQ": {
+    "n": 25,
+    "hit50": 0,
+    "hit100": 1,
+    "over1km": 11,
+    "median_m": 758.1,
+    "calib_in_radius": 0.08,
+    "conf_wrong": 0
+   },
+   "other": {
+    "n": 75,
+    "hit50": 2,
+    "hit100": 11,
+    "over1km": 28,
+    "median_m": 736.1,
+    "calib_in_radius": 0.053,
+    "conf_wrong": 1
+   }
+  },
+  "exists_false_on_real": 5,
+  "nominatim": {
+   "n": 100,
+   "found": 97,
+   "hit50": 92,
+   "hit100": 94,
+   "over1km": 2,
+   "median_m": 5.7
+  },
+  "photon": {
+   "n": 100,
+   "found": 100,
+   "hit50": 90,
+   "hit100": 90,
+   "over1km": 9,
+   "median_m": 5.7
+  },
+  "pelias": {
+   "n": 100,
+   "found": 100,
+   "hit50": 99,
+   "hit100": 99,
+   "over1km": 1,
+   "median_m": 0.0
+  }
+ },
+ "E5": {
+  "llm_sonnet": {
+   "plus_ny": {
+    "n": 30,
+    "hit50": 2,
+    "hit100": 5,
+    "over1km": 9,
+    "median_m": 349.8,
+    "calib_in_radius": 0.033,
+    "conf_wrong": 4,
+    "median_delta_vs_clean_m": 20.3
+   },
+   "typo": {
+    "n": 30,
+    "hit50": 3,
+    "hit100": 4,
+    "over1km": 13,
+    "median_m": 765.3,
+    "calib_in_radius": 0.033,
+    "conf_wrong": 9,
+    "median_delta_vs_clean_m": 145.3
+   },
+   "stripped": {
+    "n": 25,
+    "hit50": 0,
+    "hit100": 0,
+    "over1km": 14,
+    "median_m": 1213.6,
+    "calib_in_radius": 0.16,
+    "conf_wrong": 0,
+    "median_delta_vs_clean_m": 0.0
+   },
+   "ghost": {
+    "n": 20,
+    "said_exists": 20,
+    "confident_invention": 19,
+    "pin_in_gap": 0
+   }
+  },
+  "nominatim_public": {
+   "plus_ny": {
+    "n": 30,
+    "found": 29,
+    "hit100": 27,
+    "over1km": 2,
+    "median_m": 5.0
+   },
+   "typo": {
+    "n": 30,
+    "found": 3,
+    "hit100": 3,
+    "over1km": 0,
+    "median_m": 0.9
+   },
+   "stripped": {
+    "n": 25,
+    "found": 25,
+    "hit100": 7,
+    "over1km": 10,
+    "median_m": 288.8
+   },
+   "ghost": {
+    "n": 20,
+    "found": 19,
+    "hit100": 0,
+    "over1km": 0,
+    "median_m": null
+   },
+   "clean_e1": {
+    "n": 100,
+    "found": 98,
+    "hit100": 94,
+    "over1km": 4,
+    "median_m": 5.7
+   }
+  }
+ },
+ "E2": {
+  "llm_sonnet": {
+   "n": 60,
+   "borough_ok": 57,
+   "zip_ok": 19,
+   "street_ok": 0,
+   "hn_exact": 0,
+   "hn_block": 1,
+   "claimed_addr_exists": 25,
+   "resolved_median_m": 884.5
+  },
+  "nominatim_public": {
+   "n": 60,
+   "borough_ok": 35,
+   "zip_ok": 60,
+   "street_ok": 58,
+   "hn_exact": 50,
+   "hn_block": 59,
+   "claimed_addr_exists": 30,
+   "resolved_median_m": 0.0
+  }
+ },
+ "E3": {
+  "n": 48,
+  "llm_accuracy": 0.938,
+  "confusion": {
+   "clean->clean": 13,
+   "clean->spoof": 3,
+   "spoof->spoof": 16,
+   "teleport->teleport": 16
+  },
+  "false_fraud_on_clean": 3,
+  "per_class_recall": {
+   "clean": 0.812,
+   "teleport": 1.0,
+   "spoof": 1.0
+  },
+  "referee_15line_accuracy": 1.0,
+  "llm_confident_wrong": [
+   [
+    "f12",
+    "clean",
+    "spoof",
+    80
+   ]
+  ]
+ },
+ "E4": {
+  "n": 39,
+  "excluded_label_noise": 1,
+  "llm_accuracy": 1.0,
+  "staypoint_accuracy": 1.0,
+  "per_kind": {
+   "noisy_dwell": {
+    "n": 9,
+    "llm_ok": 9,
+    "sp_ok": 9
+   },
+   "dwell": {
+    "n": 12,
+    "llm_ok": 12,
+    "sp_ok": 12
+   },
+   "near_miss": {
+    "n": 9,
+    "llm_ok": 9,
+    "sp_ok": 9
+   },
+   "pass_by": {
+    "n": 9,
+    "llm_ok": 9,
+    "sp_ok": 9
+   }
+  },
+  "dwell_minutes_mae": 0.67
+ },
+ "run1": {
+  "geocode_ladder": {
+   "haiku": {
+    "neighborhood": {
+     "n": 4,
+     "median_m": 979.3,
+     "calib": 0.0
+    },
+    "landmark": {
+     "n": 8,
+     "median_m": 29.1,
+     "calib": 0.62
+    },
+    "address": {
+     "n": 12,
+     "median_m": 813.5,
+     "calib": 0.08
+    },
+    "venue": {
+     "n": 9,
+     "median_m": 13672.2,
+     "calib": 0.0
+    }
+   },
+   "sonnet": {
+    "neighborhood": {
+     "n": 4,
+     "median_m": 904.2,
+     "calib": 1.0
+    },
+    "landmark": {
+     "n": 8,
+     "median_m": 23.4,
+     "calib": 0.62
+    },
+    "address": {
+     "n": 12,
+     "median_m": 549.7,
+     "calib": 0.17
+    },
+    "venue": {
+     "n": 9,
+     "median_m": 1167.1,
+     "calib": 0.22
+    }
+   },
+   "fable": {
+    "venue": {
+     "n": 9,
+     "median_m": 195.4,
+     "calib": 1.0
+    },
+    "address": {
+     "n": 4,
+     "median_m": 59.6,
+     "calib": 1.0
+    }
+   }
+  },
+  "address_pairs": {
+   "34-56 107th Street, Corona, Queens, NY": {
+    "haiku": 1158.0,
+    "sonnet": 513.0
+   },
+   "225 Broadway, Manhattan, New York, NY": {
+    "haiku": 209.0,
+    "sonnet": 65.0
+   },
+   "347 Fifth Avenue, Manhattan, New York, NY": {
+    "haiku": 82.0,
+    "sonnet": 162.0
+   },
+   "32-01 Vernon Boulevard, Astoria, Queens, NY": {
+    "haiku": 1341.0,
+    "sonnet": 596.0
+   },
+   "56-32 188th St, Queens, NY 11365": {
+    "haiku": 3740.0,
+    "sonnet": 769.0
+   },
+   "62-29 69th Pl, Queens, NY 11379": {
+    "haiku": 3668.0,
+    "sonnet": 586.0
+   },
+   "132-14 Foch Blvd, Queens, NY 11420": {
+    "haiku": 3582.0,
+    "sonnet": 616.0
+   },
+   "164-38 95th St, Queens, NY 11414": {
+    "haiku": 835.0,
+    "sonnet": 1548.0
+   },
+   "47-01 111th Street, Corona, Queens, NY": {
+    "haiku": 731.0,
+    "sonnet": 744.0,
+    "fable": 77.0
+   },
+   "233 Broadway, Manhattan, New York, NY": {
+    "haiku": 792.0,
+    "sonnet": 58.0,
+    "fable": 32.0
+   },
+   "350 Fifth Avenue, Manhattan, New York, NY": {
+    "haiku": 56.0,
+    "sonnet": 71.0,
+    "fable": 71.0
+   },
+   "36-01 35th Avenue, Astoria, Queens, NY": {
+    "haiku": 692.0,
+    "sonnet": 488.0,
+    "fable": 48.0
+   }
+  },
+  "distance": {
+   "haiku": {
+    "bins": {
+     "0.1-1": {
+      "n": 20,
+      "median_ratio": 1.18,
+      "median_x_off": 1.36
+     },
+     "1-10": {
+      "n": 20,
+      "median_ratio": 1.04,
+      "median_x_off": 1.26
+     },
+     "10-100": {
+      "n": 20,
+      "median_ratio": 0.83,
+      "median_x_off": 1.21
+     },
+     "100-1000": {
+      "n": 20,
+      "median_ratio": 1.01,
+      "median_x_off": 1.09
+     },
+     "1000-10000": {
+      "n": 20,
+      "median_ratio": 1.02,
+      "median_x_off": 1.03
+     }
+    },
+    "loglog_slope": 0.979,
+    "median_asymmetry_x": 1.17
+   },
+   "sonnet": {
+    "bins": {
+     "0.1-1": {
+      "n": 20,
+      "median_ratio": 0.99,
+      "median_x_off": 1.1
+     },
+     "1-10": {
+      "n": 20,
+      "median_ratio": 1.0,
+      "median_x_off": 1.03
+     },
+     "10-100": {
+      "n": 20,
+      "median_ratio": 0.97,
+      "median_x_off": 1.05
+     },
+     "100-1000": {
+      "n": 20,
+      "median_ratio": 1.0,
+      "median_x_off": 1.01
+     },
+     "1000-10000": {
+      "n": 20,
+      "median_ratio": 1.0,
+      "median_x_off": 1.0
+     }
+    },
+    "loglog_slope": 0.996,
+    "median_asymmetry_x": 1.09
+   },
+   "fable": {
+    "bins": {
+     "0.1-1": {
+      "n": 10,
+      "median_ratio": 0.98,
+      "median_x_off": 1.04
+     },
+     "1-10": {
+      "n": 10,
+      "median_ratio": 1.0,
+      "median_x_off": 1.01
+     }
+    },
+    "loglog_slope": 1.007,
+    "median_asymmetry_x": null
+   }
+  },
+  "ranking": {
+   "haiku": {
+    "items": 17,
+    "top1": 16,
+    "pairs_ok": 247,
+    "pairs": 255,
+    "confound_far_twin_first": 0,
+    "confounds": 17,
+    "top1_rate": 0.941,
+    "pair_acc": 0.969,
+    "confound_err_rate": 0.0
+   },
+   "sonnet": {
+    "items": 17,
+    "top1": 16,
+    "pairs_ok": 254,
+    "pairs": 255,
+    "confound_far_twin_first": 0,
+    "confounds": 17,
+    "top1_rate": 0.941,
+    "pair_acc": 0.996,
+    "confound_err_rate": 0.0
+   },
+   "fable": {
+    "items": 10,
+    "top1": 10,
+    "pairs_ok": 150,
+    "pairs": 150,
+    "confound_far_twin_first": 0,
+    "confounds": 10,
+    "top1_rate": 1.0,
+    "pair_acc": 1.0,
+    "confound_err_rate": 0.0
+   }
+  }
+ }
+}
