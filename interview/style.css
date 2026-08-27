@@ -34,7 +34,7 @@
     letter-spacing: .12em; text-transform: uppercase; color: var(--mut);
   }
   h1 { font-size: 30px; font-weight: 600; letter-spacing: -.01em; margin: 6px 0 10px; text-wrap: balance; }
-  .lede { color: var(--mut); max-width: 60ch; margin: 0 0 6px; }
+  .lede { color: var(--mut); margin: 0 0 6px; }
   .meta { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--mut); margin-bottom: 36px; }
   h2 { font-size: 17px; font-weight: 600; margin: 0 0 2px; }
   h2 .n { font-family: "IBM Plex Mono", ui-monospace, monospace; color: var(--accent); font-size: 13px; margin-right: 8px; }
@@ -51,7 +51,7 @@
   td { padding: 7px 14px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
   td.num, th.num { text-align: right; }
   .tablebox { overflow-x: auto; margin: 0 0 14px; }
-  .read { max-width: 62ch; margin: 10px 0 0; }
+  .read { margin: 10px 0 0; }
   .read p { margin: 0 0 10px; }
   .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
   .bar { display: flex; align-items: center; gap: 10px; margin: 5px 0; }
@@ -65,7 +65,7 @@
     padding: 12px 14px; margin: 12px 0; overflow-x: auto; line-height: 1.6;
   }
   .quote i { color: var(--mut); font-style: normal; }
-  .foot { font-size: 12.5px; color: var(--mut); max-width: 66ch; }
+  .foot { font-size: 12.5px; color: var(--mut); }
   .foot p { margin: 0 0 8px; }
   ul { margin: 8px 0; padding-left: 18px; }
   li { margin-bottom: 6px; }
