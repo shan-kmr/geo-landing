@@ -72,7 +72,7 @@
   @media (max-width: 640px) { .strip { grid-template-columns: repeat(2, 1fr); } h1 { font-size: 24px; } }
 
   .costwrap { margin-top: 16px; }
-  .costtbl { max-width: 560px; }
+  .costtbl { width: 100%; }
   .costtbl td, .costtbl th { padding: 5px 14px 5px 0; }
   .costtbl td.num { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12.5px; white-space: nowrap; }
   details.appx { margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
