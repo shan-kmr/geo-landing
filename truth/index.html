@@ -85,7 +85,11 @@
 
   <div class="duel">
     <div class="panel" id="left">
-      <h3>GPT-5.2</h3><div class="who" id="lwho">OpenAI, no tools, parametric knowledge</div>
+      <h3>GPT-5.2</h3>
+      <div class="who" id="lwho">
+        <label><input type="radio" name="arm" value="alone" checked> no tools</label>
+        &nbsp;<label><input type="radio" name="arm" value="tools"> + placetruth tools</label>
+      </div>
       <div class="empty">ask something</div>
     </div>
     <div class="panel" id="right">
@@ -202,7 +206,8 @@ async function run() {
   const ours = TAB === "q1"
     ? post("/v1/geocode", { address: extractAddress(q) })
     : post("/v1/status", { name: extractName(q) });
-  const theirs = post("/v1/model", { tab: TAB, query: q });
+  const arm = document.querySelector('input[name="arm"]:checked').value;
+  const theirs = post(arm === "tools" ? "/v1/agent" : "/v1/model", { tab: TAB, query: q });
 
   ours.then(r => {
     if (TAB === "q1") {
@@ -230,6 +235,14 @@ async function run() {
   }).catch(e => paint("right", pill("warn", "error") + `<div class="kv">${e.message}</div>`));
 
   theirs.then(r => {
+    if (r.trajectory !== undefined) {
+      const traj = r.trajectory.map(t =>
+        `<span class="pill ok" style="margin-right:6px">${t.tool} → ${t.verdict ?? "?"}</span>`).join("");
+      paint("left", (traj || pill("warn", "no tool calls")) +
+        `<div class="kv" style="margin-top:8px">${(r.answer || "").replace(/</g, "&lt;").slice(0, 600)}</div>` +
+        `<div class="ms">${r.elapsed_ms} ms · ${r.model} · function calling on placetruth</div>`);
+      return;
+    }
     const p = r.parsed || {};
     if (TAB === "q1") {
       const cls = p.exists === true ? "ok" : p.exists === false ? "bad" : "warn";
