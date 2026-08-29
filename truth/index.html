@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Place Truth</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f7f8f8; --ink: #14181b; --mut: #5c6670; --line: #e2e6e8;
+    --card: #ffffff; --accent: #1e5bd6; --ok: #1b7a44; --warn: #a66a1e; --bad: #b3372e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #101315; --ink: #e8eaeb; --mut: #99a3a9; --line: #23282b;
+            --card: #171b1e; --accent: #6c9bff; --ok: #4cb572; --warn: #d29a4b; --bad: #e06a5e; }
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); margin: 0;
+         font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 44px 20px 80px; }
+  .kicker { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .12em;
+            text-transform: uppercase; color: var(--mut); margin-bottom: 18px; }
+  .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
+  .tabs button { border: 0; background: var(--card); color: var(--mut); padding: 10px 18px;
+                 font: 600 14px "IBM Plex Sans", sans-serif; cursor: pointer; }
+  .tabs button.on { background: var(--accent); color: #fff; }
+  h1 { font-size: 26px; font-weight: 600; margin: 8px 0 4px; }
+  .sub { color: var(--mut); margin: 0 0 20px; max-width: 62ch; }
+  .qrow { display: flex; gap: 8px; }
+  .qrow input { flex: 1; font: 15px "IBM Plex Mono", monospace; padding: 12px 14px;
+                border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+  .qrow button { font: 600 14px "IBM Plex Sans", sans-serif; padding: 12px 20px; border: 0;
+                 border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+  .qrow button:disabled { opacity: .5; }
+  details.samples { margin: 10px 0 0; }
+  details.samples summary { font-family: "IBM Plex Mono", monospace; font-size: 12px;
+                            color: var(--accent); cursor: pointer; list-style: none; }
+  details.samples summary::before { content: "▸ "; }
+  details.samples[open] summary::before { content: "▾ "; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chips button { font: 12.5px "IBM Plex Mono", monospace; padding: 7px 12px; border: 1px solid var(--line);
+                  border-radius: 999px; background: var(--card); color: var(--ink); cursor: pointer; text-align: left; }
+  .chips button:hover { border-color: var(--accent); }
+  .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+  @media (max-width: 700px) { .duel { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px; min-height: 170px; }
+  .panel h3 { margin: 0 0 2px; font-size: 13px; font-weight: 600; }
+  .panel .who { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--mut); margin-bottom: 12px; }
+  .pill { display: inline-block; font: 600 12px "IBM Plex Mono", monospace; padding: 4px 10px;
+          border-radius: 999px; margin-bottom: 10px; }
+  .pill.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+  .pill.bad { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+  .pill.warn { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .kv { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.8; overflow-wrap: anywhere; }
+  .kv b { color: var(--mut); font-weight: 400; }
+  .kv a { color: var(--accent); text-decoration: none; }
+  .ms { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--mut); margin-top: 10px; }
+  .empty { color: var(--mut); font-size: 13px; padding-top: 34px; text-align: center; }
+  .note { font-size: 12.5px; color: var(--mut); margin-top: 26px; max-width: 70ch; }
+  .note a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">placetruth · live demo · manhattan v0 · both sides answer live, nothing is prerecorded</div>
+
+  <div class="tabs">
+    <button id="tq1" class="on">Q1 · Does this address exist?</button>
+    <button id="tq2">Q2 · Is it still open?</button>
+  </div>
+
+  <h1 id="hd">Does this address exist?</h1>
+  <p class="sub" id="sub">Type any Manhattan address. Left: a frontier model answering from its own knowledge.
+     Right: the placetruth engine against the city address file, with evidence.</p>
+
+  <div class="qrow">
+    <input id="q" placeholder="350 Fifth Avenue, Manhattan" autocomplete="off">
+    <button id="go">Ask both</button>
+  </div>
+
+  <details class="samples" open>
+    <summary>sample queries, as people type them</summary>
+    <div class="chips" id="chips"></div>
+  </details>
+
+  <div class="duel">
+    <div class="panel" id="left">
+      <h3>GPT-5.2</h3><div class="who" id="lwho">OpenAI, no tools, parametric knowledge</div>
+      <div class="empty">ask something</div>
+    </div>
+    <div class="panel" id="right">
+      <h3>placetruth</h3><div class="who" id="rwho">manhattan-geocode-v1 · city address file</div>
+      <div class="empty">ask something</div>
+    </div>
+  </div>
+
+  <p class="note" id="foot">
+    The engine answers from the NYC AddressPoint referee (63,245 Manhattan doors) with the
+    verdict, an interval, and evidence. Absence from the registry is reported as
+    <span style="font-family:monospace">no_such_door</span> with the nearest valid neighbor.
+    The model column is a live API call, rate-limited. Aggregate results:
+    engine 100/100 on the public panel; the model asserted 39 of 40 nonexistent doors exist.
+    Method and code: <a href="https://github.com/shan-kmr">repo</a>.
+  </p>
+</div>
+
+<script>
+const API = location.hostname === "localhost" ? "http://localhost:8907" : "https://placetruth-api.fly.dev";
+let TAB = "q1";
+
+const SAMPLES = {
+  q1: [
+    "is 350 Fifth Avenue a real address?",
+    "does 79-11 57th Avenue exist in Manhattan?",
+    "347 5th Ave",
+    "whats at 1 Saint Marks Pl?",
+    "9999 Broadway, NYC",
+    "225 Brodway",
+    "is there a 601 West 218th Street?",
+    "20 Times Square — real or vanity?",
+  ],
+  q2: [
+    "is Katz's Delicatessen still open?",
+    "is Gotham Bar and Grill still operating?",
+    "did the Rubin Museum close?",
+    "is the Chipotle at 864 Broadway open?",
+    "is Cafe Un Deux Trois still around?",
+    "is Stumptown on W 8th St open?",
+    "is Fanelli Cafe operating?",
+    "is the Sam Ash store in Midtown still there?",
+  ],
+};
+
+const $ = (id) => document.getElementById(id);
+
+function setTab(tab) {
+  TAB = tab;
+  $("tq1").classList.toggle("on", tab === "q1");
+  $("tq2").classList.toggle("on", tab === "q2");
+  $("hd").textContent = tab === "q1" ? "Does this address exist?" : "Is it still open?";
+  $("sub").textContent = tab === "q1"
+    ? "Type any Manhattan address. Left: a frontier model answering from its own knowledge. Right: the placetruth engine against the city address file, with evidence."
+    : "Name a Manhattan place. Left: the model's belief. Right: the live evidence pipeline: registry, commons, and the venue's own site, decided by a rule table that refuses to guess.";
+  $("q").placeholder = tab === "q1" ? "350 Fifth Avenue, Manhattan" : "Katz's Delicatessen";
+  $("rwho").textContent = tab === "q1"
+    ? "manhattan-geocode-v1 · city address file"
+    : "status-verdict-v1 · registry + commons + own-site, live";
+  $("chips").innerHTML = "";
+  for (const s of SAMPLES[tab]) {
+    const b = document.createElement("button");
+    b.textContent = s;
+    b.onclick = () => { $("q").value = s; run(); };
+    $("chips").appendChild(b);
+  }
+  $("left").querySelector(".empty, .out")?.replaceWith(emptyDiv());
+  $("right").querySelector(".empty, .out")?.replaceWith(emptyDiv());
+}
+
+function emptyDiv() { const d = document.createElement("div"); d.className = "empty"; d.textContent = "ask something"; return d; }
+
+function paint(panelId, html) {
+  const p = $(panelId);
+  p.querySelector(".empty, .out")?.remove();
+  const d = document.createElement("div");
+  d.className = "out";
+  d.innerHTML = html;
+  p.appendChild(d);
+}
+
+function pill(cls, text) { return `<span class="pill ${cls}">${text}</span>`; }
+function kv(rows) {
+  return `<div class="kv">` + rows.filter(r => r[1] !== undefined && r[1] !== null && r[1] !== "")
+    .map(([k, v]) => `<b>${k}</b>  ${v}`).join("<br>") + `</div>`;
+}
+
+async function post(path, body) {
+  const r = await fetch(API + path, { method: "POST",
+    headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error((await r.text()) || r.status);
+  return r.json();
+}
+
+function extractAddress(q) {
+  return q.replace(/^(is|does|whats at|what's at|is there a|is there)\s+/i, "")
+          .replace(/\s*(a real address|real or vanity|exist(s)? in manhattan|exist(s)?|nyc)\??$/gi, "")
+          .replace(/[—–-]\s*$/, "").replace(/\?$/, "").trim();
+}
+
+function extractName(q) {
+  return q.replace(/^(is|did|does|whats at|what's at|the)\s+/i, "")
+          .replace(/\s*(still open|still operating|still around|still there|open|operating|close|closed)\??$/i, "")
+          .replace(/\?$/, "").trim();
+}
+
+async function run() {
+  const q = $("q").value.trim();
+  if (!q) return;
+  $("go").disabled = true;
+  paint("left", `<div class="ms">asking…</div>`);
+  paint("right", `<div class="ms">asking…</div>`);
+
+  const ours = TAB === "q1"
+    ? post("/v1/geocode", { address: extractAddress(q) })
+    : post("/v1/status", { name: extractName(q) });
+  const theirs = post("/v1/model", { tab: TAB, query: q });
+
+  ours.then(r => {
+    if (TAB === "q1") {
+      const cls = r.exists === true ? "ok" : r.exists === false ? "bad" : "warn";
+      paint("right", pill(cls, r.verdict) + kv([
+        ["match", r.normalized ? `${r.normalized.hn} ${r.normalized.st} ${r.normalized.zip ?? ""}` : null],
+        ["position", r.position ? `${r.position.lat.toFixed(5)}, ${r.position.lon.toFixed(5)} ±${r.position.radius_m}m (${r.position.tier})` : null],
+        ["nearest valid", r.nearest_valid ? r.nearest_valid.address : null],
+        ["question", r.question],
+        ["evidence", r.evidence ? r.evidence.map(e => e.source).join(", ") : null],
+        ["confidence", r.confidence],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.method_version}</div>`);
+    } else {
+      const cls = r.verdict === "operating" ? "ok" : r.verdict === "unverifiable" ? "warn" : "bad";
+      paint("right", pill(cls, r.verdict) + kv([
+        ["resolved", r.resolved_name],
+        ["rule", r.rule],
+        ["since", r.since],
+        ["evidence", (r.evidence || []).map(e =>
+           e.url ? `<a href="${e.url}" target="_blank" rel="noopener">${e.source}</a>: ${e.value}`
+                 : `${e.source}: ${e.value}`).join("<br>        ")],
+        ["notes", (r.notes || []).join(" ")],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.method_version} · ${r.adapters}</div>`);
+    }
+  }).catch(e => paint("right", pill("warn", "error") + `<div class="kv">${e.message}</div>`));
+
+  theirs.then(r => {
+    const p = r.parsed || {};
+    if (TAB === "q1") {
+      const cls = p.exists === true ? "ok" : p.exists === false ? "bad" : "warn";
+      paint("left", pill(cls, p.exists === undefined ? "no structured answer" : `exists: ${p.exists}`) + kv([
+        ["position", p.lat ? `${p.lat}, ${p.lon} ±${p.radius_m ?? "?"}m` : null],
+        ["raw", p.lat ? null : (r.raw || "").slice(0, 220)],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.model} · no tools</div>`);
+    } else {
+      const cls = p.status === "operating" ? "ok" : p.status ? "bad" : "warn";
+      paint("left", pill(cls, p.status || "no structured answer") + kv([
+        ["note", p.note], ["raw", p.status ? null : (r.raw || "").slice(0, 220)],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.model} · no tools</div>`);
+    }
+  }).catch(e => paint("left", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
+
+  await Promise.allSettled([ours, theirs]);
+  $("go").disabled = false;
+}
+
+$("tq1").onclick = () => setTab("q1");
+$("tq2").onclick = () => setTab("q2");
+$("go").onclick = run;
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+setTab("q1");
+</script>
+</body>
+</html>
