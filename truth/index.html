@@ -181,7 +181,7 @@ async function post(path, body) {
 }
 
 function extractAddress(q) {
-  return q.replace(/^(is|does|whats at|what's at|is there a|is there)\s+/i, "")
+  return q.replace(/^(is there a|is there|whats at|what's at|does|is)\s+/i, "")
           .replace(/\s*(a real address|real or vanity|exist(s)? in manhattan|exist(s)?|nyc)\??$/gi, "")
           .replace(/[—–-]\s*$/, "").replace(/\?$/, "").trim();
 }
