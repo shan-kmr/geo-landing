@@ -41,8 +41,8 @@
   .chips button { font: 12.5px "IBM Plex Mono", monospace; padding: 7px 12px; border: 1px solid var(--line);
                   border-radius: 999px; background: var(--card); color: var(--ink); cursor: pointer; text-align: left; }
   .chips button:hover { border-color: var(--accent); }
-  .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
-  @media (max-width: 700px) { .duel { grid-template-columns: 1fr; } }
+  .duel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 22px; }
+  @media (max-width: 900px) { .duel { grid-template-columns: 1fr; } }
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px; min-height: 170px; }
   .panel h3 { margin: 0 0 2px; font-size: 13px; font-weight: 600; }
   .panel .who { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--mut); margin-bottom: 12px; }
@@ -85,11 +85,11 @@
 
   <div class="duel">
     <div class="panel" id="left">
-      <h3>GPT-5.2</h3>
-      <div class="who" id="lwho">
-        <label><input type="radio" name="arm" value="alone" checked> no tools</label>
-        &nbsp;<label><input type="radio" name="arm" value="tools"> + placetruth tools</label>
-      </div>
+      <h3>GPT-5.2</h3><div class="who">no tools, parametric knowledge</div>
+      <div class="empty">ask something</div>
+    </div>
+    <div class="panel" id="mid">
+      <h3>GPT-5.2 + placetruth</h3><div class="who">same model, our tools via function calling</div>
       <div class="empty">ask something</div>
     </div>
     <div class="panel" id="right">
@@ -156,8 +156,7 @@ function setTab(tab) {
     b.onclick = () => { $("q").value = s; run(); };
     $("chips").appendChild(b);
   }
-  $("left").querySelector(".empty, .out")?.replaceWith(emptyDiv());
-  $("right").querySelector(".empty, .out")?.replaceWith(emptyDiv());
+  for (const id of ["left", "mid", "right"]) $(id).querySelector(".empty, .out")?.replaceWith(emptyDiv());
 }
 
 function emptyDiv() { const d = document.createElement("div"); d.className = "empty"; d.textContent = "ask something"; return d; }
@@ -201,13 +200,14 @@ async function run() {
   if (!q) return;
   $("go").disabled = true;
   paint("left", `<div class="ms">asking…</div>`);
+  paint("mid", `<div class="ms">asking…</div>`);
   paint("right", `<div class="ms">asking…</div>`);
 
   const ours = TAB === "q1"
     ? post("/v1/geocode", { address: extractAddress(q) })
     : post("/v1/status", { name: extractName(q) });
-  const arm = document.querySelector('input[name="arm"]:checked').value;
-  const theirs = post(arm === "tools" ? "/v1/agent" : "/v1/model", { tab: TAB, query: q });
+  const theirs = post("/v1/model", { tab: TAB, query: q });
+  const agent = post("/v1/agent", { tab: TAB, query: q });
 
   ours.then(r => {
     if (TAB === "q1") {
@@ -234,15 +234,15 @@ async function run() {
     }
   }).catch(e => paint("right", pill("warn", "error") + `<div class="kv">${e.message}</div>`));
 
+  agent.then(r => {
+    const traj = (r.trajectory || []).map(t =>
+      `<span class="pill ok" style="margin-right:6px">${t.tool} → ${t.verdict ?? "?"}</span>`).join("");
+    paint("mid", (traj || pill("warn", "no tool calls")) +
+      `<div class="kv" style="margin-top:8px">${(r.answer || "").replace(/</g, "&lt;").slice(0, 600)}</div>` +
+      `<div class="ms">${r.elapsed_ms} ms · ${r.model} · function calling on placetruth</div>`);
+  }).catch(e => paint("mid", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
+
   theirs.then(r => {
-    if (r.trajectory !== undefined) {
-      const traj = r.trajectory.map(t =>
-        `<span class="pill ok" style="margin-right:6px">${t.tool} → ${t.verdict ?? "?"}</span>`).join("");
-      paint("left", (traj || pill("warn", "no tool calls")) +
-        `<div class="kv" style="margin-top:8px">${(r.answer || "").replace(/</g, "&lt;").slice(0, 600)}</div>` +
-        `<div class="ms">${r.elapsed_ms} ms · ${r.model} · function calling on placetruth</div>`);
-      return;
-    }
     const p = r.parsed || {};
     if (TAB === "q1") {
       const cls = p.exists === true ? "ok" : p.exists === false ? "bad" : "warn";
@@ -258,7 +258,7 @@ async function run() {
     }
   }).catch(e => paint("left", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
 
-  await Promise.allSettled([ours, theirs]);
+  await Promise.allSettled([ours, theirs, agent]);
   $("go").disabled = false;
 }
 
