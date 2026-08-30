@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Demo film 01 · The map is the argument</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; height: 100%; background: #F4F4F2; overflow: hidden;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+  </style>
+</helmet>
+<div style="position: fixed; inset: 0; display: flex; flex-direction: column;">
+  <div style="flex: none; display: flex; align-items: baseline; gap: 14px; padding: 12px 18px 10px;">
+    <span style="display: inline-block; border: 1px solid #16181A; border-radius: 3px; padding: 2px 7px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .12em; font-weight: 700; color: #16181A;">1c</span>
+    <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10.5px; letter-spacing: .28em; font-weight: 700; color: #16181A;">JANUS</span>
+    <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85;">DEMO FILM 01 · 82 S · 1920×1080 · DESK 03</span>
+    <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .06em; color: #7A7F85;"><a href="Janus Demo Script.dc.html" style="color: #4A4E54;">shot list ↗</a> · space = play · ←/→ = seek · Share → Export → Video</span>
+  </div>
+  <div style="flex: 1; min-height: 0; position: relative;">
+    <x-import component-from-global-scope="JanusFilm" from="./animations.jsx ./atlas-scene.js ./film-scene.jsx" hint-size="100%,100%"></x-import>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

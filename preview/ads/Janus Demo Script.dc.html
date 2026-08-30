@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <title>Janus — Demo film 01 · shot list</title>
+  <style>
+    html, body { margin: 0; background: #F4F4F2; color: #16181A;
+      font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    a { color: #16181A; }
+    a:hover { color: #D9480F; }
+    ::selection { background: rgba(217,72,15,.12); }
+    doc-page:not(:defined) { visibility: hidden; }
+  </style>
+</helmet>
+
+<x-import component-from-global-scope="doc-page" from="./doc-page.js" size="letter" orientation="landscape" margin="0.55in" hint-size="100%,100%">
+
+  <div data-screen-label="Script header" style="display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid #16181A; padding-bottom: 12px;">
+    <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 11px; letter-spacing: .28em; font-weight: 700;">JANUS</span>
+    <span style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .14em; color: #7A7F85;">DEMO FILM 01 · SHOT LIST &amp; VO · DESK 05 · JUL 2026</span>
+    <span style="margin-left: auto; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; letter-spacing: .1em; color: #16181A;">82 s · 1920 × 1080 · silent-safe</span>
+  </div>
+
+  <div style="display: flex; gap: 28px; margin: 16px 0 6px; align-items: baseline;">
+    <div style="font-size: 27px; font-weight: 600; letter-spacing: -.014em; font-family: 'Space Grotesk', 'Helvetica Neue', sans-serif;">"The map is the argument."</div>
+    <div style="font-size: 12px; color: #4A4E54; max-width: 58ch; line-height: 1.5;">Voice: research lab presenting evidence, not SaaS selling outcomes. Every number on screen carries its denominator. The film must read perfectly with the sound off — VO is confirmation, not carrier.</div>
+  </div>
+
+  <div style="display: flex; gap: 22px; margin: 10px 0 18px; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .06em; color: #7A7F85;">
+    <span>ARC — I. THE CLAIM (0–7)</span><span>II. THE DESCENT (7–30)</span><span>III. THE PROOF (30–56)</span><span>IV. ALIVE (56–66)</span><span>V. THE RULE (66–74)</span><span>VI. THE INVITATION (74–82)</span>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.5;">
+    <thead>
+      <tr>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 10px 6px 0; width: 52px;">TC</th>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 10px 6px 0; width: 128px;">FRAME</th>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 10px 6px 0;">CAMERA &amp; ACTION</th>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 10px 6px 0; width: 21%;">ON-SCREEN TEXT</th>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 10px 6px 0; width: 23%;">VO (timed)</th>
+        <th style="text-align: left; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; letter-spacing: .12em; color: #7A7F85; font-weight: 500; border-bottom: 1px solid #16181A; padding: 6px 0; width: 9%;">SOUND</th>
+      </tr>
+    </thead>
+    <tbody>
+      <sc-for list="{{ shots }}" as="s" hint-placeholder-count="8">
+        <tr style="break-inside: avoid;">
+          <td style="vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid #E5E6E8; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px;"><b>{{ s.tc }}</b><br><span style="color: #7A7F85;">{{ s.dur }}</span></td>
+          <td style="vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid #E5E6E8;"><canvas data-board="{{ s.board }}" width="236" height="132" style="width: 118px; height: 66px; border: 1px solid #E5E6E8; border-radius: 3px; display: block;"></canvas><div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 8.5px; letter-spacing: .08em; color: #7A7F85; margin-top: 4px;">{{ s.id }} · {{ s.name }}</div></td>
+          <td style="vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid #E5E6E8; color: #16181A;"><span data-md="{{ s.action }}"></span></td>
+          <td style="vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid #E5E6E8;"><span data-md="{{ s.text }}" style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 10px; line-height: 1.6; color: #16181A;"></span></td>
+          <td style="vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid #E5E6E8; color: #4A4E54; font-style: italic;">{{ s.vo }}</td>
+          <td style="vertical-align: top; padding: 9px 0; border-bottom: 1px solid #E5E6E8; font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9px; color: #7A7F85;">{{ s.sound }}</td>
+        </tr>
+      </sc-for>
+    </tbody>
+  </table>
+
+  <div style="break-before: page; padding-top: 4px;"></div>
+
+  <div style="display: flex; gap: 32px; margin-top: 14px;" data-screen-label="Production notes">
+    <div style="flex: 1;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .14em; color: #7A7F85; border-bottom: 1px solid #16181A; padding-bottom: 6px; margin-bottom: 10px;">PRODUCTION NOTES</div>
+      <div style="display: grid; gap: 8px; font-size: 11px; line-height: 1.55; color: #4A4E54;">
+        <div><b style="color:#16181A; font-weight:600;">Palette lock.</b> Paper #FCFCFB · ink #16181A · structure #E9EAEC · signal #D9480F only on live dots, the ring, and one live row. Grayscale export must lose nothing but the ring's warmth.</div>
+        <div><b style="color:#16181A; font-weight:600;">Type.</b> Space Grotesk 600 for statements, system mono for captions/data. Text sets line-by-line (120 ms/line, 300 ms fade), never typewriter, never word-by-word.</div>
+        <div><b style="color:#16181A; font-weight:600;">Camera grammar.</b> One continuous descent — no cuts between globe and street (crossfade at cloud height is the only seam). Inside the Atlas, only authored moves: rung flights (950 ms) and the settle. Nothing hand-held, nothing orbital after S4.</div>
+        <div><b style="color:#16181A; font-weight:600;">Pacing.</b> Every number holds ≥ 1.8 s after it finishes ticking. If the VO runs long, the picture waits — never the reverse.</div>
+        <div><b style="color:#16181A; font-weight:600;">Silent cut.</b> The on-screen text column IS the silent film. VO adds warmth and the two lines marked ¶ (which never appear as text).</div>
+      </div>
+    </div>
+    <div style="flex: 1;">
+      <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .14em; color: #7A7F85; border-bottom: 1px solid #16181A; padding-bottom: 6px; margin-bottom: 10px;">DELIVERY</div>
+      <div style="display: grid; gap: 8px; font-size: 11px; line-height: 1.55; color: #4A4E54;">
+        <div><b style="color:#16181A; font-weight:600;">Master.</b> 1920 × 1080 · 30 fps · 82 s. The animated master is built and playable: <a href="Janus Demo Film.dc.html">Desk 03 — the film</a> (scrubbable, export-ready).</div>
+        <div><b style="color:#16181A; font-weight:600;">Cutdowns.</b> :30 = S2–S5 only (descent + card), retitle S8. :15 social = S3 descent + S5 three rows + URL card, silent, 9:16 crop keeps the panel center-frame.</div>
+        <div><b style="color:#16181A; font-weight:600;">VO talent direction.</b> Flat affect, measured pace (~135 wpm), no uplift on sentence ends. Reference: documentary narration, not product launch. Record wild lines for all ¶ marks.</div>
+        <div><b style="color:#16181A; font-weight:600;">In-product twin.</b> The same eight beats exist as a click-through tour (<a href="Janus Guided Tour.dc.html">Desk 04</a>) — sales runs the tour live; the film is for the inbox.</div>
+      </div>
+      <div style="margin-top: 14px; border: 1px solid #E5E6E8; border-radius: 6px; padding: 12px 14px;">
+        <div style="font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 9.5px; letter-spacing: .14em; color: #7A7F85; margin-bottom: 8px;">VO — FULL PASS (82 s · 138 words)</div>
+        <div style="font-size: 11.5px; line-height: 1.75; color: #16181A; font-style: italic;">Machine intelligence has read everything ever written — and still doesn't know what's across the street. ¶ Janus attaches evidence to the planet itself, one hexagon at a time. Every 174-metre cell in New York carries its own record; the tiles split as you dive. This is Canal and Lafayette. Not a score — a record. Three fatal crashes in twenty-two years, most in the evening. Twenty-four thousand vehicles a day — measured. Four hundred twelve thousand dollars of expected annual hazard loss. Sidewalk vibration: two-point-one metres per second squared — measured, fourteen traces. ¶ The only color on this map is what's alive right now. No blended indices, no scores. Counts, rates, named denominators — the map is the argument. It's live today. Click any cell. Cite it.</div>
+      </div>
+    </div>
+  </div>
+
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      shots: [
+        {
+          id: "S1", name: "THE CLAIM", tc: "0:00", dur: "7 s", board: "claim",
+          action: "Paper white, dead still. Two graphite lines set themselves 120 ms apart, hold, then the second line's last word — |where| — gains weight (600). Hard hold 2 s. No logo yet.",
+          text: "Machine intelligence knows |what|.\nIt rarely knows |where|.",
+          vo: "Machine intelligence has read everything ever written — and still doesn't know what's across the street.",
+          sound: "room tone"
+        },
+        {
+          id: "S2", name: "THE GLOBE", tc: "0:07", dur: "11 s", board: "globe",
+          action: "The dot-matrix globe fades up already turning (4°/s). New York's dots brighten and swell — the pulse, not a pin. At 0:14 the push-in begins, easing in; the rim leaves frame by 0:18.",
+          text: "JANUS\nGrounding machine intelligence.",
+          vo: "¶ Janus attaches evidence to the planet itself, one hexagon at a time.",
+          sound: "low swell in"
+        },
+        {
+          id: "S3", name: "THE DESCENT", tc: "0:18", dur: "12 s", board: "descent",
+          action: "Globe hands off to the city through cloud-white — the film's only crossfade. Continuous dive Upper Bay → Lower Manhattan; the lattice splits res 5 → 6 → 7 → 8 → 9 on cue, each generation fading in over its parent. Mono captions tick the edge length at each split.",
+          text: "≈ 8.5 km → 3.2 km → 1.2 km → 460 m → |174 m|\nres 5 … res 9",
+          vo: "Every 174-metre cell in New York carries its own record — the tiles split as you dive.",
+          sound: "swell peaks"
+        },
+        {
+          id: "S4", name: "THE SETTLE", tc: "0:30", dur: "8 s", board: "settle",
+          action: "Past z 13.4 the buildings rise (0.4 z fade). Camera settles at Canal &amp; Lafayette, pitch 48°, one slow drift. The ring snaps onto the cell — the first signal-colored pixel of the film (0:35).",
+          text: "Canal St &amp; Lafayette\ncell 892a1072cb3ffff · ~174 m across",
+          vo: "This is Canal and Lafayette. Not a score — a record.",
+          sound: "swell out; tick"
+        },
+        {
+          id: "S5", name: "THE CARD", tc: "0:38", dur: "18 s", board: "card",
+          action: "Panel slides in (320 ms). Rows tick on one per beat: |3 fatal| with the hour histogram drawing bar-by-bar; |24,300 veh/day · measured|; |$412 K EAL / yr|; |2.1 m/s² RMS · measured, 14 traces|. Each number counts up 300 ms then holds ≥ 1.8 s. The one warm row — |1 active work zone| — lands last.",
+          text: "3 fatal · 2001–23 · FARS\n24,300 veh/day · measured\n$412 K expected annual loss\n2.1 m/s² walk vibration · 14 traces\n1 active work zone · LIVE",
+          vo: "Three fatal crashes in twenty-two years, most in the evening. Twenty-four thousand vehicles a day — measured. Four hundred twelve thousand dollars of expected annual hazard loss. Sidewalk vibration: two-point-one — measured, fourteen traces.",
+          sound: "soft tick / row"
+        },
+        {
+          id: "S6", name: "ALIVE", tc: "0:56", dur: "10 s", board: "alive",
+          action: "Card slips away; camera lifts exactly one rung (950 ms). Buses glide along avenues in 18 s tweens; docks breathe. The HUD's live count is the only saturated element on screen.",
+          text: "res 9 · buildings · |41 live|\nbuses tween between GPS fixes · docks breathe by fill",
+          vo: "¶ The only color on this map is what's alive right now.",
+          sound: "city, faint"
+        },
+        {
+          id: "S7", name: "THE RULE", tc: "1:06", dur: "8 s", board: "rule",
+          action: "Two quick beats: shade Population fades on (halftone deepens, 350 ms) with the caption chip; a hover tooltip appears stating count + denominator. Then picture mutes to 20% and the rule sets in graphite over it.",
+          text: "No scores. No blends.\nCounts, rates, named denominators.\n|The map is the argument.|",
+          vo: "No blended indices, no scores. Counts, rates, named denominators — the map is the argument.",
+          sound: "silence (cut)"
+        },
+        {
+          id: "S8", name: "THE INVITATION", tc: "1:14", dur: "8 s", board: "invite",
+          action: "Pull back — one continuous rise to the whole print, live layer still breathing. URL sets in mono, then the deep-link example under it. Hold 3 s. No end-card logo animation — the map is the end card.",
+          text: "The Atlas is live.\n|janus.earth/atlas|\nevery cell is a URL — ?h=892a1072cb3ffff",
+          vo: "It's live today. Click any cell. Cite it.",
+          sound: "room tone"
+        }
+      ]
+    };
+  }
+
+  componentDidMount() {
+    // |text| → emphasis; \n → line breaks. Rows mount async (sc-for) — retry until seen.
+    const decorate = () => {
+      const els = document.querySelectorAll("[data-md]");
+      els.forEach((el) => {
+        const raw = el.getAttribute("data-md") || "";
+        const esc = raw.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+        el.innerHTML = esc
+          .replace(/\|([^|]+)\|/g, '<b style="color:#16181A;font-weight:700">$1</b>')
+          .replace(/\n/g, "<br>");
+        el.removeAttribute("data-md");
+      });
+      return els.length;
+    };
+    let tries = 0;
+    const loop = () => {
+      const n = decorate();
+      if (n === 0 && tries++ < 60) setTimeout(loop, 120);
+      else if (n > 0) setTimeout(loop, 300);   // one more sweep for late rows
+    };
+    loop();
+    const boot = () => {
+      if (!window.JanusScene) { setTimeout(boot, 60); return; }
+      const sweep = (n) => {
+        this.drawBoards();
+        const left = document.querySelectorAll("canvas[data-board]").length;
+        if (left > 0 && n < 30) setTimeout(() => sweep(n + 1), 200);
+      };
+      sweep(0);
+    };
+    const s = document.createElement("script");
+    s.src = "atlas-scene.js";
+    s.onload = boot;
+    document.head.appendChild(s);
+  }
+
+  drawBoards() {
+    const J = window.JanusScene;
+    document.querySelectorAll("canvas[data-board]").forEach((cv) => {
+      const kind = cv.getAttribute("data-board");
+      const ctx = cv.getContext("2d");
+      const W = 118, H = 66;
+      ctx.setTransform(2, 0, 0, 2, 0, 0);
+      ctx.fillStyle = "#FCFCFB"; ctx.fillRect(0, 0, W, H);
+      const mono = "ui-monospace, 'SF Mono', Menlo, monospace";
+      const city = (vu, z, opts) => {
+        const [x, y] = J.m2w(vu[0], vu[1]);
+        J.drawCity(ctx, W, H, { x, y, z, rot: 0.24, pitch: 0.75 }, Object.assign({ labels: false }, opts));
+      };
+      if (kind === "claim") {
+        ctx.fillStyle = "#16181A"; ctx.font = "600 8px 'Space Grotesk', sans-serif";
+        ctx.fillText("Machine intelligence knows what.", 10, 28);
+        ctx.font = "700 8px 'Space Grotesk', sans-serif";
+        ctx.fillText("It rarely knows where.", 10, 40);
+      } else if (kind === "globe") {
+        J.drawGlobe(ctx, W, H, { R: 26, rot: -2.86, tilt: 0.55, pulse: { lat: 40.7, lon: -74, amt: 1 } });
+        ctx.fillStyle = "#16181A"; ctx.font = "700 6px " + mono;
+        ctx.fillText("JANUS", 8, 60);
+      } else if (kind === "descent") {
+        city([0.1, -1.2], 11.2, {});
+        ctx.fillStyle = "#16181A"; ctx.font = "6px " + mono;
+        ctx.fillText("res 5 → 9", 8, 60);
+      } else if (kind === "settle") {
+        city([-0.06, -2.54], 14.4, { selectedVU2: null, selected: (function () { const [sx, sy] = J.m2w(-0.06, -2.56); return { x: sx, y: sy }; })() });
+      } else if (kind === "card") {
+        city([-0.2, -2.6], 14.4, { selected: (function () { const [sx, sy] = J.m2w(-0.06, -2.56); return { x: sx, y: sy }; })() });
+        ctx.fillStyle = "#FCFCFB"; ctx.fillRect(W - 42, 0, 42, H);
+        ctx.strokeStyle = "#E9EAEC"; ctx.beginPath(); ctx.moveTo(W - 42, 0); ctx.lineTo(W - 42, H); ctx.stroke();
+        ctx.fillStyle = "#16181A"; ctx.font = "700 7px " + mono; ctx.fillText("3", W - 36, 14);
+        ctx.font = "4.5px " + mono; ctx.fillStyle = "#7A7F85";
+        ctx.fillText("fatal · FARS", W - 36, 21);
+        ctx.fillText("24,300 AADT", W - 36, 31);
+        ctx.fillText("$412K EAL", W - 36, 39);
+        ctx.fillText("2.1 m/s²", W - 36, 47);
+      } else if (kind === "alive") {
+        city([0.1, -0.6], 12.6, { live: { on: true, t: 30 } });
+        ctx.fillStyle = "#D9480F"; ctx.font = "700 6px " + mono;
+        ctx.fillText("41 live", W - 30, 10);
+      } else if (kind === "rule") {
+        city([-0.18, -2.3], 12.6, { shade: "kontur_population" });
+        ctx.fillStyle = "rgba(252,252,251,.8)"; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#16181A"; ctx.font = "600 7.5px 'Space Grotesk', sans-serif";
+        ctx.fillText("The map is the argument.", 12, 36);
+      } else if (kind === "invite") {
+        city([0.35, 0.4], 11.7, { live: { on: true, t: 41 } });
+        ctx.fillStyle = "rgba(252,252,251,.75)"; ctx.fillRect(0, H - 22, W, 22);
+        ctx.fillStyle = "#16181A"; ctx.font = "700 6.5px " + mono;
+        ctx.fillText("janus.earth/atlas", 10, H - 9);
+      }
+      try {
+        const img = new Image();
+        img.src = cv.toDataURL("image/png");
+        img.style.cssText = cv.style.cssText;
+        cv.replaceWith(img);
+      } catch (e) { }
+    });
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Janus — Grounding machine intelligence</title>
+<meta name="description" content="Consented movement in. Defensible signal out. Janus powers location intelligence for teams that build in the real world.">
+<script>document.documentElement.className+=' js'</script>
+<style>
+:root{
+  --paper:#FCFCFB; --ink:#1A1815; --cobalt:#16181A; --map:#F3F3F1; --elev:#FFFFFF;
+  --line:rgba(26,24,21,.12); --line-soft:rgba(26,24,21,.07);
+  --ink-60:rgba(26,24,21,.62); --ink-45:rgba(26,24,21,.45);
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.62;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--cobalt);color:var(--paper)}
+a{color:inherit;text-decoration:none}
+a:focus-visible{outline:2px solid var(--cobalt);outline-offset:3px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:clamp(22px,5.5vw,76px)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-45);display:flex;align-items:center;gap:14px;margin-bottom:clamp(30px,4.5vw,48px)}
+.eyebrow::after{content:"";height:1px;background:var(--line);flex:0 0 56px}
+section{border-top:1px solid var(--line);padding-block:clamp(92px,12vw,170px)}
+h2{font-weight:400;font-size:clamp(34px,4.4vw,58px);line-height:1.07;letter-spacing:-.014em;max-width:15em;text-wrap:balance}
+.lede{font-size:clamp(19px,2.1vw,25px);line-height:1.52;max-width:31em;margin-top:clamp(22px,3vw,34px)}
+.fold-close{font-style:italic;font-size:clamp(19px,2.1vw,24px);line-height:1.5;margin-top:clamp(44px,6vw,68px);max-width:30em;color:var(--ink)}
+/* ---------- nav ---------- */
+header{padding:clamp(20px,3vw,30px) 0;position:relative;z-index:3}
+.nav{display:flex;justify-content:space-between;align-items:baseline;gap:18px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;letter-spacing:.34em}
+.brand svg{flex:none;transform:translateY(1px)}
+.nav-links{display:flex;align-items:baseline;gap:clamp(14px,2.6vw,30px);font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-60)}
+.nav-links a:hover{color:var(--ink)}
+.nav-dot{color:var(--ink-45)}
+/* ---------- hero ---------- */
+.hero{position:relative;border-top:0;padding-block:clamp(84px,14vh,190px) clamp(104px,16vh,212px);overflow:visible}
+.hex-bg{position:absolute;right:max(-140px,-12vw);top:-90px;width:min(60vw,780px);height:auto;pointer-events:none;z-index:0}
+.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1fr;gap:clamp(44px,7vw,116px);align-items:end}
+h1{font-weight:400;font-size:clamp(46px,9vw,106px);line-height:1.02;letter-spacing:-.022em;max-width:9.5em;text-wrap:balance}
+.rail-lede{font-style:italic;font-size:clamp(19px,1.7vw,22px);line-height:1.45}
+.rail-rule{width:52px;height:1px;background:var(--ink);opacity:.65;margin:22px 0}
+.rail-body{font-size:16.5px;line-height:1.65;color:var(--ink-60);max-width:24em}
+.rail-body strong{color:var(--ink);font-weight:600}
+/* ---------- the gap ---------- */
+.beats{display:grid;gap:clamp(46px,6.5vw,76px);margin-top:clamp(40px,6vw,68px);max-width:46em}
+.beat{display:grid;grid-template-columns:56px 1fr;gap:clamp(14px,2.5vw,26px)}
+.beat-n{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink-45);padding-top:.85em}
+.beat p{font-size:clamp(21px,2.5vw,29px);line-height:1.42;max-width:26em}
+.pt{color:var(--cobalt);font-weight:600}
+.footnote{margin-top:clamp(48px,6vw,64px);font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:var(--ink-45)}
+/* ---------- source -> signal ---------- */
+.chiprow{display:flex;flex-wrap:wrap;gap:10px;margin-top:clamp(28px,4vw,38px);max-width:46em}
+.chip{font-family:var(--mono);font-size:11.5px;letter-spacing:.07em;padding:8px 13px;border:1px solid var(--line);background:var(--elev);border-radius:3px;white-space:nowrap}
+.flow{display:grid;grid-template-columns:1fr;gap:clamp(26px,4vw,48px);align-items:center;margin-top:clamp(48px,6vw,76px);padding:clamp(26px,4.5vw,48px);border:1px solid var(--line);background:var(--elev)}
+.flow-col h4{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-45);font-weight:500;margin-bottom:16px}
+.src{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--ink-60);display:grid;gap:9px}
+.src span{border-left:2px solid var(--line);padding-left:12px}
+.resolve-cell{display:flex;align-items:center;gap:14px;justify-self:start}
+.resolve{font-family:var(--mono);font-size:11px;letter-spacing:.2em;border:1px solid var(--ink);padding:10px 18px;border-radius:2px}
+.flow-arrow{font-family:var(--mono);font-size:14px;color:var(--ink-45)}
+.out{display:flex;flex-wrap:wrap;gap:8px}
+.out .chip{background:var(--paper)}
+.reasons-line{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--ink-45);margin-top:14px}
+.pipe-note{font-style:italic;color:var(--ink-60);margin-top:clamp(30px,4vw,40px);max-width:30em}
+.pipe-note strong{color:var(--ink);font-weight:600}
+
+/* ---------- two families ---------- */
+.cols{display:grid;grid-template-columns:1fr;gap:clamp(34px,4.5vw,56px);margin-top:clamp(40px,6vw,64px);max-width:62em}
+.col{border-top:2px solid var(--ink);padding-top:22px}
+.col.theirs{border-top:1px solid var(--line)}
+.col h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;font-weight:500;margin-bottom:16px}
+.col.theirs h3{color:var(--ink-60)}
+.col p{font-size:18.5px;max-width:26em}
+.validated{font-style:italic;color:var(--ink-60);margin-top:14px;font-size:16.5px;max-width:26em}
+/* ---------- proof ---------- */
+.stats{display:grid;grid-template-columns:1fr;gap:1px;background:var(--line);border:1px solid var(--line);margin-top:clamp(44px,6vw,68px)}
+.stat{background:var(--elev);padding:clamp(20px,2.4vw,28px) clamp(18px,2vw,24px)}
+.stat b{display:block;font-family:var(--mono);font-weight:600;font-size:clamp(24px,2.1vw,31px);letter-spacing:-.02em;line-height:1}
+.stat span{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.05em;line-height:1.55;color:var(--ink-60);margin-top:10px}
+.map-fig{margin-top:clamp(48px,6vw,72px);max-width:900px;overflow-x:auto}
+.map-fig svg{width:100%;height:auto;display:block;min-width:620px}
+.cta-row{display:flex;flex-wrap:wrap;gap:14px 38px;margin-top:clamp(44px,6vw,64px);align-items:baseline}
+.cta{font-style:italic;font-size:19px;border-bottom:1px solid var(--line);padding-bottom:3px;transition:border-color .25s ease}
+.cta:hover{border-color:var(--ink)}
+.cta.cobalt{color:var(--cobalt);border-color:rgba(30,58,138,.35)}
+.cta.cobalt:hover{border-color:var(--cobalt)}
+/* ---------- domains ---------- */
+.lens-grid{display:grid;grid-template-columns:1fr;gap:clamp(18px,2.6vw,30px);margin-top:clamp(40px,6vw,64px)}
+.lens{background:var(--elev);border:1px solid var(--line);padding:clamp(26px,4vw,46px);display:flex;flex-direction:column;align-items:flex-start}
+.lens h3{font-family:var(--mono);font-size:12px;letter-spacing:.22em;font-weight:600}
+.lens-sub{font-style:italic;color:var(--ink-60);margin:12px 0 16px}
+.lens p{max-width:28em}
+.lens .cta{margin-top:auto;padding-top:26px;font-size:17.5px;border-bottom:0}
+.lens .cta em{border-bottom:1px solid var(--line);padding-bottom:3px;font-style:inherit}
+.lens .cta:hover em{border-color:var(--ink)}
+.soonrail{display:flex;flex-wrap:wrap;gap:14px 34px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ink-45);margin-top:clamp(34px,4.5vw,48px);padding-top:26px;border-top:1px dashed var(--line)}
+.lens-foot{margin-top:26px;color:var(--ink-60);font-size:17px}
+/* ---------- consented ---------- */
+.c-grid{display:grid;grid-template-columns:1fr;gap:clamp(34px,4.5vw,52px);margin-top:clamp(44px,6vw,68px);max-width:64em}
+.c-item h3{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;font-weight:600;margin-bottom:14px}
+.c-item p{font-size:18px;max-width:24em}
+.reason-eg{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.04em;margin-top:16px;padding:9px 13px;border:1px solid var(--line);background:var(--elev);border-radius:3px}
+/* ---------- research + closing ---------- */
+.sub{color:var(--ink-60);font-size:clamp(18px,1.9vw,22px);margin-top:18px;max-width:30em}
+.pubs{margin-top:clamp(44px,6vw,64px);border-top:1px solid var(--line)}
+.pub{display:grid;grid-template-columns:1fr;gap:6px 30px;padding:clamp(20px,2.6vw,30px) 0;border-bottom:1px solid var(--line-soft)}
+.pub-date{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink-45);padding-top:.5em;white-space:nowrap}
+.pub h3{font-size:clamp(20px,2vw,25px);font-weight:600;letter-spacing:-.01em}
+.pub p{color:var(--ink-60);margin-top:6px;max-width:36em}
+.patents{display:flex;flex-wrap:wrap;gap:10px 30px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--ink-60);line-height:1.8}
+.closing{margin-top:clamp(70px,9vw,110px);padding-top:clamp(50px,6vw,72px);border-top:1px solid var(--line)}
+.closing-lede{font-size:clamp(22px,2.7vw,32px);line-height:1.4;max-width:26em}
+.mark{font-weight:600;font-size:clamp(30px,4.2vw,52px);line-height:1.12;letter-spacing:-.015em;margin-top:clamp(36px,5vw,54px);max-width:14em;text-wrap:balance}
+.closing .cta-row{margin-top:clamp(40px,5vw,56px)}
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:30px 0 44px}
+.foot{display:flex;flex-wrap:wrap;gap:12px 30px;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--ink-45)}
+.foot .brand{font-size:11px;color:var(--ink)}
+/* ---------- reveal ---------- */
+.js .rv{opacity:0;transform:translateY(16px);transition:opacity .75s cubic-bezier(.2,.6,.2,1),transform .75s cubic-bezier(.2,.6,.2,1)}
+.js .rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js .rv{opacity:1;transform:none;transition:none}}
+/* ---------- responsive ---------- */
+@media (min-width:700px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:last-child{grid-column:1/-1}
+  .pub{grid-template-columns:120px 1fr}
+}
+@media (min-width:768px){
+  .hero-grid{grid-template-columns:minmax(0,7fr) minmax(0,3fr)}
+  .cols{grid-template-columns:1fr 1fr}
+  .lens-grid{grid-template-columns:1fr 1fr}
+  .flow{grid-template-columns:minmax(150px,1fr) auto minmax(0,1.6fr)}
+  .c-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1100px){
+  .stats{grid-template-columns:repeat(5,1fr)}
+  .stat:last-child{grid-column:auto}
+}
+@media (max-width:480px){
+  .beat{grid-template-columns:1fr}
+  .beat-n{padding-top:0}
+  .nav-links{gap:12px}
+}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <nav class="nav" aria-label="Primary">
+    <a class="brand" href="#top">
+      <svg width="15" height="17" viewBox="0 0 14 16" aria-hidden="true"><path d="M7 .9 13.1 4.45v7.1L7 15.1.9 11.55v-7.1Z" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+      JANUS
+    </a>
+    <div class="nav-links">
+      <a href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">Atlas&nbsp;&rarr;</a><span class="nav-dot">·</span>
+      <a href="#domains">Domains</a><span class="nav-dot">·</span>
+      <a href="#research">Research</a><span class="nav-dot">·</span>
+      <a href="#contact">&rarr;&nbsp;Talk to us</a>
+    </div>
+  </nav>
+</header>
+
+<main id="top">
+
+<!-- FOLD 0 · HERO -->
+<section class="hero wrap" aria-label="Hero">
+  <svg class="hex-bg" viewBox="0 0 720 560" aria-hidden="true">
+    <defs>
+      <pattern id="hex" width="56" height="100" patternUnits="userSpaceOnUse" patternTransform="scale(1.45)">
+        <path d="M28 66 0 50 0 16 28 0 56 16 56 50 28 66V100" fill="none" stroke="rgba(26,24,21,.085)" stroke-width="1"/>
+      </pattern>
+      <radialGradient id="fade" cx="62%" cy="34%" r="62%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+        <stop offset=".75" stop-color="#fff" stop-opacity=".25"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+      <mask id="hexmask"><rect width="720" height="560" fill="url(#fade)"/></mask>
+    </defs>
+    <rect width="720" height="560" fill="url(#hex)" mask="url(#hexmask)"/>
+  </svg>
+  <div class="hero-grid">
+    <h1>Grounding machine intelligence.</h1>
+    <aside>
+      <p class="rail-lede">The context layer for the physical world.</p>
+      <div class="rail-rule"></div>
+      <p class="rail-body">Janus powers <strong>location intelligence</strong> for teams that build in the real world.</p>
+    </aside>
+  </div>
+</section>
+
+<!-- FOLD 1 · THE GAP -->
+<section aria-labelledby="gap-h">
+  <div class="wrap">
+    <p class="eyebrow rv">&sect;01 &middot; the gap</p>
+    <h2 id="gap-h" class="rv">The web got a substrate. The&nbsp;world never did.</h2>
+    <div class="beats">
+      <div class="beat rv">
+        <span class="beat-n">/01</span>
+        <p>Cookies turned every click into signal. Everything offline stayed dark — the commute, the café, the late-night drive.</p>
+      </div>
+      <div class="beat rv">
+        <span class="beat-n">/02</span>
+        <p>What exists stops at the postcode. On public NYC data, <strong class="pt">64% of block-level crash-risk variation lives <em>inside</em> the ZIP</strong> — invisible to every area-level product.</p>
+      </div>
+      <div class="beat rv">
+        <span class="beat-n">/03</span>
+        <p>Where someone went yesterday predicts 93% of tomorrow.* The substrate is buildable now — consented movement in, defensible signal out.</p>
+      </div>
+    </div>
+    <p class="footnote rv">* Song, Qu, Blumm &amp; Barab&aacute;si &middot; Science &middot; 2010</p>
+  </div>
+</section>
+
+<!-- FOLD 2 · §A SOURCE → SIGNAL -->
+<section aria-labelledby="a-h">
+  <div class="wrap">
+    <p class="eyebrow rv">source &rarr; signal</p>
+    <h2 id="a-h" class="rv">Telematics is a source. Signal is what we derive.</h2>
+    <p class="lede rv">Apps, OBD dongles, connected cars, fleet boxes, check-ins — wherever movement comes from, Janus turns it into features a model can defend:</p>
+    <div class="chiprow rv" role="list">
+      <span class="chip" role="listitem">MILEAGE</span>
+      <span class="chip" role="listitem">TIME_OF_DAY</span>
+      <span class="chip" role="listitem">ROUTE_TYPE</span>
+      <span class="chip" role="listitem">HOME/WORK_ANCHORS</span>
+      <span class="chip" role="listitem">TRIP_CONSISTENCY</span>
+      <span class="chip" role="listitem">HIGHWAY_VS_LOCAL</span>
+    </div>
+    <div class="flow rv" aria-label="Sources resolve into derived features">
+      <div class="flow-col">
+        <h4>Sources</h4>
+        <div class="src">
+          <span>APPS</span>
+          <span>OBD&nbsp;DONGLES</span>
+          <span>CONNECTED&nbsp;CARS</span>
+          <span>FLEET&nbsp;BOXES</span>
+          <span>CHECK-INS</span>
+        </div>
+      </div>
+      <div class="resolve-cell">
+        <span class="flow-arrow">&rarr;</span>
+        <span class="resolve">resolve</span>
+        <span class="flow-arrow">&rarr;</span>
+      </div>
+      <div class="flow-col">
+        <h4>Derived features</h4>
+        <div class="out">
+          <span class="chip">MILEAGE</span>
+          <span class="chip">ROUTE_TYPE</span>
+          <span class="chip">ANCHORS</span>
+          <span class="chip">CONSISTENCY</span>
+        </div>
+        <p class="reasons-line">+ reasons attached, on every call</p>
+      </div>
+    </div>
+    <p class="pipe-note rv">We sit <strong>above</strong> the pipes; we don&rsquo;t compete with them.</p>
+  </div>
+</section>
+
+<!-- FOLD 3 · §B TWO FAMILIES -->
+<section aria-labelledby="b-h">
+  <div class="wrap">
+    <p class="eyebrow rv">where &ne; how</p>
+    <h2 id="b-h" class="rv">Where you drive is not how you drive.</h2>
+    <div class="cols">
+      <div class="col rv">
+        <h3>WHERE / WHEN&ensp;(ours)</h3>
+        <p>Mileage, time of day, route type, anchors, consistency, highway-vs-local exposure.</p>
+        <p class="validated">Validated: past exposure ranks future path hazard on 1,862 real NYC trajectories (leave-future-out).</p>
+      </div>
+      <div class="col theirs rv">
+        <h3>HOW&ensp;(yours / your vendor&rsquo;s)</h3>
+        <p>Braking, acceleration, cornering, phone use. Bring your own events — the term composes; it is never required.</p>
+      </div>
+    </div>
+    <p class="fold-close rv">We derive the first family from any consented source. We compose with the second. We replace neither.</p>
+  </div>
+</section>
+
+<!-- FOLD 4 · §D PROOF -->
+<section aria-labelledby="d-h">
+  <div class="wrap">
+    <p class="eyebrow rv">proof &middot; open data &middot; nyc</p>
+    <h2 id="d-h" class="rv">Pricing the block, not the postcode.</h2>
+    <div class="stats rv">
+      <div class="stat"><b>64%</b><span>of crash-risk variance lives WITHIN the ZIP</span></div>
+      <div class="stat"><b>5%</b><span>of blocks carry 33% of severe crashes</span></div>
+      <div class="stat"><b>+0.66</b><span>cell resolution beats the territory floor</span></div>
+      <div class="stat"><b>1,862</b><span>exposure index validated on real trajectories</span></div>
+      <div class="stat"><b>43%</b><span>of blocks have no crash history — we read them anyway</span></div>
+    </div>
+    <figure class="map-fig rv">
+      <svg viewBox="0 0 760 442" role="img" aria-label="Three stacked map layers: a flat ZIP choropleth, a fine block surface, and individual crash points">
+        <defs>
+          <clipPath id="plate"><path d="M110 0H560L450 112H0Z"/></clipPath>
+          <pattern id="cells" width="32" height="28" patternUnits="userSpaceOnUse" patternTransform="skewX(-44.5)">
+            <path d="M0 0H32M0 0V28" fill="none" stroke="rgba(26,24,21,.14)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <!-- bottom · ZIP choropleth -->
+        <g transform="translate(40,318)">
+          <g clip-path="url(#plate)">
+            <path d="M110 0H260L150 112H0Z" fill="#E7DFCB"/>
+            <path d="M260 0H400L335 60 290 112H150Z" fill="#F3F3F1"/>
+            <path d="M400 0H560L450 112H290L335 60Z" fill="#E1D7BE"/>
+            <path d="M260 0 150 112M400 0 335 60 290 112M335 60 450 112" fill="none" stroke="rgba(26,24,21,.18)" stroke-width="1"/>
+          </g>
+          <path d="M110 0H560L450 112H0Z" fill="none" stroke="rgba(26,24,21,.28)" stroke-width="1"/>
+          <path d="M515 56H588" stroke="rgba(26,24,21,.22)" stroke-dasharray="3 4"/>
+          <text x="596" y="59" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="10" letter-spacing="2" fill="rgba(26,24,21,.5)">ZIP CHOROPLETH</text>
+        </g>
+        <!-- middle · block surface -->
+        <g transform="translate(40,166)">
+          <g clip-path="url(#plate)">
+            <rect x="-20" y="-4" width="600" height="120" fill="#FFFFFF"/>
+            <rect x="-20" y="-4" width="600" height="120" fill="url(#cells)"/>
+            <g transform="skewX(-44.5)">
+              <rect x="206" y="28" width="32" height="28" fill="rgba(26,24,21,.10)"/>
+              <rect x="334" y="14" width="32" height="28" fill="rgba(26,24,21,.16)"/>
+              <rect x="270" y="56" width="32" height="28" fill="rgba(26,24,21,.07)"/>
+              <rect x="430" y="56" width="32" height="28" fill="#16181A"/>
+              <rect x="398" y="84" width="32" height="28" fill="rgba(26,24,21,.12)"/>
+            </g>
+          </g>
+          <path d="M110 0H560L450 112H0Z" fill="none" stroke="rgba(26,24,21,.28)" stroke-width="1"/>
+          <path d="M515 56H588" stroke="rgba(26,24,21,.22)" stroke-dasharray="3 4"/>
+          <text x="596" y="59" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="10" letter-spacing="2" fill="rgba(26,24,21,.5)">BLOCK SURFACE</text>
+        </g>
+        <!-- top · crash points -->
+        <g transform="translate(40,14)">
+          <path d="M110 0H560L450 112H0Z" fill="rgba(251,250,247,.5)" stroke="rgba(26,24,21,.28)" stroke-width="1"/>
+          <g fill="rgba(26,24,21,.55)">
+            <circle cx="150" cy="30" r="2"/><circle cx="205" cy="62" r="2"/><circle cx="246" cy="22" r="2"/>
+            <circle cx="172" cy="92" r="2"/><circle cx="300" cy="48" r="2"/><circle cx="262" cy="78" r="2"/>
+            <circle cx="338" cy="86" r="2"/><circle cx="356" cy="34" r="2"/><circle cx="402" cy="58" r="2.6"/>
+            <circle cx="414" cy="70" r="2.6"/><circle cx="394" cy="72" r="2.6"/><circle cx="408" cy="46" r="2.6"/>
+            <circle cx="421" cy="58" r="2.6"/><circle cx="384" cy="58" r="2"/><circle cx="436" cy="40" r="2"/>
+            <circle cx="130" cy="64" r="2"/><circle cx="282" cy="16" r="2"/><circle cx="318" cy="68" r="2"/>
+          </g>
+          <path d="M515 56H588" stroke="rgba(26,24,21,.22)" stroke-dasharray="3 4"/>
+          <text x="596" y="59" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="10" letter-spacing="2" fill="rgba(26,24,21,.5)">CRASH POINTS</text>
+        </g>
+      </svg>
+    </figure>
+    <div class="cta-row rv">
+      <a class="cta" href="https://skay97-curbai.hf.space" target="_blank" rel="noopener">Open the Atlas &mdash; live New York &rarr;</a>
+      <a class="cta" href="#contact">Send us your territory list &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOLD 5 · DOMAINS / LENSES -->
+<section id="domains" aria-labelledby="lens-h">
+  <div class="wrap">
+    <p class="eyebrow rv">one signal &middot; many lenses</p>
+    <h2 id="lens-h" class="rv">One trajectory. A different product in every lens.</h2>
+    <div class="lens-grid">
+      <article class="lens rv">
+        <h3>UNDERWRITING</h3>
+        <p class="lens-sub">Insurance &amp; mobility risk.</p>
+        <p>A consented trail becomes a calibrated exposure index with the reasons attached — frequency-side signal where credit can&rsquo;t go and the file is thin.</p>
+        <a class="cta" href="#contact"><em>Read the case study &rarr;</em></a>
+      </article>
+      <article class="lens rv">
+        <h3>PERSONA</h3>
+        <p class="lens-sub">Consumer &amp; location apps.</p>
+        <p>Fourteen days of movement becomes who the user is — home, routine, mode, affinity — for the assistant, the ranker, the feed.</p>
+        <a class="cta" href="#contact"><em>See the X-ray &rarr;</em></a>
+      </article>
+    </div>
+    <div class="soonrail rv">
+      <span>SITING &amp; CATCHMENT — soon</span>
+      <span>FEEDS &amp; RANKING — soon</span>
+      <span>ADS — soon</span>
+    </div>
+    <p class="lens-foot rv">Two lenses are live today. The rail is where the same signal goes next.</p>
+  </div>
+</section>
+
+<!-- FOLD 6 · §C CONSENTED BY CONSTRUCTION -->
+<section aria-labelledby="c-h">
+  <div class="wrap">
+    <p class="eyebrow rv">consent &middot; explainability &middot; defensibility</p>
+    <h2 id="c-h" class="rv">Location is sensitive. The clean version wins.</h2>
+    <div class="c-grid">
+      <div class="c-item rv">
+        <h3>CONSENTED</h3>
+        <p>Opt-in, per-use consent flags travel with every call. No shadow collection, no way around opt-in — by design, not policy.</p>
+      </div>
+      <div class="c-item rv">
+        <h3>EXPLAINABLE</h3>
+        <p>Every score ships its reasons, in language a customer could be shown.</p>
+        <span class="reason-eg">late-night arterial dwell&nbsp;&nbsp;+0.11</span>
+      </div>
+      <div class="c-item rv">
+        <h3>DEFENSIBLE</h3>
+        <p>Mechanistic features — road geometry, time, exposure, not postcode proxies — disparate-impact tested, with filing-ready documentation.</p>
+      </div>
+    </div>
+    <p class="fold-close rv">The covert version of this industry is in court. We built the consented one.</p>
+  </div>
+</section>
+
+<!-- FOLD 7 · RESEARCH + CLOSING -->
+<section id="research" aria-labelledby="r-h">
+  <div class="wrap">
+    <p class="eyebrow rv">research</p>
+    <h2 id="r-h" class="rv">The story underneath the model.</h2>
+    <p class="sub rv">We publish the method, the benchmark, and the negative results. The rigor is the product.</p>
+    <div class="pubs">
+      <div class="pub rv">
+        <span class="pub-date">2026</span>
+        <div><h3>FineGeo-NYC</h3><p>An open benchmark for sub-area and per-user geospatial inference. 9,528 cells, 867,020 crashes, leakage-controlled.</p></div>
+      </div>
+      <div class="pub rv">
+        <span class="pub-date">2026</span>
+        <div><h3>The NYC Risk &amp; Mobility Atlas</h3><p>Where risk actually lives: 64% inside the ZIP; 5% of blocks carry a third of severe crashes.</p></div>
+      </div>
+      <div class="pub rv">
+        <span class="pub-date">2026</span>
+        <div><h3>Reasoning over geo-embeddings</h3><p>What serializing the world to text costs — measured — and the projector that avoids it.</p></div>
+      </div>
+      <div class="pub rv">
+        <span class="pub-date">2025 &middot; ACL</span>
+        <div><h3>Simulating populations from sparse signal.</h3></div>
+      </div>
+      <div class="pub rv">
+        <span class="pub-date">PATENTS</span>
+        <div class="patents">
+          <span>P03309 — inferring institutions from movement</span>
+          <span>P03346 — choosing what to play, show, or sell at a place</span>
+          <span>P03310 — extracting trends from places, at scale</span>
+        </div>
+      </div>
+    </div>
+    <div class="closing rv" id="contact">
+      <p class="closing-lede">We&rsquo;re a small team working at the frontier of <em>geospatial foundation models, visitation analysis, and place embeddings.</em></p>
+      <p class="mark">Consented movement in. Defensible signal out.</p>
+      <div class="cta-row">
+        <a class="cta cobalt" href="#contact">Talk to us &rarr;</a>
+        <a class="cta" href="#contact">Send us your territory list &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span class="brand">
+      <svg width="13" height="15" viewBox="0 0 14 16" aria-hidden="true"><path d="M7 .9 13.1 4.45v7.1L7 15.1.9 11.55v-7.1Z" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+      JANUS
+    </span>
+    <span>&copy; 2026 Janus</span>
+    <span>hello@&hellip;</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  if(!('IntersectionObserver' in window)){document.querySelectorAll('.rv').forEach(function(el){el.classList.add('in')});return}
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}
+    })
+  },{rootMargin:'0px 0px -8% 0px',threshold:.06});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>
