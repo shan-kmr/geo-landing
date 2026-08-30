@@ -98,14 +98,6 @@
     </div>
   </div>
 
-  <p class="note" id="foot">
-    The engine answers from the NYC AddressPoint referee (63,245 Manhattan doors) with the
-    verdict, an interval, and evidence. Absence from the registry is reported as
-    <span style="font-family:monospace">no_such_door</span> with the nearest valid neighbor.
-    The model column is a live API call, rate-limited. Aggregate results:
-    engine 100/100 on the public panel; the model asserted 39 of 40 nonexistent doors exist.
-    Method and code: <a href="https://github.com/shan-kmr">repo</a>.
-  </p>
 </div>
 
 <script>
@@ -123,6 +115,12 @@ const SAMPLES = {
     "is there a 601 West 218th Street?",
     "20 Times Square — real or vanity?",
   ],
+  q1hard: [
+    "is 1689 Broadway a deliverable address?",
+    "does 298 West 46th Street exist?",
+    "is 11 West 58th Street real?",
+    "can you ship to 420 East 37th Street?",
+  ],
   q2: [
     "is Katz's Delicatessen still open?",
     "is Gotham Bar and Grill still operating?",
@@ -132,6 +130,12 @@ const SAMPLES = {
     "is Stumptown on W 8th St open?",
     "is Fanelli Cafe operating?",
     "is the Sam Ash store in Midtown still there?",
+  ],
+  q2hard: [
+    "is Craft by Tom Colicchio open tonight?",
+    "is Donohue's Steak House still serving?",
+    "can I book Sushi Ichimura?",
+    "is the Fotografiska museum on Park Ave open?",
   ],
 };
 
@@ -150,12 +154,19 @@ function setTab(tab) {
     ? "manhattan-geocode-v1 · city address file"
     : "status-verdict-v1 · registry + commons + own-site, live";
   $("chips").innerHTML = "";
-  for (const s of SAMPLES[tab]) {
+  const addChip = (s, hard) => {
     const b = document.createElement("button");
     b.textContent = s;
+    if (hard) b.style.borderColor = "var(--bad)";
     b.onclick = () => { $("q").value = s; run(); };
     $("chips").appendChild(b);
-  }
+  };
+  for (const s of SAMPLES[tab]) addChip(s, false);
+  const lbl = document.createElement("span");
+  lbl.style.cssText = "font:11px 'IBM Plex Mono',monospace;color:var(--mut);align-self:center;margin-left:4px";
+  lbl.textContent = "built to break parametric memory →";
+  $("chips").appendChild(lbl);
+  for (const s of SAMPLES[tab + "hard"]) addChip(s, true);
   for (const id of ["left", "mid", "right"]) $(id).querySelector(".empty, .out")?.replaceWith(emptyDiv());
 }
 
