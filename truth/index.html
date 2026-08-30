@@ -121,33 +121,26 @@ let TAB = "q1";
 
 const SAMPLES = {
   q1: [
-    "is 350 Fifth Avenue a real address?",
-    "does 79-11 57th Avenue exist in Manhattan?",
     "347 5th Ave",
     "whats at 1 Saint Marks Pl?",
-    "9999 Broadway, NYC",
     "225 Brodway",
     "is there a 601 West 218th Street?",
-    "20 Times Square — real or vanity?",
   ],
   q1hard: [
-    "is 1689 Broadway a deliverable address?",
-    "does 298 West 46th Street exist?",
-    "is 11 West 58th Street real?",
-    "can you ship to 420 East 37th Street?",
+    "is 11 West 58th Street a real address?",
+    "does 151 West 41st Street exist?",
+    "can you ship to 14 West 46th Street?",
+    "is 233 Cherry Street deliverable?",
+    "is 1689 Broadway a real address?",
+    "does 420 East 37th Street exist?",
   ],
   q2: [
     "is Gotham Bar and Grill still operating?",
-    "is Katz's Delicatessen still open?",
-    "is The Odeon in Tribeca open?",
-    "is Balthazar operating?",
-    "is Veselka open?",
-    "is Stumptown on W 8th St open?",
-  ],
-  q2hard: [
     "did Gotham Bar and Grill close for good?",
     "is the Gotham on 12th Street taking reservations?",
+    "is Katz's Delicatessen still open?",
   ],
+  q2hard: [],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -168,7 +161,6 @@ function setTab(tab) {
   const addChip = (s, hard) => {
     const b = document.createElement("button");
     b.textContent = s;
-    if (hard) b.style.borderColor = "var(--bad)";
     b.onclick = () => { $("q").value = s; run(); };
     $("chips").appendChild(b);
   };
