@@ -41,7 +41,14 @@
   .chips button { font: 12.5px "IBM Plex Mono", monospace; padding: 7px 12px; border: 1px solid var(--line);
                   border-radius: 999px; background: var(--card); color: var(--ink); cursor: pointer; text-align: left; }
   .chips button:hover { border-color: var(--accent); }
-  .duel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 22px; }
+  .duel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 22px; }
+  @media (max-width: 1100px) { .duel { grid-template-columns: 1fr 1fr; } }
+  .ibtn { float: right; cursor: pointer; font: 600 11px "IBM Plex Mono", monospace; color: var(--mut);
+          border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; background: none; }
+  .pv { display: none; font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--mut);
+        background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px;
+        margin: 8px 0; white-space: pre-wrap; max-height: 180px; overflow: auto; }
+  .pv.show { display: block; }
   @media (max-width: 900px) { .duel { grid-template-columns: 1fr; } }
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px; min-height: 170px; }
   .panel h3 { margin: 0 0 2px; font-size: 13px; font-weight: 600; }
@@ -85,15 +92,23 @@
 
   <div class="duel">
     <div class="panel" id="left">
-      <h3>GPT-5.2</h3><div class="who">no tools, parametric knowledge</div>
+      <h3>GPT-5.2 <button class="ibtn" data-p="left">i</button></h3><div class="who">no tools, parametric knowledge</div>
+      <div class="pv" id="pv-left"></div>
+      <div class="empty">ask something</div>
+    </div>
+    <div class="panel" id="web">
+      <h3>GPT-5.2 + web search <button class="ibtn" data-p="web">i</button></h3><div class="who">OpenAI hosted web_search tool</div>
+      <div class="pv" id="pv-web"></div>
       <div class="empty">ask something</div>
     </div>
     <div class="panel" id="mid">
-      <h3>GPT-5.2 + placetruth</h3><div class="who">same model, our tools via function calling</div>
+      <h3>GPT-5.2 + placetruth <button class="ibtn" data-p="mid">i</button></h3><div class="who">same model, our tools via function calling</div>
+      <div class="pv" id="pv-mid"></div>
       <div class="empty">ask something</div>
     </div>
     <div class="panel" id="right">
-      <h3>placetruth</h3><div class="who" id="rwho">manhattan-geocode-v1 · city address file</div>
+      <h3>placetruth <button class="ibtn" data-p="right">i</button></h3><div class="who" id="rwho">manhattan-geocode-v1 · city address file</div>
+      <div class="pv" id="pv-right"></div>
       <div class="empty">ask something</div>
     </div>
   </div>
@@ -122,20 +137,16 @@ const SAMPLES = {
     "can you ship to 420 East 37th Street?",
   ],
   q2: [
-    "is Katz's Delicatessen still open?",
     "is Gotham Bar and Grill still operating?",
-    "did the Rubin Museum close?",
-    "is the Chipotle at 864 Broadway open?",
-    "is Cafe Un Deux Trois still around?",
+    "is Katz's Delicatessen still open?",
+    "is The Odeon in Tribeca open?",
+    "is Balthazar operating?",
+    "is Veselka open?",
     "is Stumptown on W 8th St open?",
-    "is Fanelli Cafe operating?",
-    "is the Sam Ash store in Midtown still there?",
   ],
   q2hard: [
-    "is Craft by Tom Colicchio open tonight?",
-    "is Donohue's Steak House still serving?",
-    "can I book Sushi Ichimura?",
-    "is the Fotografiska museum on Park Ave open?",
+    "did Gotham Bar and Grill close for good?",
+    "is the Gotham on 12th Street taking reservations?",
   ],
 };
 
@@ -162,16 +173,13 @@ function setTab(tab) {
     $("chips").appendChild(b);
   };
   for (const s of SAMPLES[tab]) addChip(s, false);
-  const lbl = document.createElement("span");
-  lbl.style.cssText = "font:11px 'IBM Plex Mono',monospace;color:var(--mut);align-self:center;margin-left:4px";
-  lbl.textContent = "built to break parametric memory →";
-  $("chips").appendChild(lbl);
   for (const s of SAMPLES[tab + "hard"]) addChip(s, true);
-  for (const id of ["left", "mid", "right"]) $(id).querySelector(".empty, .out")?.replaceWith(emptyDiv());
+  for (const id of ["left", "web", "mid", "right"]) $(id).querySelector(".empty, .out")?.replaceWith(emptyDiv());
 }
 
 function emptyDiv() { const d = document.createElement("div"); d.className = "empty"; d.textContent = "ask something"; return d; }
 
+function setPrompt(panelId, text) { const el = $("pv-" + panelId); if (el) el.textContent = text || ""; }
 function paint(panelId, html) {
   const p = $(panelId);
   p.querySelector(".empty, .out")?.remove();
@@ -210,14 +218,14 @@ async function run() {
   const q = $("q").value.trim();
   if (!q) return;
   $("go").disabled = true;
-  paint("left", `<div class="ms">asking…</div>`);
-  paint("mid", `<div class="ms">asking…</div>`);
-  paint("right", `<div class="ms">asking…</div>`);
+  for (const id of ["left", "web", "mid", "right"]) paint(id, `<div class="ms">asking…</div>`);
+  setPrompt("right", JSON.stringify(TAB === "q1" ? { address: extractAddress(q) } : { name: extractName(q) }));
 
   const ours = TAB === "q1"
     ? post("/v1/geocode", { address: extractAddress(q) })
     : post("/v1/status", { name: extractName(q) });
   const theirs = post("/v1/model", { tab: TAB, query: q });
+  const web = post("/v1/model_web", { tab: TAB, query: q });
   const agent = post("/v1/agent", { tab: TAB, query: q });
 
   ours.then(r => {
@@ -245,7 +253,25 @@ async function run() {
     }
   }).catch(e => paint("right", pill("warn", "error") + `<div class="kv">${e.message}</div>`));
 
+  web.then(r => {
+    setPrompt("web", r.prompt);
+    const p = r.parsed || {};
+    if (TAB === "q1") {
+      const cls = p.exists === true ? "ok" : p.exists === false ? "bad" : "warn";
+      paint("web", pill(cls, p.exists === undefined ? "no structured answer" : `exists: ${p.exists}`) + kv([
+        ["position", p.lat ? `${p.lat}, ${p.lon} ±${p.radius_m ?? "?"}m` : null],
+        ["searches", r.searches],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.model}</div>`);
+    } else {
+      const cls = p.status === "operating" ? "ok" : p.status ? "bad" : "warn";
+      paint("web", pill(cls, p.status || "no structured answer") + kv([
+        ["note", p.note], ["searches", r.searches],
+      ]) + `<div class="ms">${r.elapsed_ms} ms · ${r.model}</div>`);
+    }
+  }).catch(e => paint("web", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
+
   agent.then(r => {
+    setPrompt("mid", r.prompt);
     const traj = (r.trajectory || []).map(t =>
       `<span class="pill ok" style="margin-right:6px">${t.tool} → ${t.verdict ?? "?"}</span>`).join("");
     paint("mid", (traj || pill("warn", "no tool calls")) +
@@ -254,6 +280,7 @@ async function run() {
   }).catch(e => paint("mid", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
 
   theirs.then(r => {
+    setPrompt("left", r.prompt);
     const p = r.parsed || {};
     if (TAB === "q1") {
       const cls = p.exists === true ? "ok" : p.exists === false ? "bad" : "warn";
@@ -269,10 +296,12 @@ async function run() {
     }
   }).catch(e => paint("left", pill("warn", "unavailable") + `<div class="kv">${e.message}</div>`));
 
-  await Promise.allSettled([ours, theirs, agent]);
+  await Promise.allSettled([ours, theirs, web, agent]);
   $("go").disabled = false;
 }
 
+document.querySelectorAll(".ibtn").forEach(b =>
+  b.onclick = () => $("pv-" + b.dataset.p).classList.toggle("show"));
 $("tq1").onclick = () => setTab("q1");
 $("tq2").onclick = () => setTab("q2");
 $("go").onclick = run;
