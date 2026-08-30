@@ -17,7 +17,7 @@
   * { box-sizing: border-box; }
   body { background: var(--bg); color: var(--ink); margin: 0;
          font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.5; }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 44px 20px 80px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 44px 20px 80px; }
   .kicker { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .12em;
             text-transform: uppercase; color: var(--mut); margin-bottom: 18px; }
   .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 10px; }
@@ -25,7 +25,7 @@
                  font: 600 14px "IBM Plex Sans", sans-serif; cursor: pointer; }
   .tabs button.on { background: var(--accent); color: #fff; }
   h1 { font-size: 26px; font-weight: 600; margin: 8px 0 4px; }
-  .sub { color: var(--mut); margin: 0 0 20px; max-width: 62ch; }
+  .sub { color: var(--mut); margin: 0 0 20px; }
   .qrow { display: flex; gap: 8px; }
   .qrow input { flex: 1; font: 15px "IBM Plex Mono", monospace; padding: 12px 14px;
                 border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
@@ -69,16 +69,13 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="kicker">placetruth · live demo · manhattan v0 · both sides answer live, nothing is prerecorded</div>
-
   <div class="tabs">
     <button id="tq1" class="on">Q1 · Does this address exist?</button>
     <button id="tq2">Q2 · Is it still open?</button>
   </div>
 
   <h1 id="hd">Does this address exist?</h1>
-  <p class="sub" id="sub">Type any Manhattan address. Left: a frontier model answering from its own knowledge.
-     Right: the placetruth engine against the city address file, with evidence.</p>
+  <p class="sub" id="sub">NYC / Manhattan build (v0)</p>
 
   <div class="qrow">
     <input id="q" placeholder="350 Fifth Avenue, Manhattan" autocomplete="off">
@@ -86,7 +83,7 @@
   </div>
 
   <details class="samples" open>
-    <summary>sample queries, as people type them</summary>
+    <summary>sample queries</summary>
     <div class="chips" id="chips"></div>
   </details>
 
@@ -154,9 +151,7 @@ function setTab(tab) {
   $("tq1").classList.toggle("on", tab === "q1");
   $("tq2").classList.toggle("on", tab === "q2");
   $("hd").textContent = tab === "q1" ? "Does this address exist?" : "Is it still open?";
-  $("sub").textContent = tab === "q1"
-    ? "Type any Manhattan address. Left: a frontier model answering from its own knowledge. Right: the placetruth engine against the city address file, with evidence."
-    : "Name a Manhattan place. Left: the model's belief. Right: the live evidence pipeline: registry, commons, and the venue's own site, decided by a rule table that refuses to guess.";
+  $("sub").textContent = "NYC / Manhattan build (v0)";
   $("q").placeholder = tab === "q1" ? "350 Fifth Avenue, Manhattan" : "Katz's Delicatessen";
   $("rwho").textContent = tab === "q1"
     ? "manhattan-geocode-v1 · city address file"
